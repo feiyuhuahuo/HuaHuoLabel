@@ -7,26 +7,25 @@ import json
 import onnxruntime as ort
 
 from random import shuffle
+from os import path as osp
+from os.path import sep as os_sep
 from PIL import Image, ImageEnhance
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMainWindow, QMenu, QFileDialog, QInputDialog, QMessageBox, QLineEdit, QWidget, \
     QHBoxLayout, QColorDialog, QListWidgetItem, QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QPixmap, QImage, QColor, QFontMetrics, QIcon, QAction
+from need.custom_widgets import *
+from need.custom_widgets.marquee_label import signal_show_plain_img, signal_show_label_img
 from need.custom_widgets.img_show_widget import shape_type, signal_xy_color2ui, signal_selected_shape, \
     signal_del_shape, selected_label_item, signal_open_label_window, signal_one_collection_done, \
     BaseImgFrame, signal_move2new_folder
-from need.custom_widgets.marquee_label import signal_show_plain_img, signal_show_label_img
 from need.custom_signals import StrSignal
-from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask
-from need.custom_widgets import *
 from need.custom_threads.seg_auto_inference import signal_progress_text, signal_progress_value, signal_progress_done, \
     RunInference
 from need.custom_threads.seg_change_one_class_json import ChangeOneClassJsons, signal_cocj_done
 from need.custom_threads.seg_delete_one_class_json import DeleteOneClassJsons, signal_docj_done
-from need.custom_widgets.waiting_label import WaitingLabel
-from os import path as osp
-from os.path import sep as os_sep
+from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask
 
 signal_select_ui_ok_from_label_adding = StrSignal()
 

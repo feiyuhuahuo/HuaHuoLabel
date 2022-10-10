@@ -11,7 +11,7 @@ from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QC
     QImageReader
 from need.utils import point_in_shape, AnnUndo
 from need.custom_signals import *
-from need.custom_widgets.select_window import SelectWindow
+from need.custom_widgets import SelectWindow
 
 signal_del_shape = IntSignal()
 shape_type = StrSignal()

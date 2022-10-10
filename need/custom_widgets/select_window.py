@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget
-from PySide6.QtWidgets import QApplication
 
 
 class SelectWindow(QWidget):
@@ -27,6 +26,7 @@ class SelectWindow(QWidget):
 
 
 # if __name__ == '__main__':
+#     from PySide6.QtWidgets import QApplication
 #     app = QApplication()
 #     ui = SelectWindow(title='你好')
 #     ui.ui.show()

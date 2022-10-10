@@ -6,5 +6,5 @@ from .class_button import ClassButton
 from .marquee_label import MarqueeLabel
 from .select_window import SelectWindow
 from .progress_bar import ProgressWindow
-
-__all__ = ['ImgShow', 'ClassStat', 'ClassButton', 'MarqueeLabel', 'SelectWindow', 'ProgressWindow']
+from .waiting_label import WaitingLabel
+__all__ = ['ImgShow', 'ClassStat', 'ClassButton', 'MarqueeLabel', 'SelectWindow', 'ProgressWindow', 'WaitingLabel']

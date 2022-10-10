@@ -5,3 +5,5 @@ images/company
 out
 test_thing
 待分类图片
+*__pycache__*
+.idea

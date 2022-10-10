@@ -1,9 +1,8 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-from PySide6.QtWidgets import QLabel, QApplication, QGraphicsDropShadowEffect
+from PySide6.QtWidgets import QLabel, QApplication
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFont, QColor
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
 
 class WaitingLabel(QLabel):
