@@ -1,0 +1,2 @@
+nuitka --mingw64 --standalone --plugin-enable=pyside6,numpy --output-dir=out  --windows-disable-console --windows-icon-from-ico=icon.ico SAMHOM_Images.py
+(~10 minutes)
