@@ -546,12 +546,11 @@ class ImgCls(QMainWindow):
             os.makedirs(f'{self.img_root_path}/labels/val', exist_ok=True)
 
             val_label = self.path_to(self.imgs[self.cur_i], img2png=True)
-            val_num = 0
             if '图片已删除' not in val_label:
                 if osp.exists(val_label):
                     shutil.copy(self.imgs[self.cur_i], val_path)
                     shutil.copy(val_label, f'{self.img_root_path}/labels/val')
-                    val_num += 1
+                    val_num = len(glob.glob(f'{val_path}/*'))
                     self.main_ui.label_5.setText(f'已复制到 "{val_path}", 共 {val_num} 张图片.')
                 else:
                     QMessageBox.warning(self.main_ui, '未找到对应的标注文件', f'未找到"{val_label}"。')

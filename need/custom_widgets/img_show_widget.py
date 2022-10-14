@@ -11,7 +11,7 @@ from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QC
     QImageReader
 from need.utils import point_in_shape, AnnUndo
 from need.custom_signals import *
-from need.custom_widgets import SelectWindow
+from need.custom_widgets.select_window import SelectWindow
 
 signal_del_shape = IntSignal()
 shape_type = StrSignal()
@@ -175,6 +175,7 @@ class BaseImgFrame(QFrame):
                 img_x, img_y = rel_x - b_left, rel_y - b_up
                 qimg = self.scaled_img.toImage()
                 qcolor = QColor.fromRgb(qimg.pixel(int(img_x), int(img_y)))
+                # if self.
                 return int(img_x / img_pixel_real_pixel), int(img_y / img_pixel_real_pixel), qcolor
             else:
                 return None, None, None
@@ -268,20 +269,7 @@ class ImgShow(BaseImgFrame):
     def mouseDoubleClickEvent(self, e):  # 同时触发 mousePressEvent()
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
             if self.AnnMode:
-                input_dlg = QInputDialog()
-                input_dlg.resize(400, 100)
-                input_dlg.setLabelText('注释')
-                is_ok = input_dlg.exec()
-
-                self.painter.begin(self.scaled_img)
-                self.painter.setPen(self.ann_font_color)
-                self.painter.setFont(QFont('Decorative', self.ann_font_size))
-                if is_ok:
-                    pos = (e.position() - self.img_tl_point).toPoint()
-                    self.painter.drawText(pos, input_dlg.textValue())
-                self.painter.end()
-                self.update()
-                self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本用于伸缩功能
+                self.ann_add_text(e.position())
         else:
             if self.AnnMode and self.scaled_img_painted is not None:
                 action_img = self.scaled_img_painted
@@ -294,7 +282,6 @@ class ImgShow(BaseImgFrame):
 
             scale_factor = (self.scaled_img.width() / old_img_w, self.scaled_img.height() / old_img_h)
             self.center_point()
-
             self.shape_scale_move(old_img_tl, scale_factor)
             self.update()
 
@@ -308,74 +295,8 @@ class ImgShow(BaseImgFrame):
         if self.SegMode and QApplication.keyboardModifiers() == Qt.ControlModifier:  # 画标注功能
             self.update()
         elif self.SegMode and self.SegEditMode:
-            # 标注角点拖动功能
             if self.corner_index is not None and self.LeftClick:
-                offset = self.cursor_in_widget - self.start_pos
-                if len(self.corner_index) == 2:
-                    i, j = self.corner_index
-                elif len(self.corner_index) == 3:
-                    i, j, k = self.corner_index
-
-                b_left, b_up, b_right, b_down = self.get_border_coor()
-                border = (b_left, b_up, b_right, b_down)
-                polygon = self.all_polygons[i]
-
-                # 处理widget_points
-                if polygon['shape_type'] == '环形':
-                    new_x, new_y = (polygon['widget_points'][j][k] + offset).toTuple()
-                    new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
-
-                    if not self.OutInConflict:
-                        out_c = [aa.toTuple() for aa in polygon['widget_points'][0]]
-                        if j == 0:
-                            in_c = polygon['widget_points'][1]
-                            for one in in_c:
-                                if point_in_shape(one.toTuple(), out_c, '多边形') is None:
-                                    self.LeftClick = False
-                                    self.OutInConflict = True
-                                    QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
-                                    return
-                        if j == 1:
-                            if point_in_shape((new_x, new_y), out_c, '多边形') is None:
-                                self.LeftClick = False
-                                self.OutInConflict = True
-                                QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
-                                return
-
-                    polygon['widget_points'][j][k] = QPointF(new_x, new_y)
-                else:
-                    new_x, new_y = (polygon['widget_points'][j] + offset).toTuple()
-                    new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
-                    polygon['widget_points'][j] = QPointF(new_x, new_y)
-
-                # 处理对应的img_points
-                if polygon['shape_type'] == '多边形':
-                    x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j], border=border)
-                    if x is not None:
-                        polygon['img_points'][j] = (x, y)
-                elif polygon['shape_type'] in ('矩形', '椭圆形'):
-                    if j == 0:
-                        x1, y1 = polygon['widget_points'][j].toTuple()
-                        x2, y2 = polygon['widget_points'][1].toTuple()
-                    elif j == 1:
-                        x2, y2 = polygon['widget_points'][j].toTuple()
-                        x1, y1 = polygon['widget_points'][0].toTuple()
-
-                    polygon['widget_points'][0] = QPointF(x1, y1)
-                    polygon['widget_points'][1] = QPointF(x2, y2)
-
-                    for k in range(2):
-                        x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k], border=border)
-                        if x is not None:
-                            polygon['img_points'][k] = (x, y)
-                elif polygon['shape_type'] == '环形':
-                    x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k], border=border)
-                    if x is not None:
-                        polygon['img_points'][j][k] = (x, y)
-
-                self.start_pos = self.cursor_in_widget
-                self.update()
-            # 标注移动功能
+                self.corner_point_move()
             else:
                 polygon = self.get_editing_polygon()
                 if polygon is not None:
@@ -383,16 +304,8 @@ class ImgShow(BaseImgFrame):
                 else:
                     self.polygon_editing_i = None
                     self.move_pix_img()
-
         elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            self.ann_point_cur = self.cursor_in_widget - self.img_tl_point  # 绘图的坐标系应为图片坐标系
-            self.painter.begin(self.scaled_img)
-            self.painter.setPen(QPen(self.ann_pen_color, self.ann_pen_size))
-            self.painter.drawLine(self.ann_point_last, self.ann_point_cur)
-            self.painter.end()
-            self.update()
-            self.ann_point_last = self.ann_point_cur
-            self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本
+            self.ann_draw()
         else:
             self.move_pix_img()
 
@@ -402,23 +315,7 @@ class ImgShow(BaseImgFrame):
 
         if self.SegMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
             if self.ShapeDone:
-                if self.shape_type == '环形':
-                    self.widget_points_huan.append(self.widget_points.copy())
-                    self.img_points_huan.append(self.img_points.copy())
-                    if len(self.widget_points_huan) < 2:
-                        self.clear_widget_img_points()
-                        self.update()
-                    else:
-                        out_c = [aa.toTuple() for aa in self.widget_points_huan[0]]
-                        for one in self.widget_points_huan[1]:
-                            if point_in_shape(one.toTuple(), out_c, '多边形') is None:
-                                QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
-                                self.widget_points_huan.pop(1)
-                                return
-
-                        signal_open_label_window.send(True)
-                else:
-                    signal_open_label_window.send(True)
+                self.shape_done_open_label_window()
             else:
                 self.cursor_in_widget = e.position()
                 self.add_widget_img_pair(self.cursor_in_widget)
@@ -453,7 +350,7 @@ class ImgShow(BaseImgFrame):
 
                 if b_left <= point_br.x() <= b_right and b_up <= point_br.y() <= b_down:
                     if len(self.widget_points):
-                        self.add_widget_img_pair(point_br)
+                        self.add_widget_img_pair(point_br, plus_one=True)  # 标注小目标时，这两个形状，右下角坐标+1会更准确
                         signal_open_label_window.send(True)
                 else:
                     self.clear_widget_img_points()
@@ -537,11 +434,41 @@ class ImgShow(BaseImgFrame):
 
         self.update()
 
-    def add_widget_img_pair(self, qpointf):
+    def add_widget_img_pair(self, qpointf, plus_one=False):
         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(qpointf)
         if img_pixel_x is not None:
             self.widget_points.append(qpointf)
+            if plus_one:
+                img_pixel_x += 1
+                img_pixel_y += 1
             self.img_points.append([img_pixel_x, img_pixel_y])
+
+    def ann_add_text(self, ori_position):  # 注释模式添加文字功能
+        input_dlg = QInputDialog()
+        input_dlg.setWindowTitle('文字注释')
+        input_dlg.resize(400, 100)
+        input_dlg.setLabelText('请输入注释：')
+        is_ok = input_dlg.exec()
+
+        self.painter.begin(self.scaled_img)
+        self.painter.setPen(self.ann_font_color)
+        self.painter.setFont(QFont('Decorative', self.ann_font_size))
+        if is_ok:
+            pos = (ori_position - self.img_tl_point).toPoint()
+            self.painter.drawText(pos, input_dlg.textValue())
+        self.painter.end()
+        self.update()
+        self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本用于伸缩功能
+
+    def ann_draw(self):  # 注释模式涂鸦功能
+        self.ann_point_cur = self.cursor_in_widget - self.img_tl_point  # 绘图的坐标系应为图片坐标系
+        self.painter.begin(self.scaled_img)
+        self.painter.setPen(QPen(self.ann_pen_color, self.ann_pen_size))
+        self.painter.drawLine(self.ann_point_last, self.ann_point_cur)
+        self.painter.end()
+        self.update()
+        self.ann_point_last = self.ann_point_cur
+        self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本
 
     def collection_ui_ok(self, text):
         def compute_new_points(points, add_offset=QPointF(0, 0)):
@@ -596,21 +523,75 @@ class ImgShow(BaseImgFrame):
 
         self.collection_ui.ui.show()
 
-    def compute_shape_attr(self):
-        img_size = self.img.size().toTuple()
-        zero_img = np.zeros(img_size, dtype='uint8')
+    def corner_point_move(self):  # 标注角点的拖动功能
+        offset = self.cursor_in_widget - self.start_pos
+        if len(self.corner_index) == 2:
+            i, j = self.corner_index
+        elif len(self.corner_index) == 3:
+            i, j, k = self.corner_index
 
-        if self.shape_type == '环形':
-            contours = [np.array(self.img_points_huan[0]), np.array(self.img_points_huan[1])]
-            cv2.drawContours(zero_img, contours, -1, 1, -1)
+        b_left, b_up, b_right, b_down = self.get_border_coor()
+        border = (b_left, b_up, b_right, b_down)
+        polygon = self.all_polygons[i]
+
+        # 处理widget_points
+        if polygon['shape_type'] == '环形':
+            new_x, new_y = (polygon['widget_points'][j][k] + offset).toTuple()
+            new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
+
+            if not self.OutInConflict:
+                out_c = [aa.toTuple() for aa in polygon['widget_points'][0]]
+                if j == 0:
+                    in_c = polygon['widget_points'][1]
+                    for one in in_c:
+                        if point_in_shape(one.toTuple(), out_c, '多边形') is None:
+                            self.LeftClick = False
+                            self.OutInConflict = True
+                            QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                            return
+                if j == 1:
+                    if point_in_shape((new_x, new_y), out_c, '多边形') is None:
+                        self.LeftClick = False
+                        self.OutInConflict = True
+                        QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                        return
+
+            polygon['widget_points'][j][k] = QPointF(new_x, new_y)
         else:
-            cv2.drawContours(zero_img, [np.array(self.img_points)], -1, 1, -1)
+            new_x, new_y = (polygon['widget_points'][j] + offset).toTuple()
+            new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
+            polygon['widget_points'][j] = QPointF(new_x, new_y)
 
-        area = zero_img.sum()
-        # todo:  qpixmap 转 array
-        defect_img = 1
+        # 处理对应的img_points
+        if polygon['shape_type'] == '多边形':
+            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j], border=border)
+            if x is not None:
+                polygon['img_points'][j] = (x, y)
+        elif polygon['shape_type'] in ('矩形', '椭圆形'):
+            if j == 0:
+                x1, y1 = polygon['widget_points'][j].toTuple()
+                x2, y2 = polygon['widget_points'][1].toTuple()
+            elif j == 1:
+                x2, y2 = polygon['widget_points'][j].toTuple()
+                x1, y1 = polygon['widget_points'][0].toTuple()
 
-        print(img_size)
+            polygon['widget_points'][0] = QPointF(x1, y1)
+            polygon['widget_points'][1] = QPointF(x2, y2)
+
+            for k in range(2):
+                x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k], border=border)
+                if k == 1:
+                    x += 1
+                    y += 1
+                if x is not None:
+                    polygon['img_points'][k] = (x, y)
+        elif polygon['shape_type'] == '环形':
+            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k], border=border)
+            if x is not None:
+                polygon['img_points'][j][k] = (x, y)
+
+        self.start_pos = self.cursor_in_widget
+        self.update()
 
     def cursor_close_to_corner(self):
         self.corner_index = None
@@ -838,7 +819,7 @@ class ImgShow(BaseImgFrame):
             self.shape_scale_move(old_img_tl)
         self.update()
 
-    def move_polygons(self, key_left=False, key_right=False, key_up=False, key_down=False):
+    def move_polygons(self, key_left=False, key_right=False, key_up=False, key_down=False):  # 标注整体移动功能
         offset = None
         img_w, img_h = self.img.width(), self.img.height()
 
@@ -878,7 +859,7 @@ class ImgShow(BaseImgFrame):
                 widget_points = editing_polygon['widget_points']
                 editing_polygon['img_points'], editing_polygon['widget_points'] = [], []
 
-                for one_point in widget_points:
+                for i, one_point in enumerate(widget_points):
                     one_point += offset
                     # 防止坐标越界
                     in_border_x = min(max(b_left, one_point.x()), b_right)
@@ -887,6 +868,10 @@ class ImgShow(BaseImgFrame):
                     editing_polygon['widget_points'].append(one_point)
 
                     img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point, border=border)
+
+                    if i == 1 and self.shape_type in ('矩形', '椭圆形'):
+                        img_pixel_x += 1
+                        img_pixel_y += 1
 
                     if img_pixel_x is not None:
                         editing_polygon['img_points'].append([img_pixel_x, img_pixel_y])
@@ -901,8 +886,6 @@ class ImgShow(BaseImgFrame):
         signal_move2new_folder.send(True)
 
     def one_polygon_done(self, qcolor, category):
-        # self.compute_shape_attr()
-
         if self.shape_type == '环形':
             self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': self.shape_type,
                                       'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
@@ -918,9 +901,6 @@ class ImgShow(BaseImgFrame):
         if len(self.widget_points):
             self.widget_points.pop()
             self.img_points.pop()
-
-    def set_angle(self, angle):
-        self.angle = angle
 
     def set_mode(self, cls=False, m_cls=False, det=False, seg=False, seg_edit=False, ann=False):
         self.ClsMode, self.MClsMode, self.DetMode, self.SegMode, self.SegEditMode, self.AnnMode = \
@@ -943,6 +923,25 @@ class ImgShow(BaseImgFrame):
 
         if not ann:
             self.clear_scaled_img()
+
+    def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
+        if self.shape_type == '环形':
+            self.widget_points_huan.append(self.widget_points.copy())
+            self.img_points_huan.append(self.img_points.copy())
+            if len(self.widget_points_huan) < 2:
+                self.clear_widget_img_points()
+                self.update()
+            else:
+                out_c = [aa.toTuple() for aa in self.widget_points_huan[0]]
+                for one in self.widget_points_huan[1]:
+                    if point_in_shape(one.toTuple(), out_c, '多边形') is None:
+                        QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                        self.widget_points_huan.pop(1)
+                        return
+
+                signal_open_label_window.send(True)
+        else:
+            signal_open_label_window.send(True)
 
     def shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):
         for one in self.all_polygons:

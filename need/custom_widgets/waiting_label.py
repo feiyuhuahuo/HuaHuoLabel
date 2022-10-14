@@ -19,7 +19,7 @@ class WaitingLabel(QLabel):
         self.timer.timeout.connect(self.set_text)
         self.timer.start(1000)
 
-        self.setStyleSheet("background-color: rgb(240, 240, 240); border-color: rgb(120, 120, 120); "
+        self.setStyleSheet("background-color: rgb(240, 240, 240); border-color: rgb(80, 80, 80); "
                            "border-width: 2px; border-style: solid;")
 
     def set_text(self):
