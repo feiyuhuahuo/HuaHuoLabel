@@ -1,11 +1,11 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import pdb
+import copy
 import cv2
 import numpy as np
 from collections import OrderedDict
-from PySide6.QtGui import QUndoCommand
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QUndoCommand, QColor, QImage
 from math import sqrt, pow
 
 ClassStatDict = OrderedDict()  # 用于记录分类和分割类别的数量
@@ -53,71 +53,6 @@ class AnnUndo(QUndoCommand):
         self.board.scaled_img = self.undo_img
         self.board.scaled_img_painted = self.board.scaled_img.copy()
         self.board.update()
-
-
-def point_in_polygon(px, py, poly):
-    flag = False
-    i = 0
-    l = len(poly)
-    j = l - 1
-
-    while i < l:
-        sx = poly[i][0]
-        sy = poly[i][1]
-        tx = poly[j][0]
-        ty = poly[j][1]
-
-        if (sx == px and sy == py) or (tx == px and ty == py):  # 点与多边形顶点重合
-            return px, py
-        # 判断线段两端点是否在射线两侧
-        if (sy < py <= ty) or (sy >= py > ty):
-            x = sx + (py - sy) * (tx - sx) / (ty - sy)  # 线段上与射线 Y 坐标相同的点的 X 坐标
-            if x == px:  # 点在多边形的边上
-                return px, py
-            if x > px:  # 射线穿过多边形的边界
-                flag = not flag
-        j = i
-        i += 1
-
-    # 射线穿过多边形边界的次数为奇数时点在多边形内
-    return poly if flag else None
-
-
-def point_in_shape(p, poly, shape_type='多边形'):  # 判断点是否在多边形内部
-    px, py = p[0], p[1]
-    if shape_type == '多边形':
-        return point_in_polygon(px, py, poly)
-    elif shape_type == '矩形':
-        if poly[0][0] <= px <= poly[1][0] and poly[0][1] <= py <= poly[1][1]:
-            return poly
-        return None
-    elif shape_type == '椭圆形':
-        cx, cy = (poly[0][0] + poly[1][0]) / 2, (poly[0][1] + poly[1][1]) / 2
-        px, py = px - cx, cy - py
-        a, b = (poly[1][0] - poly[0][0]) / 2, (poly[1][1] - poly[0][1]) / 2
-
-        if px ** 2 / a ** 2 + py ** 2 / b ** 2 <= 1:
-            return poly
-        return None
-    elif shape_type == '环形':
-        if point_in_polygon(px, py, poly[0]) is not None and point_in_polygon(px, py, poly[1]) is None:
-            return poly
-        return None
-
-
-def point_to_line_Distance(point_a, point_b, point_c):
-    """
-    计算点a到点b c所在直线的距离
-    """
-    # 首先计算b c 所在直线的斜率和截距
-    if point_b[0] == point_c[0]:
-        return 9999999
-    slope = (point_b[1] - point_c[1]) / (point_b[0] - point_c[0])
-    intercept = point_b[1] - slope * point_b[0]
-
-    # 计算点a到b c所在直线的距离
-    distance = abs(slope * point_a[0] - point_a[1] + intercept) / sqrt(1 + pow(slope, 2))
-    return distance
 
 
 def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
@@ -229,6 +164,9 @@ def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
             mask2 = np.asfortranarray(mask2, dtype='uint8')
             mask2 = ~(mask2.astype('bool'))
             mask = mask1 * mask2
+        elif shape['shape_type'] == "填充":
+            for point in shape['img_points']:
+                mask[point[1], point[0]] = 1
 
         mask = np.asfortranarray(mask, dtype='uint8')[:, :, None] * class_value
         all_masks.append(mask)
@@ -244,3 +182,110 @@ def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
         seg_mask += mask
 
     return seg_mask
+
+
+def path_to(path, img2json=False, img2png=False, img2txt=False):
+    if img2json:
+        return path.replace('分割/原图', '分割/标注')[:-3] + 'json'
+    elif img2png:
+        return path.replace('分割/原图', '分割/标注')[:-3] + 'png'
+    elif img2txt:
+        return path.replace('原图', '标注')[:-3] + 'txt'
+
+
+def point_in_polygon(px, py, poly):
+    flag = False
+    i = 0
+    l = len(poly)
+    j = l - 1
+
+    while i < l:
+        sx = poly[i][0]
+        sy = poly[i][1]
+        tx = poly[j][0]
+        ty = poly[j][1]
+
+        if (sx == px and sy == py) or (tx == px and ty == py):  # 点与多边形顶点重合
+            return px, py
+        # 判断线段两端点是否在射线两侧
+        if (sy < py <= ty) or (sy >= py > ty):
+            x = sx + (py - sy) * (tx - sx) / (ty - sy)  # 线段上与射线 Y 坐标相同的点的 X 坐标
+            if x == px:  # 点在多边形的边上
+                return px, py
+            if x > px:  # 射线穿过多边形的边界
+                flag = not flag
+        j = i
+        i += 1
+
+    # 射线穿过多边形边界的次数为奇数时点在多边形内
+    return poly if flag else None
+
+
+def point_in_shape(p, poly, shape_type='多边形'):  # 判断点是否在多边形内部
+    px, py = p[0], p[1]
+    if shape_type == '多边形':
+        return point_in_polygon(px, py, poly)
+    elif shape_type == '矩形':
+        if poly[0][0] <= px <= poly[1][0] and poly[0][1] <= py <= poly[1][1]:
+            return poly
+        return None
+    elif shape_type == '椭圆形':
+        cx, cy = (poly[0][0] + poly[1][0]) / 2, (poly[0][1] + poly[1][1]) / 2
+        px, py = px - cx, cy - py
+        a, b = (poly[1][0] - poly[0][0]) / 2, (poly[1][1] - poly[0][1]) / 2
+
+        if px ** 2 / a ** 2 + py ** 2 / b ** 2 <= 1:
+            return poly
+        return None
+    elif shape_type == '环形':
+        if point_in_polygon(px, py, poly[0]) is not None and point_in_polygon(px, py, poly[1]) is None:
+            return poly
+        return None
+
+
+def point_to_line_Distance(point_a, point_b, point_c):  # 计算点a到点b c所在直线的距离
+    # 首先计算b c 所在直线的斜率和截距
+    if point_b[0] == point_c[0]:
+        return 999999
+    slope = (point_b[1] - point_c[1]) / (point_b[0] - point_c[0])
+    intercept = point_b[1] - slope * point_b[0]
+
+    # 计算点a到b c所在直线的距离
+    distance = abs(slope * point_a[0] - point_a[1] + intercept) / sqrt(1 + pow(slope, 2))
+    return distance
+
+
+def qimage_to_array(img, share_memory=False):
+    """ Creates a numpy array from a QImage.
+
+        If share_memory is True, the numpy array and the QImage is shared.
+        Be careful: make sure the numpy array is destroyed before the image,
+        otherwise the array will point to unreserved memory!!
+    """
+    assert isinstance(img, QImage), "img must be a QtGui.QImage object"
+    assert img.format() == QImage.Format.Format_RGB32, \
+        "img format must be QImage.Format.Format_RGB32, got: {}".format(img.format())
+
+    img_size = img.size()
+    buffer = img.constBits()
+
+    # Sanity check
+    n_bits_buffer = len(buffer) * 8
+    n_bits_image = img_size.width() * img_size.height() * img.depth()
+    assert n_bits_buffer == n_bits_image, \
+        "size mismatch: {} != {}".format(n_bits_buffer, n_bits_image)
+
+    assert img.depth() == 32, "unexpected image depth: {}".format(img.depth())
+
+    # Note the different width height parameter order!
+    arr = np.ndarray(shape=(img_size.height(), img_size.width(), img.depth() // 8),
+                     buffer=buffer, dtype=np.uint8)
+
+    if share_memory:
+        return arr
+    else:
+        return copy.deepcopy(arr)
+
+
+def uniform_path(path):
+    return path.replace('\\', '/').replace('\\\\', '/')

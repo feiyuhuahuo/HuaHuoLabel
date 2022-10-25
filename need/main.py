@@ -1,4 +1,5 @@
 import glob
+import pdb
 import shutil
 import cv2
 import numpy as np
@@ -17,17 +18,17 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QPixmap, QImage, QColor, QFontMetrics, QIcon, QAction
 from need.custom_widgets import *
 from need.custom_widgets.marquee_label import signal_show_plain_img, signal_show_label_img
-from need.custom_widgets.img_show_widget import shape_type, signal_xy_color2ui, signal_selected_shape, \
-    signal_del_shape, selected_label_item, signal_open_label_window, signal_one_collection_done, \
+from need.custom_widgets.img_show_widget import signal_shape_type, signal_xy_color2ui, signal_selected_shape, \
+    signal_del_shape, signal_selected_label_item, signal_open_label_window, signal_one_collection_done, \
     BaseImgFrame, signal_move2new_folder
 from need.custom_signals import StrSignal
 from need.custom_threads.seg_auto_inference import signal_progress_text, signal_progress_value, signal_progress_done, \
     RunInference
 from need.custom_threads.seg_change_one_class_json import ChangeOneClassJsons, signal_cocj_done
 from need.custom_threads.seg_delete_one_class_json import DeleteOneClassJsons, signal_docj_done
-from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask
+from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask, path_to, uniform_path, qimage_to_array
 
-signal_select_ui_ok_from_label_adding = StrSignal()
+signal_select_ui_ok_button = StrSignal()
 
 
 # noinspection PyUnresolvedReferences
@@ -59,7 +60,7 @@ class ImgCls(QMainWindow):
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
         self.main_ui = loader.load('main.ui')  # 主界面
-        self.label_ui = SelectWindow(parent=self, title='类别', button_signal=signal_select_ui_ok_from_label_adding).ui
+        self.label_ui = SelectWindow(title='类别', button_signal=signal_select_ui_ok_button)
 
         self.setCentralWidget(self.main_ui)
         self.setFocusPolicy(Qt.StrongFocus)
@@ -149,10 +150,11 @@ class ImgCls(QMainWindow):
 
     def connect_signals(self):
         self.main_ui.pushButton.clicked.connect(self.open_dir)
-        self.main_ui.pushButton_10.clicked.connect(self.show_class_stastics)
+        self.main_ui.pushButton_10.clicked.connect(self.show_class_statistic)
         self.main_ui.pushButton_auto_infer.clicked.connect(self.auto_inference)
         self.main_ui.pushButton_12.clicked.connect(self.change_pen_color)
         self.main_ui.pushButton_35.clicked.connect(self.undo_painting)
+        self.main_ui.pushButton_36.clicked.connect(self.save_ann_img)
         self.main_ui.pushButton_37.clicked.connect(self.change_font_color)
         self.main_ui.pushButton_39.clicked.connect(self.change_pen_color)
         self.main_ui.pushButton_40.clicked.connect(self.clear_painted_img)
@@ -196,7 +198,7 @@ class ImgCls(QMainWindow):
         signal_progress_text.signal.connect(self.update_progress_auto_infer_text)
         signal_progress_value.signal.connect(self.update_progress_auto_infer_value)
         signal_selected_shape.signal.connect(self.set_shape_selected)
-        signal_select_ui_ok_from_label_adding.signal.connect(self.save_one_seg_label)
+        signal_select_ui_ok_button.signal.connect(self.save_one_seg_label)
         signal_show_label_img.signal.connect(self.marquee_show)
         signal_show_plain_img.signal.connect(self.marquee_show)
         signal_xy_color2ui.signal.connect(self.show_xy_color)
@@ -239,7 +241,7 @@ class ImgCls(QMainWindow):
                 self.scan_img(next=True)
 
             if hasattr(self, 'marquee_window_label'):
-                png_path = self.path_to(self.imgs[self.cur_i], img2png=True)
+                png_path = path_to(self.imgs[self.cur_i], img2png=True)
                 if os.path.exists(png_path):
                     qimg_png = self.get_qimg_png(png_path)
                     self.marquee_window_label.paint_img(qimg_png)
@@ -345,7 +347,7 @@ class ImgCls(QMainWindow):
                 os.makedirs(work_dir, exist_ok=True)
 
                 self.cur_i = min(max(0, self.cur_i), self.img_num - 1)
-                img_path = self.uniform_path(self.imgs[self.cur_i])
+                img_path = uniform_path(self.imgs[self.cur_i])
                 dst_path = f'{work_dir}/{img_path.split("/")[-1]}'
 
                 if not self.del_existed_file(img_path, dst_path):
@@ -401,11 +403,11 @@ class ImgCls(QMainWindow):
                 img_name = path_split[-1]
 
                 if op == 'cut':
-                    self.file_move(self.uniform_path(osp.join(cur_path, img_name)), ori_path)
+                    self.file_move(uniform_path(osp.join(cur_path, img_name)), ori_path)
                 elif op == 'copy':
                     os.remove(osp.join(cur_path, img_name))
                 elif op == 're_cls':
-                    self.file_move(self.uniform_path(osp.join(cur_path, img_name)), ori_path)
+                    self.file_move(uniform_path(osp.join(cur_path, img_name)), ori_path)
                     old_class = path_split[-2]
                     ClassStatDict[old_class] += 1
 
@@ -509,7 +511,7 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.set_angle(self.main_ui.spinBox_angle.value())
 
     def change_shape_type(self):
-        shape_type.send(self.main_ui.comboBox_2.currentText())
+        signal_shape_type.send(self.main_ui.comboBox_2.currentText())
 
     def choose_new_color(self):
         existed_color = []
@@ -545,7 +547,7 @@ class ImgCls(QMainWindow):
             os.makedirs(val_path, exist_ok=True)
             os.makedirs(f'{self.img_root_path}/labels/val', exist_ok=True)
 
-            val_label = self.path_to(self.imgs[self.cur_i], img2png=True)
+            val_label = path_to(self.imgs[self.cur_i], img2png=True)
             if '图片已删除' not in val_label:
                 if osp.exists(val_label):
                     shutil.copy(self.imgs[self.cur_i], val_path)
@@ -568,7 +570,7 @@ class ImgCls(QMainWindow):
         for one in self.imgs:
             name = one.split(os_sep)[-1]
             if ('图片已删除' not in name) and (name not in val_img_list):
-                train_label = self.path_to(one, img2png=True)
+                train_label = path_to(one, img2png=True)
                 if osp.exists(train_label):
                     shutil.copy(one, train_path)
                     shutil.copy(train_label, f'{self.img_root_path}/labels/train')
@@ -599,7 +601,7 @@ class ImgCls(QMainWindow):
             del_path = f'{self.img_root_path}/deleted'
         os.makedirs(del_path, exist_ok=True)
 
-        img_path = self.uniform_path(self.imgs[self.cur_i])
+        img_path = uniform_path(self.imgs[self.cur_i])
         if self.WorkMode == 'cls':
             self.file_move(img_path, del_path)
             old_class = self.has_classified(self.imgs[self.cur_i])
@@ -611,7 +613,7 @@ class ImgCls(QMainWindow):
             os.makedirs(path_m_cls_img, exist_ok=True)
             os.makedirs(path_m_cls_txt, exist_ok=True)
             self.file_move(img_path, path_m_cls_img)
-            txt_path = self.path_to(img_path, img2txt=True)
+            txt_path = path_to(img_path, img2txt=True)
             if os.path.exists(txt_path):
                 self.file_move(txt_path, path_m_cls_txt)
         elif self.WorkMode == 'seg':
@@ -620,7 +622,7 @@ class ImgCls(QMainWindow):
             os.makedirs(path_seg_img, exist_ok=True)
             os.makedirs(path_seg_ann, exist_ok=True)
             self.file_move(img_path, path_seg_img)
-            json_path = self.path_to(img_path, img2json=True)
+            json_path = path_to(img_path, img2json=True)
             png_path = json_path[:-5] + '.png'
             if os.path.exists(json_path):
                 self.file_move(json_path, path_seg_ann)
@@ -777,7 +779,7 @@ class ImgCls(QMainWindow):
         return True
 
     def has_classified(self, path):  # 查看单标签分类模式下，图片是否已分类
-        path = self.uniform_path(path)
+        path = uniform_path(path)
         path_split = path.split('/')
         if path_split[-2] in ClassStatDict.keys():
             return path_split[-2]  # old class
@@ -854,7 +856,7 @@ class ImgCls(QMainWindow):
         txt = self.file_select_dlg.getOpenFileName(self.main_ui, '选择txt', filter='txt (*.txt)')[0]
         if txt:
             self.main_ui.listWidget.clear()
-            self.label_ui.listWidget.clear()
+            self.label_ui.ui.listWidget.clear()
             ClassStatDict.clear()
 
             shuffle(ColorNames)
@@ -869,7 +871,7 @@ class ImgCls(QMainWindow):
                         print(one, aa)
                         ClassStatDict.setdefault(one, 0)
                         self.main_ui.listWidget.addItem(item.clone())
-                        self.label_ui.listWidget.addItem(item)
+                        self.label_ui.ui.listWidget.addItem(item)
 
     def load_cls_classes(self):
         path = self.file_select_dlg.getOpenFileName(self.main_ui, '选择任务', filter='txt (*.txt)')[0]
@@ -919,7 +921,7 @@ class ImgCls(QMainWindow):
         if '图片已删除' in self.imgs[self.cur_i]:
             self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat('undo')
         else:
-            stat = self.marquee_stat(self.uniform_path(self.imgs[self.cur_i]))
+            stat = self.marquee_stat(uniform_path(self.imgs[self.cur_i]))
             self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat(stat)
 
         if left:
@@ -948,7 +950,8 @@ class ImgCls(QMainWindow):
         if self.WorkMode in ('det', 'seg'):
             if show_png:
                 if self.WorkMode == 'seg':
-                    png_path = self.path_to(img_path, img2png=True)
+                    png_path = path_to(img_path, img2png=True)
+
                     if os.path.exists(png_path):
                         qimg_png = self.get_qimg_png(png_path)
                         self.marquee_window_label = BaseImgFrame()
@@ -970,13 +973,13 @@ class ImgCls(QMainWindow):
         if self.WorkMode == 'cls':
             stat = 'done' if path.split('/')[-2] in ClassStatDict.keys() else 'undo'
         elif self.WorkMode == 'm_cls':
-            txt = self.path_to(path, img2txt=True)
+            txt = path_to(path, img2txt=True)
             if osp.exists(txt):
                 with open(txt, 'r') as f:
                     if f.readlines():
                         stat = 'done'
         elif self.WorkMode == 'seg':
-            json_path = self.path_to(path, img2json=True)
+            json_path = path_to(path, img2json=True)
             if osp.exists(json_path):
                 with open(json_path, 'r') as f:
                     content = json.load(f)
@@ -1022,7 +1025,7 @@ class ImgCls(QMainWindow):
     def m_cls_to_button(self):  # 若已存在txt标注，直接显示在按钮上
         self.button_clear()
 
-        txt_name = self.uniform_path(self.imgs[self.cur_i]).split('/')[-1][:-3] + 'txt'
+        txt_name = uniform_path(self.imgs[self.cur_i]).split('/')[-1][:-3] + 'txt'
         txt_path = f'{self.img_root_path}/多标签分类/标注/{txt_name}'
 
         if os.path.isfile(txt_path):
@@ -1059,7 +1062,7 @@ class ImgCls(QMainWindow):
             color = self.choose_new_color()
             item = QListWidgetItem(name)
             item.setForeground(color)
-            self.label_ui.listWidget.addItem(item.clone())
+            self.label_ui.ui.listWidget.addItem(item.clone())
             self.main_ui.listWidget.addItem(item.clone())
             ClassStatDict.setdefault(name, 0)
 
@@ -1148,17 +1151,8 @@ class ImgCls(QMainWindow):
         qimg = QImage(self.cv2_img_changed.astype('uint8').data, width, height, width * depth, QImage.Format_RGB888)
         self.main_ui.img_widget.paint_img(qimg, re_center=False)
 
-    @staticmethod
-    def path_to(path, img2json=False, img2png=False, img2txt=False):
-        if img2json:
-            return path.replace('分割/原图', '分割/标注')[:-3] + 'json'
-        elif img2png:
-            return path.replace('分割/原图', '分割/标注')[:-3] + 'png'
-        elif img2txt:
-            return path.replace('原图', '标注')[:-3] + 'txt'
-
     def polygons_to_img(self):
-        json_path = self.path_to(self.imgs[self.cur_i], img2json=True)
+        json_path = path_to(self.imgs[self.cur_i], img2json=True)
         if os.path.exists(json_path):
             with open(json_path, 'r') as f:
                 content = json.load(f)
@@ -1176,14 +1170,13 @@ class ImgCls(QMainWindow):
                 self.main_ui.listWidget_2.addItem(item.clone())
                 if cate not in ClassStatDict.keys():
                     self.main_ui.listWidget.addItem(item.clone())
-                    self.label_ui.listWidget.addItem(item)
+                    self.label_ui.ui.listWidget.addItem(item)
 
                 if self.is_first_marquee():
                     ClassStatDict.setdefault(cate, 0)
                     ClassStatDict[cate] += 1
 
             self.main_ui.img_widget.json_to_polygons(json_path, json_data=(polygons, img_h, img_w))
-            self.main_ui.img_widget.update()
 
     def pop_marquee(self):
         item_num = self.marquees_layout.count()
@@ -1213,8 +1206,17 @@ class ImgCls(QMainWindow):
         self.main_ui.listWidget.clear()
         self.main_ui.listWidget_2.clear()
         ClassStatDict.clear()
-        self.label_ui.listWidget.clear()
+        self.label_ui.ui.listWidget.clear()
         self.main_ui.img_widget.collection_ui.ui.listWidget.clear()
+
+    def save_ann_img(self):
+        os.makedirs(f'{self.img_root_path}/注释图片', exist_ok=True)
+        img = self.main_ui.img_widget.get_ann_img()
+        img_array = qimage_to_array(img)
+        img_name = uniform_path(self.imgs[self.cur_i]).split('/')[-1][:-3]
+        save_path = f'{self.img_root_path}/注释图片/{img_name}.jpg'
+        cv2.imencode('.jpg', img_array.astype('uint8'))[1].tofile(save_path)
+        QMessageBox.information(self.main_ui, '已保存', f'图片保存于：{save_path}。')
 
     def save_cls_classes(self):
         content, is_ok = self.input_dlg.getText(self.main_ui, '请输入名称', '请输入名称', QLineEdit.Normal)
@@ -1263,7 +1265,9 @@ class ImgCls(QMainWindow):
 
             cv2.imencode(suffix, cv2_img.astype('uint8'))[1].tofile(one[:-4] + suffix)
 
-        QMessageBox.information(self.main_ui, '保存完成', f'保存完成，共{len(imgs_path)}张图片。')
+        re = QMessageBox.question(self.main_ui, '覆盖图片', '当前路径下的所有图片将被覆盖，继续吗？')
+        if re == QMessageBox.Yes:
+            QMessageBox.information(self.main_ui, '保存完成', f'保存完成，共{len(imgs_path)}张图片。')
 
     def save_one_seg_label(self, text):
         if self.LabelUiCallByMo:
@@ -1277,7 +1281,7 @@ class ImgCls(QMainWindow):
                 color = self.choose_new_color()
                 item = QListWidgetItem(text)
                 item.setForeground(color)
-                self.label_ui.listWidget.addItem(item)
+                self.label_ui.ui.listWidget.addItem(item)
                 self.main_ui.listWidget.addItem(item.clone())
                 self.main_ui.listWidget_2.addItem(item.clone())
             else:
@@ -1318,8 +1322,6 @@ class ImgCls(QMainWindow):
                                  f'当前仅有{len(seg_class_names)}类，但标注最大值为{seg_mask.max()}。')
             return
 
-        if 'png' in img_name:
-            img_name = 'seg_' + img_name
         cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(f'{label_path}/{img_name[:-4]}.png')
 
     def scan_img(self, last=False, next=False):
@@ -1367,7 +1369,7 @@ class ImgCls(QMainWindow):
                     self.polygons_to_img()
 
     def select_shape(self):
-        selected_label_item.send(self.main_ui.listWidget_2.currentRow())
+        signal_selected_label_item.send(self.main_ui.listWidget_2.currentRow())
 
     def set_seg_edit_mode(self):
         self.main_ui.img_widget.set_mode(seg=True, seg_edit=self.main_ui.checkBox_3.isChecked())
@@ -1461,8 +1463,32 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.clear_all_polygons()
         self.update()
 
-    def show_class_stastics(self):
-        self.sub_window_stat = ClassStat()
+    def show_class_statistic(self):
+        add_info = []
+        num = 0
+        if self.WorkMode == 'cls':
+            files = glob.glob(f'{self.img_root_path}/单标签分类/*')
+            for one in files:
+                if os.path.isdir(one):
+                    num += len(glob.glob(f'{one}/*'))
+            add_info += [f'已分类图片数量：{num}', f'总图片数量：{self.img_num}']
+
+        elif self.WorkMode == 'm_cls':
+            files = glob.glob(f'{self.img_root_path}/多标签分类/标注/*.txt')
+            for one in files:
+                if os.stat(one).st_size > 0:
+                    num += 1
+            add_info += [f'已分类图片数量：{num}', f'总图片数量：{self.img_num}']
+        elif self.WorkMode == 'det':
+            pass
+        elif self.WorkMode == 'seg':
+            files = glob.glob(f'{self.img_root_path}/分割/标注/*.json')
+            for one in files:
+                if os.stat(one).st_size > 200:
+                    num += 1
+            add_info += [f'带标注图片数量：{num}', f'总图片数量：{self.img_num}']
+
+        self.sub_window_stat = ClassStat(add_info)
         self.sub_window_stat.show()
         self.sub_window_stat.resize(self.sub_window_stat.class_list.size())
 
@@ -1507,7 +1533,7 @@ class ImgCls(QMainWindow):
             img_w, img_h = self.main_ui.img_widget.img.size().width(), self.main_ui.img_widget.img.size().height()
             self.bottom_img_text = f'{path}，H: {img_h}, W: {img_w}, {self.cur_i + 1}/{self.img_num}'
             self.main_ui.label_5.setTextFormat(Qt.PlainText)
-            self.main_ui.label_5.setText(self.uniform_path(self.bottom_img_text))
+            self.main_ui.label_5.setText(uniform_path(self.bottom_img_text))
 
     def show_label_ui(self):
         self.label_ui.show()
@@ -1589,7 +1615,3 @@ class ImgCls(QMainWindow):
                 shutil.copy(f'{self.img_root_path}/分割/标注/{name}', v_path)
 
             QMessageBox.information(self.main_ui, '已完成', f'已完成')
-
-    @staticmethod
-    def uniform_path(path):
-        return path.replace('\\', '/').replace('\\\\', '/')

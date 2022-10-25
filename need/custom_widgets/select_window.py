@@ -1,20 +1,33 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
+from need.custom_signals import *
+
+signal_select_window_close = BoolSignal()
 
 
 class SelectWindow(QWidget):
-    # parent=None必须要实现，否则由其它界面呼起时，好像只能看，其它功能会失灵
-    def __init__(self, parent=None, title='窗口', button_signal=None):
-        super().__init__(parent)
+    def __init__(self, title='窗口', button_signal=None):
+        super().__init__()
         loader = QUiLoader()
         self.ui = loader.load('label_window.ui')
-        self.ui.setWindowTitle(title)
-
+        layout = QVBoxLayout()
+        layout.addWidget(self.ui)
+        self.setLayout(layout)
+        self.resize(150, 320)
+        self.setWindowTitle(title)
+        self.setWindowIcon(QIcon('images/icon.ico'))
+        self.setWindowModality(Qt.ApplicationModal)
         self.button_signal = button_signal
         self.ui.listWidget.itemClicked.connect(self.select_seg_label)
         self.ui.pushButton.clicked.connect(self.emit_text)
+
+    def closeEvent(self, event):
+        signal_select_window_close.send(True)
+        self.close()
 
     def select_seg_label(self):
         self.ui.lineEdit.setText(self.ui.listWidget.currentItem().text())
@@ -29,5 +42,5 @@ class SelectWindow(QWidget):
 #     from PySide6.QtWidgets import QApplication
 #     app = QApplication()
 #     ui = SelectWindow(title='你好')
-#     ui.ui.show()
+#     ui.show()
 #     app.exec()

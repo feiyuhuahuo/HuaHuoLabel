@@ -169,6 +169,11 @@
                      <string>环形</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>填充</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item>
@@ -568,11 +573,45 @@ QCheckBox::indicator:unchecked {
                   <string>撤销</string>
                  </property>
                  <property name="text">
-                  <string/>
+                  <string>撤销</string>
                  </property>
                  <property name="icon">
                   <iconset>
                    <normaloff>images/undo.png</normaloff>images/undo.png</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>16</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item alignment="Qt::AlignHCenter">
+                <widget class="QPushButton" name="pushButton_36">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>75</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="toolTip">
+                  <string>撤销</string>
+                 </property>
+                 <property name="text">
+                  <string>保存</string>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normaloff>images/icon_30.png</normaloff>images/icon_30.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -634,7 +673,7 @@ QCheckBox::indicator:unchecked {
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>860</width>
+             <width>855</width>
              <height>171</height>
             </rect>
            </property>
@@ -1040,6 +1079,10 @@ QRadioButton::indicator:unchecked {
              </property>
              <property name="text">
               <string>打开目录</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>images/icon_25.png</normaloff>images/icon_25.png</iconset>
              </property>
             </widget>
            </item>
@@ -1705,18 +1748,6 @@ QRadioButton::indicator:unchecked {
            </property>
           </widget>
          </item>
-         <item row="0" column="1" alignment="Qt::AlignHCenter">
-          <widget class="QPushButton" name="pushButton_10">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>类别统计</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="4">
           <widget class="QPushButton" name="pushButton_update_tv">
            <property name="enabled">
@@ -1729,33 +1760,6 @@ QRadioButton::indicator:unchecked {
            </property>
            <property name="text">
             <string>更新训练/验证集</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QPushButton" name="pushButton_101">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>仅能撤销分类操作</string>
-           </property>
-           <property name="text">
-            <string>分类回退</string>
            </property>
           </widget>
          </item>
@@ -1787,6 +1791,10 @@ QRadioButton::indicator:unchecked {
            <property name="text">
             <string>自动推理</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>C:/Users/feiyuhuahuo/Pictures/icons/图片12.png</normaloff>C:/Users/feiyuhuahuo/Pictures/icons/图片12.png</iconset>
+           </property>
           </widget>
          </item>
          <item row="2" column="1">
@@ -1804,6 +1812,49 @@ QRadioButton::indicator:unchecked {
            </property>
            <property name="text">
             <string>对比图片</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="pushButton_10">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>类别统计</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>C:/Users/feiyuhuahuo/Pictures/icons/图片7.png</normaloff>C:/Users/feiyuhuahuo/Pictures/icons/图片7.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="pushButton_101">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>仅能撤销分类操作</string>
+           </property>
+           <property name="text">
+            <string>分类回退</string>
            </property>
           </widget>
          </item>
@@ -2132,7 +2183,7 @@ QRadioButton::indicator:unchecked {
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>images/icon_20 - 副本.png</normaloff>images/icon_20 - 副本.png</iconset>
+                 <normaloff>images/图片20.png</normaloff>images/图片20.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -2160,7 +2211,7 @@ QRadioButton::indicator:unchecked {
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>images/icon_20.png</normaloff>images/icon_20.png</iconset>
+                 <normaloff>images/图片21.png</normaloff>images/图片21.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -2348,7 +2399,7 @@ QRadioButton::indicator:unchecked {
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>images/icon_20 - 副本.png</normaloff>images/icon_20 - 副本.png</iconset>
+               <normaloff>images/图片20.png</normaloff>images/图片20.png</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -2376,7 +2427,7 @@ QRadioButton::indicator:unchecked {
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>images/icon_20.png</normaloff>images/icon_20.png</iconset>
+               <normaloff>images/图片21.png</normaloff>images/图片21.png</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -2658,7 +2709,7 @@ QRadioButton::indicator:unchecked {
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>images/icon_10 - 副本.png</normaloff>images/icon_10 - 副本.png</iconset>
+               <normaloff>images/icon_30.png</normaloff>images/icon_30.png</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -2692,7 +2743,7 @@ QRadioButton::indicator:unchecked {
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>images/icon_10 - 副本.png</normaloff>images/icon_10 - 副本.png</iconset>
+               <normaloff>images/icon_30.png</normaloff>images/icon_30.png</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -2765,7 +2816,7 @@ QRadioButton::indicator:unchecked {
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup_3"/>
  </buttongroups>
 </ui>
