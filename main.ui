@@ -340,7 +340,7 @@ QCheckBox::indicator:unchecked {
                 </widget>
                </item>
                <item alignment="Qt::AlignHCenter">
-                <widget class="QCheckBox" name="checkBox_3">
+                <widget class="QCheckBox" name="checkBox_seg_edit">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -902,7 +902,7 @@ QRadioButton::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>多标签分类</string>
+               <string>多类别分类</string>
               </property>
               <property name="checked">
                <bool>false</bool>
@@ -942,7 +942,7 @@ QRadioButton::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>单标签分类</string>
+               <string>单类别分类</string>
               </property>
               <property name="checked">
                <bool>true</bool>

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QInputDialog, QFrame, QMessageBox, QApplication, Q
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QSize
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
     QImageReader
+from PySide6 import QtCore
 from need.utils import point_in_shape, AnnUndo
 from need.custom_signals import *
 from need.custom_widgets.select_window import SelectWindow, signal_select_window_close
@@ -183,7 +184,8 @@ class BaseImgFrame(QFrame):
     def show_menu(self, ob):  # 在鼠标位置显示菜单
         ob.exec(QCursor.pos())
 
-    def widget_coor_to_img_coor(self, rel_pos, border=None):  # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
+    def widget_coor_to_img_coor(self, rel_pos: QtCore.QPointF, border=None):
+        # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
         rel_x, rel_y = rel_pos.x(), rel_pos.y()
         img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
 
@@ -316,13 +318,12 @@ class ImgShow(BaseImgFrame):
             self.update()
         elif self.SegMode and self.SegEditMode:
             if self.corner_index is not None and self.LeftClick:
-                self.corner_point_move()
+                self.corner_point_move(self.corner_index)
             else:
-                polygon = self.get_editing_polygon()
-                if polygon is not None:
+                self.polygon_editing_i = self.get_editing_polygon()
+                if self.polygon_editing_i is not None:
                     self.move_polygons()
                 else:
-                    self.polygon_editing_i = None
                     self.move_pix_img()
         elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.ann_draw()
@@ -390,7 +391,7 @@ class ImgShow(BaseImgFrame):
             self.draw_completed_polygons()
 
             if self.SegEditMode:
-                self.cursor_close_to_corner()
+                self.corner_index = self.cursor_close_to_corner()
                 self.draw_editing_polygon()
 
             if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -553,12 +554,12 @@ class ImgShow(BaseImgFrame):
 
         self.collection_ui.show()
 
-    def corner_point_move(self):  # 标注角点的拖动功能
+    def corner_point_move(self, corner_index):  # 标注角点的拖动功能
         offset = self.cursor_in_widget - self.start_pos
-        if len(self.corner_index) == 2:
-            i, j = self.corner_index
-        elif len(self.corner_index) == 3:
-            i, j, k = self.corner_index
+        if len(corner_index) == 2:
+            i, j = corner_index
+        elif len(corner_index) == 3:
+            i, j, k = corner_index
 
         b_left, b_up, b_right, b_down = self.get_border_coor()
         border = (b_left, b_up, b_right, b_down)
@@ -574,13 +575,13 @@ class ImgShow(BaseImgFrame):
                 if j == 0:
                     in_c = polygon['widget_points'][1]
                     for one in in_c:
-                        if point_in_shape(one.toTuple(), out_c, '多边形') is None:
+                        if not point_in_shape(one.toTuple(), out_c, '多边形'):
                             self.LeftClick = False
                             self.OutInConflict = True
                             QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
                             return
                 if j == 1:
-                    if point_in_shape((new_x, new_y), out_c, '多边形') is None:
+                    if not point_in_shape((new_x, new_y), out_c, '多边形'):
                         self.LeftClick = False
                         self.OutInConflict = True
                         QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
@@ -621,25 +622,28 @@ class ImgShow(BaseImgFrame):
         self.update()
 
     def cursor_close_to_corner(self):
-        self.corner_index = None
+        corner_index = None
         for i, polygon in enumerate(self.all_polygons):
             if polygon['shape_type'] == '环形':
                 for j, huan in enumerate(polygon['widget_points']):
                     for k, point in enumerate(huan):
                         if self.close_to_corner(point):
-                            self.corner_index = (i, j, k)
-                            return
+                            corner_index = (i, j, k)
+                            return corner_index
             else:
                 for j, point in enumerate(polygon['widget_points']):
                     if polygon['shape_type'] == '椭圆形':
-                        p_i = self.close_to_corner(polygon['widget_points'])
+                        p_i = self.close_to_corner(polygon['widget_points'], is_ellipse=True)
                         if type(p_i) == int:
-                            self.corner_index = (i, p_i)
-                            return
+                            corner_index = (i, p_i)
+                            return corner_index
+                    elif polygon['shape_type'] == '填充':
+                        pass
                     else:
                         if self.close_to_corner(point):
-                            self.corner_index = (i, j)
-                            return
+                            corner_index = (i, j)
+                            return corner_index
+        return corner_index
 
     def change_pen(self, seg_pen_size=None, seg_pen_color=None, ann_pen_size=None, ann_pen_color=None):
         if seg_pen_size is not None:
@@ -673,6 +677,7 @@ class ImgShow(BaseImgFrame):
         self.all_polygons = []
         self.clear_widget_img_points()
         self.clear_widget_img_points_huan()
+        self.update()
 
     def clear_widget_img_points(self):
         self.widget_points = []
@@ -682,30 +687,29 @@ class ImgShow(BaseImgFrame):
         self.widget_points_huan = []
         self.img_points_huan = []
 
-    def close_to_corner(self, points, radius=3):
+    def close_to_corner(self, points, radius=3, is_ellipse=False):
         self.painter.setPen(Qt.NoPen)
         self.painter.setBrush(QColor('lightgreen'))
 
-        if type(points) == QPointF:
+        if not is_ellipse:
             x, y = points.toTuple()
             if (x - 3 < self.cursor_in_widget.x() < x + 3) and (y - 3 < self.cursor_in_widget.y() < y + 3):
                 self.painter.drawEllipse(x - 2 * radius, y - 2 * radius, 12, 12)
                 return True
-        elif type(points) == list and len(points) == 2:
+        else:
             x1, y1 = points[0].toTuple()
             x2, y2 = points[1].toTuple()
             cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
 
             cursor = self.cursor_in_widget.toTuple()
-            if point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type='椭圆形') is None:
+            if not point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type='椭圆形'):
                 if x1 <= cursor[0] <= cx and y1 <= cursor[1] <= cy:
-                    self.painter.drawEllipse(x1 - 2 * radius, y1 - 2 * radius, 12, 12)
+                    self.painter.drawEllipse(x1 - 0 * radius, y1 - 0 * radius, 12, 12)
                     return 0
                 elif cx <= cursor[0] <= x2 and cy <= cursor[1] <= y2:
-                    self.painter.drawEllipse(x2 - 2 * radius, y2 - 2 * radius, 12, 12)
+                    self.painter.drawEllipse(x2 - 3 * radius, y2 - 3 * radius, 12, 12)
                     return 1
-        else:
-            return False
+
         return False
 
     def del_polygons(self):
@@ -719,24 +723,26 @@ class ImgShow(BaseImgFrame):
         if self.polygon_editing_i is not None:
             self.painter.setPen(Qt.NoPen)
             self.painter.setBrush(QColor(0, 255, 0, 150))
-            editing_polygon = self.all_polygons[self.polygon_editing_i]
+            editing_poly = self.all_polygons[self.polygon_editing_i]
+            shape_type = editing_poly['shape_type']
 
-            if editing_polygon['shape_type'] in ('矩形', '椭圆形'):
-                x1, y1 = editing_polygon['widget_points'][0].toTuple()
-                x2, y2 = editing_polygon['widget_points'][1].toTuple()
-
-                if editing_polygon['shape_type'] == '矩形':
+            if shape_type in ('矩形', '椭圆形'):
+                x1, y1 = editing_poly['widget_points'][0].toTuple()
+                x2, y2 = editing_poly['widget_points'][1].toTuple()
+                if shape_type == '矩形':
                     self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                elif editing_polygon['shape_type'] == '椭圆形':
+                elif shape_type == '椭圆形':
                     self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
-            elif editing_polygon['shape_type'] == '多边形':
-                self.painter.drawPolygon(editing_polygon['widget_points'])
-            elif editing_polygon['shape_type'] == '环形':
-                polygon1 = QPolygon([aa.toPoint() for aa in editing_polygon['widget_points'][0]])
-                polygon2 = QPolygon([aa.toPoint() for aa in editing_polygon['widget_points'][1]])
+            elif shape_type == '多边形':
+                self.painter.drawPolygon(editing_poly['widget_points'])
+            elif shape_type == '环形':
+                polygon1 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][0]])
+                polygon2 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][1]])
                 self.r1, self.r2 = QRegion(polygon1), QRegion(polygon2)
                 self.painter.setClipRegion(self.r1 - self.r2)
                 self.painter.fillRect(self.r1.boundingRect(), QColor(0, 255, 0, 150))
+            elif shape_type == '填充':
+                self.fill_img_pixel(editing_poly['img_points'], QColor(0, 255, 0, 150))
 
             signal_selected_shape.send(self.polygon_editing_i)
 
@@ -789,26 +795,30 @@ class ImgShow(BaseImgFrame):
         return self.scaled_img_painted.scaled(self.img.size(), Qt.KeepAspectRatio, self.interpolation).toImage()
 
     def get_editing_polygon(self):
-        polygon = None
+        editing_i = None
         for i, one in enumerate(self.all_polygons):
             point = self.cursor_in_widget.toTuple()
-            if one['shape_type'] == '环形':
+            shape_type = one['shape_type']
+
+            if shape_type == '环形':
                 wp1 = [aa.toTuple() for aa in one['widget_points'][0]]
                 wp2 = [aa.toTuple() for aa in one['widget_points'][1]]
                 shape_points = [wp1, wp2]
+            elif shape_type == '填充':
+                img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
+                point = (img_pixel_x, img_pixel_y)
+                shape_points = one['img_points']
             else:
                 shape_points = [aa.toTuple() for aa in one['widget_points']]
 
-            polygon = point_in_shape(point, shape_points, one['shape_type'])
-
-            if polygon is not None:
+            if point_in_shape(point, shape_points, shape_type):
                 self.setFocus(Qt.OtherFocusReason)
-                self.polygon_editing_i = i
+                editing_i = i
                 break
             else:
                 self.clearFocus()
 
-        return polygon
+        return editing_i
 
     def get_json_polygons(self):
         json_polygons = deepcopy(self.all_polygons)
@@ -879,25 +889,44 @@ class ImgShow(BaseImgFrame):
             self.update()
 
     def move_polygons(self, key_left=False, key_right=False, key_up=False, key_down=False):  # 标注整体移动功能
+        if self.polygon_editing_i is None:
+            return
+
         offset = None
         img_w, img_h = self.img.width(), self.img.height()
+        img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
+        editing_polygon = self.all_polygons[self.polygon_editing_i]
+        shape_type = editing_polygon['shape_type']
 
         if key_left:
-            offset = QPointF(-int(img_w / 300) - 1, 0)
+            if shape_type == '填充':
+                offset = QPointF(-img_w2real_w, 0)
+            else:
+                offset = QPointF(-int(img_w / 300), 0)
         elif key_right:
-            offset = QPointF(int(img_w / 300) + 1, 0)
+            if shape_type == '填充':
+                offset = QPointF(img_w2real_w, 0)
+            else:
+                offset = QPointF(int(img_w / 300), 0)
         elif key_up:
-            offset = QPointF(0, -int(img_h / 300) - 1)
+            if shape_type == '填充':
+                offset = QPointF(0, -img_h2real_h)
+            else:
+                offset = QPointF(0, -int(img_h / 300))
         elif key_down:
-            offset = QPointF(0, int(img_h / 300) + 1)
+            if shape_type == '填充':
+                offset = QPointF(0, img_h2real_h)
+            else:
+                offset = QPointF(0, int(img_h / 300))
+
         elif self.LeftClick:
             offset = self.cursor_in_widget - self.start_pos
 
-        if (offset is not None) and (self.polygon_editing_i is not None):
+        if offset is not None:
             b_left, b_up, b_right, b_down = self.get_border_coor()
             border = (b_left, b_up, b_right, b_down)
-            editing_polygon = self.all_polygons[self.polygon_editing_i]
-            if editing_polygon['shape_type'] == '环形':
+
+            if shape_type == '环形':
                 wp1, wp2 = editing_polygon['widget_points']
                 editing_polygon['img_points'], editing_polygon['widget_points'] = [[], []], [[], []]
 
@@ -913,7 +942,6 @@ class ImgShow(BaseImgFrame):
                         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point, border=border)
                         if img_pixel_x is not None:
                             editing_polygon['img_points'][i].append([img_pixel_x, img_pixel_y])
-
             else:
                 widget_points = editing_polygon['widget_points']
                 editing_polygon['img_points'], editing_polygon['widget_points'] = [], []
@@ -934,7 +962,7 @@ class ImgShow(BaseImgFrame):
             if self.LeftClick:
                 self.start_pos = self.cursor_in_widget
 
-        self.update()
+            self.update()
 
     @staticmethod
     def move_to_new_folder():
@@ -956,6 +984,7 @@ class ImgShow(BaseImgFrame):
         if len(self.widget_points):
             self.widget_points.pop()
             self.img_points.pop()
+            self.update()
 
     def set_mode(self, cls=False, m_cls=False, det=False, seg=False, seg_edit=False, ann=False):
         self.ClsMode, self.MClsMode, self.DetMode, self.SegMode, self.SegEditMode, self.AnnMode = \
@@ -989,7 +1018,7 @@ class ImgShow(BaseImgFrame):
             else:
                 out_c = [aa.toTuple() for aa in self.widget_points_huan[0]]
                 for one in self.widget_points_huan[1]:
-                    if point_in_shape(one.toTuple(), out_c, '多边形') is None:
+                    if not point_in_shape(one.toTuple(), out_c, '多边形'):
                         QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
                         self.widget_points_huan.pop(1)
                         return

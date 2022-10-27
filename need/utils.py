@@ -218,29 +218,30 @@ def point_in_polygon(px, py, poly):
         i += 1
 
     # 射线穿过多边形边界的次数为奇数时点在多边形内
-    return poly if flag else None
+    return flag
 
 
-def point_in_shape(p, poly, shape_type='多边形'):  # 判断点是否在多边形内部
+def point_in_shape(p: tuple, poly: list, shape_type='多边形') -> bool:  # 判断点是否在某个形状内部
     px, py = p[0], p[1]
     if shape_type == '多边形':
         return point_in_polygon(px, py, poly)
     elif shape_type == '矩形':
         if poly[0][0] <= px <= poly[1][0] and poly[0][1] <= py <= poly[1][1]:
-            return poly
-        return None
+            return True
     elif shape_type == '椭圆形':
         cx, cy = (poly[0][0] + poly[1][0]) / 2, (poly[0][1] + poly[1][1]) / 2
         px, py = px - cx, cy - py
         a, b = (poly[1][0] - poly[0][0]) / 2, (poly[1][1] - poly[0][1]) / 2
-
         if px ** 2 / a ** 2 + py ** 2 / b ** 2 <= 1:
-            return poly
-        return None
+            return True
     elif shape_type == '环形':
-        if point_in_polygon(px, py, poly[0]) is not None and point_in_polygon(px, py, poly[1]) is None:
-            return poly
-        return None
+        if point_in_polygon(px, py, poly[0]) and (not point_in_polygon(px, py, poly[1])):
+            return True
+    elif shape_type == '填充':
+        if list(p) in poly:
+            return True
+
+    return False
 
 
 def point_to_line_Distance(point_a, point_b, point_c):  # 计算点a到点b c所在直线的距离

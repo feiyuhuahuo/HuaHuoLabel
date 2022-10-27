@@ -92,31 +92,16 @@ import pdb
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-
+import PySide6
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QVBoxLayout
 from need.custom_signals import *
 
+import numpy as np
 
-class SelectWindow(QWidget):
-    # parent=None必须要实现，否则由其它界面呼起时，好像只能看，其它功能会失灵
-    def __init__(self, parent=None, title='窗口', button_signal=None):
-        super().__init__(parent)
-        loader = QUiLoader()
-        self.ui = loader.load('label_window.ui')
-        layout = QVBoxLayout()
-        layout.addWidget(self.ui)
-        self.setLayout(layout)
-        self.button_signal = None
-        self.resize(300, 800)
+ggg = QVBoxLayout()
+print(type(ggg))
 
-    def closeEvent(self, event):
-        print('*****************')
-        self.close()
+def aa(x: QVBoxLayout, y:int):
+    print(x)
 
-
-if __name__ == '__main__':
-    from PySide6.QtWidgets import QApplication
-    app = QApplication()
-    ui = SelectWindow(title='你好')
-
-    ui.show()
-    app.exec()
