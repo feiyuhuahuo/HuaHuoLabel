@@ -90,18 +90,15 @@ import pdb
 #     # cv2.imshow("aa", img*200)
 #     # cv2.waitKey()
 
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget, QVBoxLayout
-import PySide6
-from PySide6 import QtWidgets
-from PySide6.QtWidgets import QVBoxLayout
-from need.custom_signals import *
+import cv2
+import glob
 
-import numpy as np
+imgs = glob.glob('C:/Users/feiyuhuahuo\Desktop\待标注\分割\原图/*.bmp')
+img2 = glob.glob('D:\Data\pingmei_seg\分割\原图/*.bmp')
 
-ggg = QVBoxLayout()
-print(type(ggg))
+img2 = [one.split('\\')[-1] for one in img2]
+print(img2)
+for one in imgs:
+    name = one.split('\\')[-1]
 
-def aa(x: QVBoxLayout, y:int):
-    print(x)
-
+    print(name)

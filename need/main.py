@@ -1276,8 +1276,14 @@ class ImgCls(QMainWindow):
     def save_edited_img(self, save_all=False):
         if save_all:
             imgs_path = [aa for aa in self.imgs if aa != 'images/图片已删除.png']
+            re = QMessageBox.question(self.main_ui, '覆盖图片', f'"{self.img_root_path}"下的所有图片将被覆盖，继续吗？')
+            if re != QMessageBox.Yes:
+                return
         else:
             imgs_path = [self.imgs[self.cur_i]]
+            re = QMessageBox.question(self.main_ui, '覆盖图片', f'"{self.imgs[self.cur_i]}"将被覆盖，继续吗？')
+            if re != QMessageBox.Yes:
+                return
 
         for one in imgs_path:
             cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
@@ -1313,9 +1319,7 @@ class ImgCls(QMainWindow):
 
             cv2.imencode(suffix, cv2_img.astype('uint8'))[1].tofile(one[:-4] + suffix)
 
-        re = QMessageBox.question(self.main_ui, '覆盖图片', '当前路径下的所有图片将被覆盖，继续吗？')
-        if re == QMessageBox.Yes:
-            QMessageBox.information(self.main_ui, '保存完成', f'保存完成，共{len(imgs_path)}张图片。')
+        QMessageBox.information(self.main_ui, '保存完成', f'保存完成，共{len(imgs_path)}张图片。')
 
     def save_one_seg_label(self, text):
         if self.LabelUiCallByMo:
@@ -1609,6 +1613,11 @@ class ImgCls(QMainWindow):
             self.main_ui.label_5.setText(uniform_path(self.bottom_img_text))
 
     def show_label_ui(self):
+        geo_self = self.main_ui.geometry()
+        print(geo_self)
+        # x1 = int(geo_self.width() / 2)
+        # y1 = int(geo_self.height() / 2)
+        # self.label_ui.move(x1, y1)
         self.label_ui.show()
 
     @staticmethod
