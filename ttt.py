@@ -81,24 +81,10 @@ import pdb
 #     cv2.imencode('.bmp', piece3)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_3.bmp')
 #     cv2.imencode('.bmp', piece4)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_4.bmp')
 
-# import cv2
-#
-# aa = 0
-# for one in range(3):
-#     img = cv2.imread(f'E:/c_sharp_deploy/result_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
-#     # print(img.sum())
-#     # cv2.imshow("aa", img*200)
-#     # cv2.waitKey()
-
 import cv2
-import glob
 
-imgs = glob.glob('C:/Users/feiyuhuahuo\Desktop\待标注\分割\原图/*.bmp')
-img2 = glob.glob('D:\Data\pingmei_seg\分割\原图/*.bmp')
-
-img2 = [one.split('\\')[-1] for one in img2]
-print(img2)
-for one in imgs:
-    name = one.split('\\')[-1]
-
-    print(name)
+cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
+for one in range(4):
+    img = cv2.imread(f'E:/c_sharp_deploy/qhb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
+    cv2.imshow("aa", img*200)
+    cv2.waitKey()

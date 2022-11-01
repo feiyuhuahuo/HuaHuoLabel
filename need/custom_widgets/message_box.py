@@ -15,15 +15,17 @@ class MessageBoxWithTips(QWidget):
         elif type == 'critical':
             icon = QMessageBox.Critical
 
-        # self.message_box = QMessageBox(self, icon, title=title, text=message)
-
-        self.message_box = QMessageBox(QMessageBox.Information, title='SS', text='ASDSD')
+        self.message_box = QMessageBox(self)
+        self.message_box.setWindowTitle(title)
+        self.message_box.setText(message)
+        self.message_box.setIcon(icon)
+        self.message_box.show()
 
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
     app = QApplication()
-    ui = MessageBoxWithTips('warning', 'asd', 'sadaf')
+    ui = MessageBoxWithTips('critical', 'asd', 'sadfghbfhshtthsdsththseesbegesaf')
     ui.show()
     app.exec()

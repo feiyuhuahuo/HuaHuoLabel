@@ -1613,11 +1613,11 @@ class ImgCls(QMainWindow):
             self.main_ui.label_5.setText(uniform_path(self.bottom_img_text))
 
     def show_label_ui(self):
-        geo_self = self.main_ui.geometry()
-        print(geo_self)
-        # x1 = int(geo_self.width() / 2)
-        # y1 = int(geo_self.height() / 2)
-        # self.label_ui.move(x1, y1)
+        geo = self.frameGeometry()
+        x, y, w, h = geo.x(), geo.y(), geo.width(), geo.height()
+        new_x = x + int(w / 3)
+        new_y = y + int(h / 3)
+        self.label_ui.move(new_x, new_y)
         self.label_ui.show()
 
     @staticmethod

@@ -123,7 +123,7 @@ class BaseImgFrame(QFrame):
         b_r_x, b_r_y = t_l_x + img_w - 1, t_l_y + img_h - 1
         return t_l_x, t_l_y, b_r_x, b_r_y
 
-    def get_widget_to_img_ratio(self):  # 图片的一个像素点实际对于控件展示的图片有多少个坐标点
+    def get_widget_to_img_ratio(self):  # 图片的一个像素点实际对于控件展示区域有多少个坐标点
         ori_w, ori_h = self.img.size().width(), self.img.size().height()
 
         if ori_w and ori_h:
@@ -943,22 +943,35 @@ class ImgShow(BaseImgFrame):
                         if img_pixel_x is not None:
                             editing_polygon['img_points'][i].append([img_pixel_x, img_pixel_y])
             else:
-                widget_points = editing_polygon['widget_points']
-                editing_polygon['img_points'], editing_polygon['widget_points'] = [], []
+                widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
 
+                # if shape_type == '填充':
+                #     ccc = [QPointF(aa[0], aa[1]) for aa in img_points]
+                #     widget_points = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in ccc]
+                #     editing_polygon['widget_points'] = widget_points
+
+                print(img_points)
                 for i, one_point in enumerate(widget_points):
-                    one_point += offset
+
                     # 防止坐标越界
+
+                    if shape_type == '填充':
+                        xx = img_points[i][0] * img_w2real_w + self.img_tl.x()
+                        yy = img_points[i][1] * img_h2real_h + self.img_tl.y()
+                        one_point = QPointF(xx, yy)
+
+                    one_point += offset
                     in_border_x = min(max(b_left, one_point.x()), b_right)
                     in_border_y = min(max(b_up, one_point.y()), b_down)
                     one_point = QPointF(in_border_x, in_border_y)
-                    editing_polygon['widget_points'].append(one_point)
+                    widget_points[i] = one_point
 
                     img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point, border=border)
 
                     if img_pixel_x is not None:
-                        editing_polygon['img_points'].append([img_pixel_x, img_pixel_y])
-
+                        img_points[i] = [img_pixel_x, img_pixel_y]
+                print(img_points)
+                print('---------------------')
             if self.LeftClick:
                 self.start_pos = self.cursor_in_widget
 
