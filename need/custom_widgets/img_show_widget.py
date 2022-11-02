@@ -184,13 +184,13 @@ class BaseImgFrame(QFrame):
     def show_menu(self, ob):  # 在鼠标位置显示菜单
         ob.exec(QCursor.pos())
 
-    def widget_coor_to_img_coor(self, rel_pos: QtCore.QPointF, border=None):
+    def widget_coor_to_img_coor(self, rel_pos: QtCore.QPointF):
         # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
         rel_x, rel_y = rel_pos.x(), rel_pos.y()
         img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
 
         if img_w2real_w is not None:
-            b_left, b_up, b_right, b_down = border if border else self.get_border_coor()
+            b_left, b_up, b_right, b_down = self.get_border_coor()
             if b_left <= rel_x <= b_right and b_up <= rel_y <= b_down:
                 img_x, img_y = rel_x - b_left, rel_y - b_up
                 qimg = self.scaled_img.toImage()
@@ -200,6 +200,16 @@ class BaseImgFrame(QFrame):
                 return None, None, None
         else:
             return None, None, None
+
+    def img_coor_to_widget_coor(self, point: list):
+        img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
+        b_left, b_up, b_right, b_down = self.get_border_coor()
+
+        point = QPointF(point[0] * img_w2real_w, point[1] * img_h2real_h) + self.img_tl
+        if b_left <= point.x() <= b_right and b_up <= point.y() <= b_down:
+            return point
+        else:
+            return None
 
 
 class ImgShow(BaseImgFrame):
@@ -466,11 +476,22 @@ class ImgShow(BaseImgFrame):
 
     def add_widget_img_pair(self, qpointf, fill_mode=False):
         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(qpointf)
-        if img_pixel_x is not None:
-            if fill_mode and [img_pixel_x, img_pixel_y] in self.img_points:
-                return False
 
-            self.img_points.append([img_pixel_x, img_pixel_y])
+        if img_pixel_x is not None:
+            img_p = [img_pixel_x, img_pixel_y]
+
+            if fill_mode:
+                if img_p in self.img_points:
+                    return False
+                else:
+                    # print(qpointf)
+                    qpointf = self.img_coor_to_widget_coor(img_p)
+                    # print(qpointf)
+                    # print('____________')
+
+            self.img_points.append(img_p)
+
+
             self.widget_points.append(qpointf)
             return True
 
@@ -562,7 +583,6 @@ class ImgShow(BaseImgFrame):
             i, j, k = corner_index
 
         b_left, b_up, b_right, b_down = self.get_border_coor()
-        border = (b_left, b_up, b_right, b_down)
         polygon = self.all_polygons[i]
 
         # 处理widget_points
@@ -595,7 +615,7 @@ class ImgShow(BaseImgFrame):
 
         # 处理对应的img_points
         if polygon['shape_type'] == '多边形':
-            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j], border=border)
+            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j])
             if x is not None:
                 polygon['img_points'][j] = (x, y)
         elif polygon['shape_type'] in ('矩形', '椭圆形'):
@@ -610,11 +630,11 @@ class ImgShow(BaseImgFrame):
             polygon['widget_points'][1] = QPointF(x2, y2)
 
             for k in range(2):
-                x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k], border=border)
+                x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k])
                 if x is not None:
                     polygon['img_points'][k] = (x, y)
         elif polygon['shape_type'] == '环形':
-            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k], border=border)
+            x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k])
             if x is not None:
                 polygon['img_points'][j][k] = (x, y)
 
@@ -623,6 +643,7 @@ class ImgShow(BaseImgFrame):
 
     def cursor_close_to_corner(self):
         corner_index = None
+
         for i, polygon in enumerate(self.all_polygons):
             if polygon['shape_type'] == '环形':
                 for j, huan in enumerate(polygon['widget_points']):
@@ -630,6 +651,11 @@ class ImgShow(BaseImgFrame):
                         if self.close_to_corner(point):
                             corner_index = (i, j, k)
                             return corner_index
+            elif polygon['shape_type'] == '填充':
+                img_p_x, img_p_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
+                img_p = [img_p_x, img_p_y]
+                if img_p in polygon['img_points']:
+                    return polygon['img_points'].index(img_p)
             else:
                 for j, point in enumerate(polygon['widget_points']):
                     if polygon['shape_type'] == '椭圆形':
@@ -637,8 +663,6 @@ class ImgShow(BaseImgFrame):
                         if type(p_i) == int:
                             corner_index = (i, p_i)
                             return corner_index
-                    elif polygon['shape_type'] == '填充':
-                        pass
                     else:
                         if self.close_to_corner(point):
                             corner_index = (i, j)
@@ -855,19 +879,15 @@ class ImgShow(BaseImgFrame):
         if img_w2real_w is not None:
             for one in polygons:
                 if one['shape_type'] == '环形':
-                    img_points = [[QPointF(aa[0], aa[1]) for aa in one['img_points'][0]],
-                                  [QPointF(aa[0], aa[1]) for aa in one['img_points'][1]]]
-                    p1 = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in img_points[0]]
-                    p2 = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in img_points[1]]
+                    p1 = [self.img_coor_to_widget_coor(aa) for aa in one['img_points'][0]]
+                    p2 = [self.img_coor_to_widget_coor(aa) for aa in one['img_points'][1]]
                     ps = [p1, p2]
                 elif one['shape_type'] in ('多边形', '填充'):
-                    img_points = [QPointF(aa[0], aa[1]) for aa in one['img_points']]
-                    ps = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in img_points]
+                    ps = [self.img_coor_to_widget_coor(aa) for aa in one['img_points']]
                 elif one['shape_type'] in ('矩形', '椭圆形'):
-                    img_points_1, img_points_2 = one['img_points']
-                    p1 = QPointF(img_points_1[0], img_points_1[1])
-                    p2 = QPointF(img_points_2[0] + 1, img_points_2[1] + 1)  # 右下角点+1以获得更好的显示效果
-                    ps = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in [p1, p2]]
+                    p1 = one['img_points'][0]
+                    p2 = [one['img_points'][1][0] + 1, one['img_points'][1][1] + 1]  # 右下角点+1以获得更好的显示效果
+                    ps = [self.img_coor_to_widget_coor(aa) for aa in [p1, p2]]
 
                 one['widget_points'] = ps
 
@@ -924,7 +944,6 @@ class ImgShow(BaseImgFrame):
 
         if offset is not None:
             b_left, b_up, b_right, b_down = self.get_border_coor()
-            border = (b_left, b_up, b_right, b_down)
 
             if shape_type == '环形':
                 wp1, wp2 = editing_polygon['widget_points']
@@ -933,45 +952,28 @@ class ImgShow(BaseImgFrame):
                 for i, one_wp in enumerate([wp1, wp2]):
                     for one_point in one_wp:
                         one_point += offset
-                        # 防止坐标越界
-                        in_border_x = min(max(b_left, one_point.x()), b_right)
+                        in_border_x = min(max(b_left, one_point.x()), b_right)  # 防止坐标越界
                         in_border_y = min(max(b_up, one_point.y()), b_down)
                         one_point = QPointF(in_border_x, in_border_y)
                         editing_polygon['widget_points'][i].append(one_point)
 
-                        img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point, border=border)
+                        img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point)
                         if img_pixel_x is not None:
                             editing_polygon['img_points'][i].append([img_pixel_x, img_pixel_y])
             else:
                 widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
 
-                # if shape_type == '填充':
-                #     ccc = [QPointF(aa[0], aa[1]) for aa in img_points]
-                #     widget_points = [QPointF(aa.x() * img_w2real_w, aa.y() * img_h2real_h) + self.img_tl for aa in ccc]
-                #     editing_polygon['widget_points'] = widget_points
-
-                print(img_points)
                 for i, one_point in enumerate(widget_points):
-
-                    # 防止坐标越界
-
-                    if shape_type == '填充':
-                        xx = img_points[i][0] * img_w2real_w + self.img_tl.x()
-                        yy = img_points[i][1] * img_h2real_h + self.img_tl.y()
-                        one_point = QPointF(xx, yy)
-
                     one_point += offset
-                    in_border_x = min(max(b_left, one_point.x()), b_right)
+                    in_border_x = min(max(b_left, one_point.x()), b_right)  # 防止坐标越界
                     in_border_y = min(max(b_up, one_point.y()), b_down)
-                    one_point = QPointF(in_border_x, in_border_y)
-                    widget_points[i] = one_point
+                    one_point = QPointF(in_border_x, in_border_y)  # 这里原位替换了widget_points里的数据
 
-                    img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point, border=border)
+                    img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point)
 
                     if img_pixel_x is not None:
                         img_points[i] = [img_pixel_x, img_pixel_y]
-                print(img_points)
-                print('---------------------')
+
             if self.LeftClick:
                 self.start_pos = self.cursor_in_widget
 
@@ -993,6 +995,9 @@ class ImgShow(BaseImgFrame):
 
         self.update()
 
+    def erase_pixel(self):
+        pass
+    
     def remove_widget_img_pair(self):
         if len(self.widget_points):
             self.widget_points.pop()

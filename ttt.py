@@ -81,10 +81,14 @@ import pdb
 #     cv2.imencode('.bmp', piece3)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_3.bmp')
 #     cv2.imencode('.bmp', piece4)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_4.bmp')
 
-import cv2
+# import cv2
+#
+# cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
+# for one in range(4):
+#     img = cv2.imread(f'E:/c_sharp_deploy/qhb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
+#     cv2.imshow("aa", img*200)
+#     cv2.waitKey()
 
-cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
-for one in range(4):
-    img = cv2.imread(f'E:/c_sharp_deploy/qhb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
-    cv2.imshow("aa", img*200)
-    cv2.waitKey()
+aa=[[1,2], [5, 6], [6,3]]
+bb=[6,3]
+print(aa.index(bb))
