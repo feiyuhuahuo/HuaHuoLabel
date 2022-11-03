@@ -89,6 +89,6 @@ import pdb
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-aa=[[1,2], [5, 6], [6,3]]
-bb=[6,3]
-print(aa.index(bb))
+aa=None
+if aa:
+    print('8888')

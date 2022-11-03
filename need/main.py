@@ -59,6 +59,13 @@ class ImgCls(QMainWindow):
         self.looking_classes = []
         self.looking_all = True
 
+        self.window_marquee_img = None
+        self.window_marquee_label = None
+        self.window_train_val_img = None
+        self.window_train_val_png = None
+        self.window_compare = None
+        self.window_auto_infer_progress = None
+
         self.file_select_dlg = QFileDialog(self)
         self.input_dlg = QInputDialog(self)
 
@@ -217,25 +224,25 @@ class ImgCls(QMainWindow):
         signal_xy_color2ui.signal.connect(self.show_xy_color)
 
     def closeEvent(self, e):
-        if hasattr(self, 'marquee_window_label'):
-            self.marquee_window_label.close()
-        if hasattr(self, 'marquee_window_img'):
-            self.marquee_window_img.close()
-        if hasattr(self, 'seg_img_window'):
-            self.seg_img_window.close()
-        if hasattr(self, 'seg_png_window'):
-            self.seg_png_window.close()
-        if hasattr(self, 'compare_window'):
-            self.compare_window.close()
-        if hasattr(self, 'progress_window'):
-            self.progress_auto_infer.close()
+        if self.window_marquee_img:
+            self.window_marquee_img.close()
+        if self.window_marquee_label:
+            self.window_marquee_label.close()
+        if self.window_train_val_img:
+            self.window_train_val_img.close()
+        if self.window_train_val_png:
+            self.window_train_val_png.close()
+        if self.window_compare:
+            self.window_compare.close()
+        if self.window_auto_infer_progress:
+            self.window_auto_infer_progress.close()
         self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_A or event.key() == Qt.Key_D:
             # 查看训练/验证集时的图片翻页功能
-            if hasattr(self, 'seg_img_window') and hasattr(self, 'seg_png_window'):
-                if (not self.seg_img_window.IsClosed) or (not self.seg_img_window.IsClosed):
+            if self.window_train_val_img and self.window_train_val_png:
+                if (not self.window_train_val_img.IsClosed) or (not self.window_train_val_png.IsClosed):
                     if event.key() == Qt.Key_A:
                         self.tv_i -= 1
                     elif event.key() == Qt.Key_D:
@@ -243,10 +250,11 @@ class ImgCls(QMainWindow):
 
                     self.tv_i = min(max(0, self.tv_i), len(self.tv_imgs) - 1)
                     ori_path = self.tv_imgs[self.tv_i]
-                    self.seg_img_window.paint_img(QPixmap(ori_path))
+                    self.window_train_val_img.paint_img(QPixmap(ori_path))
                     png_path = ori_path.replace('imgs', 'labels')[:-3] + 'png'
                     qimg_png = self.get_qimg_png(png_path)
-                    self.seg_png_window.paint_img(qimg_png)
+                    if qimg_png:
+                        self.window_train_val_png.paint_img(qimg_png)
                     return
 
             if event.key() == Qt.Key_A:
@@ -295,10 +303,10 @@ class ImgCls(QMainWindow):
 
         try:
             sess = ort.InferenceSession(onnx_file, providers=["CUDAExecutionProvider"])
-            self.progress_auto_infer = ProgressWindow(title='推理中', text_prefix='使用GPU推理中：')
+            self.window_auto_infer_progress = ProgressWindow(title='推理中', text_prefix='使用GPU推理中：')
         except:
             sess = ort.InferenceSession(onnx_file, providers=["CPUExecutionProvider"])
-            self.progress_auto_infer = ProgressWindow(title='推理中', text_prefix='使用CPU推理中：')
+            self.window_auto_infer_progress = ProgressWindow(title='推理中', text_prefix='使用CPU推理中：')
 
         inputs = sess.get_inputs()
         if len(inputs) > 1:
@@ -338,13 +346,13 @@ class ImgCls(QMainWindow):
         else:
             return
 
-        self.progress_auto_infer.show()
+        self.window_auto_infer_progress.show()
 
         self.inference_thread = RunInference(sess, self.imgs, list(ClassStatDict.keys()), dp_para, filter_area)
         self.inference_thread.start()
 
     def auto_inference_done(self):
-        self.progress_auto_infer.set_text(f'已完成，推理结果存放在 "{self.img_root_path}/自动标注"。')
+        self.window_auto_infer_progress.set_text(f'已完成，推理结果存放在 "{self.img_root_path}/自动标注"。')
 
     def button_action(self):
         button = self.sender()
@@ -692,8 +700,11 @@ class ImgCls(QMainWindow):
             for i in range(class_num):
                 lines += f'{self.main_ui.listWidget.item(i).text()},\n'
 
-            with open(f'{self.img_root_path}/分割/{text}.txt', 'w', encoding='utf-8') as f:
+            txt_path = f'{self.img_root_path}/分割/{text}.txt'
+            with open(txt_path, 'w', encoding='utf-8') as f:
                 f.writelines(lines)
+
+            QMessageBox.information(self.main_ui, '已完成', f'已导出到"{txt_path}"。')
 
     def file_copy(self, src_path, dst_path):
         new_file_path = osp.join(dst_path, src_path.split('/')[-1])
@@ -732,6 +743,8 @@ class ImgCls(QMainWindow):
             png_img = png_img * int(255 / class_num)
             height, width, depth = png_img.shape
             return QImage(png_img.astype('uint8').data, width, height, width * depth, QImage.Format_RGB888)
+        else:
+            return False
 
     def get_sub_seg_png(self):
         if len(ClassStatDict) == 0:
@@ -798,13 +811,14 @@ class ImgCls(QMainWindow):
             self.go_next_marquee_window()
 
     def go_next_marquee_window(self):
-        if hasattr(self, 'marquee_window_label'):
+        if self.window_marquee_label:
             png_path = path_to(self.imgs[self.cur_i], img2png=True)
             if os.path.exists(png_path):
                 qimg_png = self.get_qimg_png(png_path)
-                self.marquee_window_label.paint_img(qimg_png)
-        if hasattr(self, 'marquee_window_img'):
-            self.marquee_window_img.paint_img(QPixmap(self.imgs[self.cur_i]))
+                if qimg_png:
+                    self.window_marquee_label.paint_img(qimg_png)
+        if self.window_marquee_img:
+            self.window_marquee_img.paint_img(QPixmap(self.imgs[self.cur_i]))
 
     def has_categories(self):
         class_num = self.main_ui.listWidget.count()
@@ -1000,18 +1014,17 @@ class ImgCls(QMainWindow):
 
                     if os.path.exists(png_path):
                         qimg_png = self.get_qimg_png(png_path)
-                        self.marquee_window_label = BaseImgFrame()
-                        self.marquee_window_label.setWindowFlags(Qt.WindowStaysOnTopHint)
-                        self.marquee_window_label.setWindowTitle('标注图片')
-                        self.marquee_window_label.paint_img(qimg_png)
-                        self.marquee_window_label.show()
+                        if qimg_png:
+                            self.window_marquee_label = BaseImgFrame(title='标注图片')
+                            self.window_marquee_label.setWindowFlags(Qt.WindowStaysOnTopHint)
+                            self.window_marquee_label.paint_img(qimg_png)
+                            self.window_marquee_label.show()
             else:
                 pix_map = QPixmap(img_path)
-                self.marquee_window_img = BaseImgFrame()
-                self.marquee_window_img.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.marquee_window_img.setWindowTitle('原图')
-                self.marquee_window_img.paint_img(pix_map)
-                self.marquee_window_img.show()
+                self.window_marquee_img = BaseImgFrame(title='原图')
+                self.window_marquee_img.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.window_marquee_img.paint_img(pix_map)
+                self.window_marquee_img.show()
 
     def marquee_stat(self, path):  # 获取一个特定marquee的编辑状态
         stat = 'undo'
@@ -1130,6 +1143,8 @@ class ImgCls(QMainWindow):
             self.img_root_path = path
             self.main_ui.lineEdit.setText(self.img_root_path)
             self.reset_seg()
+            self.window_marquee_label = None
+            self.window_train_val_png = None
 
             if self.WorkMode == 'cls':
                 sub_path = '单类别分类'
@@ -1572,10 +1587,9 @@ class ImgCls(QMainWindow):
     def show_compare_img(self):
         path = self.file_select_dlg.getOpenFileName(self.main_ui, '选择图片', filter='图片类型 (*.png *.jpg *.bmp)')[0]
         if path:
-            self.compare_window = BaseImgFrame()
-            self.compare_window.setWindowTitle('对比图片')
-            self.compare_window.paint_img(path)
-            self.compare_window.show()
+            self.window_compare = BaseImgFrame(title='对比图片')
+            self.window_compare.paint_img(path)
+            self.window_compare.show()
 
     def show_img_status_info(self):
         path = self.imgs[self.cur_i]
@@ -1628,37 +1642,40 @@ class ImgCls(QMainWindow):
         if not self.has_categories():
             return
 
+        QMessageBox.information(self.main_ui, '选择图片', '请选择一张训练集或验证集中的图片。')
+
         self.tv_i = 0
         tv_path = self.file_select_dlg.getExistingDirectory(self.main_ui, '选择文件夹', dir=self.img_root_path)
 
         if tv_path:
             self.tv_imgs = sorted(glob.glob(f'{tv_path}/*'))
+        else:
+            return
 
-        self.seg_img_window = BaseImgFrame()
-        self.seg_img_window.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.seg_img_window.setWindowTitle('分割原图')
+        self.window_train_val_img = BaseImgFrame(title='分割原图')
+        self.window_train_val_img.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         geo_self = self.frameGeometry()
-        geo_sub = self.seg_img_window.frameGeometry()
+        geo_sub = self.window_train_val_img.frameGeometry()
         x1 = geo_self.left()
         y1 = int((geo_self.height() - geo_sub.height()) / 2)
-        self.seg_img_window.move(x1, y1)
+        self.window_train_val_img.move(x1, y1)
 
-        self.seg_png_window = BaseImgFrame()
-        self.seg_png_window.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.seg_png_window.setWindowTitle('分割标注')
+        self.window_train_val_png = BaseImgFrame(title='分割标注')
+        self.window_train_val_png.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         x2 = x1 + geo_sub.width()
-        self.seg_png_window.move(x2, y1)
+        self.window_train_val_png.move(x2, y1)
 
         ori_path = self.tv_imgs[self.tv_i]
-        self.seg_img_window.paint_img(QPixmap(ori_path))
-        self.seg_img_window.show()
+        self.window_train_val_img.paint_img(QPixmap(ori_path))
+        self.window_train_val_img.show()
 
         png_path = ori_path.replace('imgs', 'labels')[:-3] + 'png'
         qimg_png = self.get_qimg_png(png_path)
-        self.seg_png_window.paint_img(qimg_png)
-        self.seg_png_window.show()
+        if qimg_png:
+            self.window_train_val_png.paint_img(qimg_png)
+            self.window_train_val_png.show()
 
     def show_xy_color(self, info):
         x, y, r, g, b = info
@@ -1671,10 +1688,10 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.undo_stack.undo()
 
     def update_progress_auto_infer_value(self, info):
-        self.progress_auto_infer.set_value(info)
+        self.window_auto_infer_progress.set_value(info)
 
     def update_progress_auto_infer_text(self, info):
-        self.progress_auto_infer.set_text(info)
+        self.window_auto_infer_progress.set_text(info)
 
     def update_train_val(self):
         t_path = f'{self.img_root_path}/labels/train'

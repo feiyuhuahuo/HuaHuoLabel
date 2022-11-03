@@ -1,6 +1,8 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import json
+
+from typing import Optional, List, Union
 from copy import deepcopy
 import pdb
 from PySide6.QtWidgets import QInputDialog, QFrame, QMessageBox, QApplication, QMenu, QListWidgetItem
@@ -25,11 +27,12 @@ signal_xy_color2ui = ListSignal()
 
 class BaseImgFrame(QFrame):
     # 基础图片展示控件，只提供基本的图片显示、拖曳、缩放功能，不提供标注功能。
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, title='base_frame'):
         super().__init__(parent)
         self.painter = QPainter()
         self.painter.setRenderHint(QPainter.Antialiasing)
         self.painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        self.setWindowTitle(title)
         self.setMouseTracking(True)
         self.resize(512, 512)
         # todo: bug, 不知道为什么基类的menu右键的时候不显示
@@ -193,21 +196,28 @@ class BaseImgFrame(QFrame):
             b_left, b_up, b_right, b_down = self.get_border_coor()
             if b_left <= rel_x <= b_right and b_up <= rel_y <= b_down:
                 img_x, img_y = rel_x - b_left, rel_y - b_up
-                qimg = self.scaled_img.toImage()
-                qcolor = QColor.fromRgb(qimg.pixel(int(img_x), int(img_y)))
+                qcolor = QColor.fromRgb(self.scaled_img.toImage().pixel(int(img_x), int(img_y)))
                 return int(img_x / img_w2real_w), int(img_y / img_h2real_h), qcolor
             else:
                 return None, None, None
         else:
             return None, None, None
 
-    def img_coor_to_widget_coor(self, point: list):
+    def img_coor_to_widget_coor(self, point: Union[List, List[List]]):
         img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
         b_left, b_up, b_right, b_down = self.get_border_coor()
 
-        point = QPointF(point[0] * img_w2real_w, point[1] * img_h2real_h) + self.img_tl
-        if b_left <= point.x() <= b_right and b_up <= point.y() <= b_down:
-            return point
+        if type(point[0]) == int:
+            point = QPointF(point[0] * img_w2real_w, point[1] * img_h2real_h) + self.img_tl
+            if b_left <= point.x() <= b_right and b_up <= point.y() <= b_down:
+                return point
+            else:
+                return None
+        elif type(point[0]) == list:
+            widget_points = []
+            for one_p in point:
+                widget_points.append(QPointF(one_p[0] * img_w2real_w, one_p[1] * img_h2real_h) + self.img_tl)
+            return widget_points
         else:
             return None
 
@@ -239,6 +249,7 @@ class ImgShow(BaseImgFrame):
         self.shape_type = '多边形'
         self.cursor_in_widget = QPointF(0., 0.)  # 鼠标在控件坐标系的实时坐标
         self.polygon_editing_i = None  # 正在编辑的标注的索引，即标注高亮时对应的索引
+        self.fill_editing_i = None  # 正在编辑的填充标注的索引
         self.scale_factor = (0., 0.)  # 图片伸缩因子
         self.offset = QPointF(0., 0.)  # 图片移动偏移量
         self.corner_index = None  # 标注角点的索引
@@ -295,6 +306,8 @@ class ImgShow(BaseImgFrame):
             self.move_polygons(key_up=True)
         elif event.key() == Qt.Key_S:
             self.move_polygons(key_down=True)
+        elif event.key() == Qt.Key_Shift:
+            self.fill_editing_i = self.corner_index
 
     def mouseDoubleClickEvent(self, e):  # 同时触发 mousePressEvent()
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -323,18 +336,21 @@ class ImgShow(BaseImgFrame):
             signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
 
         if self.SegMode and QApplication.keyboardModifiers() == Qt.ControlModifier:  # 画标注功能
+            self.update()
             if self.shape_type == '填充' and len(self.img_points):
                 self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-            self.update()
+
         elif self.SegMode and self.SegEditMode:
-            if self.corner_index is not None and self.LeftClick:
-                self.corner_point_move(self.corner_index)
-            else:
-                self.polygon_editing_i = self.get_editing_polygon()
+            self.polygon_editing_i = self.get_editing_polygon()
+            if self.LeftClick and QApplication.keyboardModifiers() != Qt.ShiftModifier:
+                if self.corner_index is not None:
+                    self.corner_point_move(self.corner_index)
+
                 if self.polygon_editing_i is not None:
                     self.move_polygons()
                 else:
                     self.move_pix_img()
+
         elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.ann_draw()
         else:
@@ -350,11 +366,9 @@ class ImgShow(BaseImgFrame):
             else:
                 self.cursor_in_widget = e.position()
                 if self.shape_type == '填充':
-                    if self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True):
-                        self.update()
+                    self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
                 else:
                     self.add_widget_img_pair(self.cursor_in_widget)
-                    self.update()
 
         elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.setCursor(self.pencil_cursor)
@@ -391,6 +405,8 @@ class ImgShow(BaseImgFrame):
                     self.clear_widget_img_points()
             elif self.shape_type == '填充':
                 signal_open_label_window.send(True)
+        elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.SegEditMode:
+            self.erase_paint_pixel(self.fill_editing_i)
 
     def paintEvent(self, e):  # 程序调用show()和update()之后就会调用此函数
         self.painter.begin(self)
@@ -481,19 +497,14 @@ class ImgShow(BaseImgFrame):
             img_p = [img_pixel_x, img_pixel_y]
 
             if fill_mode:
-                if img_p in self.img_points:
-                    return False
-                else:
-                    # print(qpointf)
-                    qpointf = self.img_coor_to_widget_coor(img_p)
-                    # print(qpointf)
-                    # print('____________')
+                if img_p not in self.img_points:
+                    self.img_points.append(img_p)
+                    self.widget_points.append(self.img_coor_to_widget_coor(img_p))
+            else:
+                self.img_points.append(img_p)
+                self.widget_points.append(qpointf)
 
-            self.img_points.append(img_p)
-
-
-            self.widget_points.append(qpointf)
-            return True
+            self.update()
 
     def ann_add_text(self, ori_position):  # 注释模式添加文字功能
         input_dlg = QInputDialog()
@@ -577,13 +588,18 @@ class ImgShow(BaseImgFrame):
 
     def corner_point_move(self, corner_index):  # 标注角点的拖动功能
         offset = self.cursor_in_widget - self.start_pos
-        if len(corner_index) == 2:
+        if type(corner_index) == int:
+            i = corner_index
+        elif len(corner_index) == 2:
             i, j = corner_index
         elif len(corner_index) == 3:
             i, j, k = corner_index
 
         b_left, b_up, b_right, b_down = self.get_border_coor()
         polygon = self.all_polygons[i]
+
+        if polygon['shape_type'] == '填充':  # 填充标注不具备这个功能
+            return
 
         # 处理widget_points
         if polygon['shape_type'] == '环形':
@@ -655,7 +671,7 @@ class ImgShow(BaseImgFrame):
                 img_p_x, img_p_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
                 img_p = [img_p_x, img_p_y]
                 if img_p in polygon['img_points']:
-                    return polygon['img_points'].index(img_p)
+                    return i
             else:
                 for j, point in enumerate(polygon['widget_points']):
                     if polygon['shape_type'] == '椭圆形':
@@ -796,6 +812,22 @@ class ImgShow(BaseImgFrame):
         self.polygon_editing_i = i
         self.update()
 
+    def erase_paint_pixel(self, fill_index):
+        x, y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
+        new_p = [x, y]
+        img_points = self.all_polygons[fill_index]['img_points']
+        widget_points = self.all_polygons[fill_index]['widget_points']
+
+        if new_p in img_points:
+            index = img_points.index(new_p)
+            img_points.pop(index)
+            widget_points.pop(index)
+        else:
+            img_points.append(new_p)
+            widget_points.append(self.img_coor_to_widget_coor(new_p))
+
+        self.update()
+
     def fill_img_pixel(self, img_points, qcolor):
         self.painter.setBrush(qcolor)
         img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
@@ -844,6 +876,12 @@ class ImgShow(BaseImgFrame):
 
         return editing_i
 
+    def get_in_border_wp(self, w_p: QPointF) -> QPointF:  # 防止widget_points坐标越界
+        b_left, b_up, b_right, b_down = self.get_border_coor()
+        in_border_x = min(max(b_left, w_p.x()), b_right)
+        in_border_y = min(max(b_up, w_p.y()), b_down)
+        return QPointF(in_border_x, in_border_y)
+
     def get_json_polygons(self):
         json_polygons = deepcopy(self.all_polygons)
 
@@ -879,15 +917,15 @@ class ImgShow(BaseImgFrame):
         if img_w2real_w is not None:
             for one in polygons:
                 if one['shape_type'] == '环形':
-                    p1 = [self.img_coor_to_widget_coor(aa) for aa in one['img_points'][0]]
-                    p2 = [self.img_coor_to_widget_coor(aa) for aa in one['img_points'][1]]
+                    p1 = self.img_coor_to_widget_coor(one['img_points'][0])
+                    p2 = self.img_coor_to_widget_coor(one['img_points'][1])
                     ps = [p1, p2]
                 elif one['shape_type'] in ('多边形', '填充'):
-                    ps = [self.img_coor_to_widget_coor(aa) for aa in one['img_points']]
+                    ps = self.img_coor_to_widget_coor(one['img_points'])
                 elif one['shape_type'] in ('矩形', '椭圆形'):
                     p1 = one['img_points'][0]
                     p2 = [one['img_points'][1][0] + 1, one['img_points'][1][1] + 1]  # 右下角点+1以获得更好的显示效果
-                    ps = [self.img_coor_to_widget_coor(aa) for aa in [p1, p2]]
+                    ps = self.img_coor_to_widget_coor([p1, p2])
 
                 one['widget_points'] = ps
 
@@ -912,30 +950,45 @@ class ImgShow(BaseImgFrame):
         if self.polygon_editing_i is None:
             return
 
-        offset = None
-        img_w, img_h = self.img.width(), self.img.height()
-        img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
         editing_polygon = self.all_polygons[self.polygon_editing_i]
+        widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
         shape_type = editing_polygon['shape_type']
 
+        if shape_type != '填充' and self.corner_index is not None:
+            return  # 标注工具不是填充时，角点移动功能优先，即self.corner_index is not None时为角点移动功能
+
+        offset = None
+        img_w, img_h = self.img.width(), self.img.height()
         if key_left:
             if shape_type == '填充':
-                offset = QPointF(-img_w2real_w, 0)
+                for i, one_point in enumerate(img_points):
+                    one_point[0] -= 1
+                    w_p = self.img_coor_to_widget_coor(one_point)
+                    widget_points[i] = self.get_in_border_wp(w_p)
             else:
                 offset = QPointF(-int(img_w / 300), 0)
         elif key_right:
             if shape_type == '填充':
-                offset = QPointF(img_w2real_w, 0)
+                for i, one_point in enumerate(img_points):
+                    one_point[0] += 1
+                    w_p = self.img_coor_to_widget_coor(one_point)
+                    widget_points[i] = self.get_in_border_wp(w_p)
             else:
                 offset = QPointF(int(img_w / 300), 0)
         elif key_up:
             if shape_type == '填充':
-                offset = QPointF(0, -img_h2real_h)
+                for i, one_point in enumerate(img_points):
+                    one_point[1] -= 1
+                    w_p = self.img_coor_to_widget_coor(one_point)
+                    widget_points[i] = self.get_in_border_wp(w_p)
             else:
                 offset = QPointF(0, -int(img_h / 300))
         elif key_down:
             if shape_type == '填充':
-                offset = QPointF(0, img_h2real_h)
+                for i, one_point in enumerate(img_points):
+                    one_point[1] += 1
+                    w_p = self.img_coor_to_widget_coor(one_point)
+                    widget_points[i] = self.get_in_border_wp(w_p)
             else:
                 offset = QPointF(0, int(img_h / 300))
 
@@ -943,41 +996,28 @@ class ImgShow(BaseImgFrame):
             offset = self.cursor_in_widget - self.start_pos
 
         if offset is not None:
-            b_left, b_up, b_right, b_down = self.get_border_coor()
-
             if shape_type == '环形':
-                wp1, wp2 = editing_polygon['widget_points']
-                editing_polygon['img_points'], editing_polygon['widget_points'] = [[], []], [[], []]
-
-                for i, one_wp in enumerate([wp1, wp2]):
-                    for one_point in one_wp:
+                for i, one_wp in enumerate(widget_points):
+                    for j, one_point in enumerate(one_wp):
                         one_point += offset
-                        in_border_x = min(max(b_left, one_point.x()), b_right)  # 防止坐标越界
-                        in_border_y = min(max(b_up, one_point.y()), b_down)
-                        one_point = QPointF(in_border_x, in_border_y)
-                        editing_polygon['widget_points'][i].append(one_point)
-
+                        one_point = self.get_in_border_wp(one_point)
+                        widget_points[i][j] = one_point
                         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point)
                         if img_pixel_x is not None:
-                            editing_polygon['img_points'][i].append([img_pixel_x, img_pixel_y])
+                            img_points[i][j] = [img_pixel_x, img_pixel_y]
             else:
-                widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
-
                 for i, one_point in enumerate(widget_points):
                     one_point += offset
-                    in_border_x = min(max(b_left, one_point.x()), b_right)  # 防止坐标越界
-                    in_border_y = min(max(b_up, one_point.y()), b_down)
-                    one_point = QPointF(in_border_x, in_border_y)  # 这里原位替换了widget_points里的数据
-
+                    one_point = self.get_in_border_wp(one_point)
+                    widget_points[i] = one_point
                     img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(one_point)
-
                     if img_pixel_x is not None:
                         img_points[i] = [img_pixel_x, img_pixel_y]
 
             if self.LeftClick:
                 self.start_pos = self.cursor_in_widget
 
-            self.update()
+        self.update()
 
     @staticmethod
     def move_to_new_folder():
@@ -995,9 +1035,6 @@ class ImgShow(BaseImgFrame):
 
         self.update()
 
-    def erase_pixel(self):
-        pass
-    
     def remove_widget_img_pair(self):
         if len(self.widget_points):
             self.widget_points.pop()
