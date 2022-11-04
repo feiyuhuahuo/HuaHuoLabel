@@ -6,6 +6,7 @@ import numpy as np
 import os
 import json
 import onnxruntime as ort
+import sys
 
 from random import shuffle
 from os import path as osp
@@ -21,14 +22,16 @@ from need.custom_widgets.marquee_label import signal_show_plain_img, signal_show
 from need.custom_widgets.img_show_widget import signal_shape_type, signal_xy_color2ui, signal_selected_shape, \
     signal_del_shape, signal_selected_label_item, signal_open_label_window, signal_one_collection_done, \
     BaseImgFrame, signal_move2new_folder
-from need.custom_signals import StrSignal
+from need.custom_signals import StrSignal, ErrorSignal
 from need.custom_threads.seg_auto_inference import signal_progress_text, signal_progress_value, signal_progress_done, \
     RunInference
 from need.custom_threads.seg_change_one_class_json import ChangeOneClassJsons, signal_cocj_done
 from need.custom_threads.seg_delete_one_class_json import DeleteOneClassJsons, signal_docj_done
-from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask, path_to, uniform_path, qimage_to_array
+from need.utils import ClassStatDict, ColorNames, ColorCode, get_seg_mask, path_to, uniform_path, \
+    qimage_to_array, get_datetime
 
 signal_select_ui_ok_button = StrSignal()
+error2app = ErrorSignal()
 
 
 # noinspection PyUnresolvedReferences
@@ -72,7 +75,7 @@ class ImgCls(QMainWindow):
         loader = QUiLoader()
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
-        self.main_ui = loader.load('main.ui')  # 主界面
+        self.main_ui = loader.load('ui_files/main.ui')  # 主界面
         self.label_ui = SelectWindow(title='类别', button_signal=signal_select_ui_ok_button)
 
         self.setCentralWidget(self.main_ui)
@@ -81,6 +84,7 @@ class ImgCls(QMainWindow):
         self.setWindowIcon(QIcon('images/icon.ico'))
         self.resize(1200, 900)
 
+        sys.stderr = error2app
         self.init_button_group('temp.txt')
         self.init_menu()
         self.connect_signals()
@@ -222,6 +226,7 @@ class ImgCls(QMainWindow):
         signal_show_label_img.signal.connect(self.marquee_show)
         signal_show_plain_img.signal.connect(self.marquee_show)
         signal_xy_color2ui.signal.connect(self.show_xy_color)
+        sys.stderr.signal.connect(self.error2log)
 
     def closeEvent(self, e):
         if self.window_marquee_img:
@@ -467,14 +472,6 @@ class ImgCls(QMainWindow):
     def change_font_size(self):
         self.main_ui.img_widget.change_font(ann_font_size=self.main_ui.spinBox_5.value())
 
-    def show_waiting_label(self):
-        self.waiting_label = WaitingLabel(self)
-        geo_self = self.frameGeometry()
-        x1 = int(geo_self.width() / 2)
-        y1 = int(geo_self.height() / 3)
-        self.waiting_label.move(x1, y1)
-        self.waiting_label.show()
-
     def change_one_class_jsons(self):
         new_c, is_ok = self.input_dlg.getText(self.main_ui, f'修改类别', '请输入类别名称', QLineEdit.Normal)
         if is_ok:
@@ -691,6 +688,14 @@ class ImgCls(QMainWindow):
         self.waiting_label.stop()
         self.waiting_label.close()
         QMessageBox.information(self.main_ui, '已完成', f'已完成，对应的PNG标注图已同步更新。')
+
+    def error2log(self, text):
+        QMessageBox.warning(self.main_ui, '系统错误', f'<font color=red>{text}</font>，请反馈给开发者。')
+
+        date_time = get_datetime()
+
+        with open('error_log.txt', 'a+', encoding='utf-8') as f:
+            f.writelines(text)
 
     def export_seg_classes(self):
         text, is_ok = QInputDialog().getText(self, '名称', '请输入导出txt的名称。', QLineEdit.Normal)
@@ -1676,6 +1681,14 @@ class ImgCls(QMainWindow):
         if qimg_png:
             self.window_train_val_png.paint_img(qimg_png)
             self.window_train_val_png.show()
+
+    def show_waiting_label(self):
+        self.waiting_label = WaitingLabel(self)
+        geo_self = self.frameGeometry()
+        x1 = int(geo_self.width() / 2)
+        y1 = int(geo_self.height() / 3)
+        self.waiting_label.move(x1, y1)
+        self.waiting_label.show()
 
     def show_xy_color(self, info):
         x, y, r, g, b = info

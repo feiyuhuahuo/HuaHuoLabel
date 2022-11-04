@@ -715,13 +715,13 @@ QCheckBox::indicator:unchecked {
            <string>***.bmp，0/0</string>
           </property>
           <property name="textFormat">
-           <enum>Qt::MarkdownText</enum>
+           <enum>Qt::PlainText</enum>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
           </property>
           <property name="textInteractionFlags">
-           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+           <set>Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QMainWindow
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 from need.custom_signals import *
@@ -9,14 +9,12 @@ from need.custom_signals import *
 signal_select_window_close = BoolSignal()
 
 
-class SelectWindow(QWidget):
+class SelectWindow(QMainWindow):
     def __init__(self, title='窗口', button_signal=None):
         super().__init__()
         loader = QUiLoader()
-        self.ui = loader.load('label_window.ui')
-        layout = QVBoxLayout()
-        layout.addWidget(self.ui)
-        self.setLayout(layout)
+        self.ui = loader.load('ui_files/label_window.ui')
+        self.setCentralWidget(self.ui)
         self.resize(150, 320)
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon('images/icon.ico'))

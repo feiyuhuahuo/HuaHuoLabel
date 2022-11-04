@@ -43,3 +43,10 @@ class ListSignal(QObject):
 
     def send(self, info):
         self.signal.emit(info)
+
+
+class ErrorSignal(QObject):
+    signal = Signal(str)
+
+    def write(self, text):
+        self.signal.emit(str(text))

@@ -13,16 +13,38 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../images/icon.ico</normaloff>../images/icon.ico</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="3,1">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,3">
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
        <property name="spacing">
         <number>0</number>
        </property>
        <item>
         <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -30,7 +52,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>images/info.png</pixmap>
+          <pixmap>../images/info.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>false</bool>
@@ -41,12 +63,15 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_2">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+        <widget class="QTextBrowser" name="textBrowser">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="text">
-          <string>文字</string>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
          </property>
         </widget>
        </item>

@@ -89,6 +89,17 @@ import pdb
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-aa=None
-if aa:
-    print('8888')
+import glob
+imgs = glob.glob("C:/Users/feiyuhuahuo/Documents/WeChat Files\wxid_ccg22nnpy0h221\FileStorage\File/2022-11/nanjiao_seg/分割/标注/*.json")
+import cv2
+import numpy as np
+import json
+
+for i, one in enumerate(imgs):
+    print(i)
+    with open(one, 'r') as f:
+        content = json.load(f)
+        polygons, img_h, img_w = content['polygons'], content['img_height'], content['img_width']
+
+    if img_h != 1024 or img_w != 1024:
+        print(one)

@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import pdb
 import copy
+import datetime
 import cv2
 import numpy as np
 from collections import OrderedDict
@@ -130,6 +131,10 @@ def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
         return point_list
 
     return result
+
+
+def get_datetime():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
 def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
