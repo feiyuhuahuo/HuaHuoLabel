@@ -15,13 +15,13 @@ from need.custom_signals import *
 from need.custom_widgets.select_window import SelectWindow, signal_select_window_close
 
 signal_del_shape = IntSignal()
-signal_shape_type = StrSignal()
 signal_move2new_folder = BoolSignal()
 signal_open_label_window = BoolSignal()
 signal_one_collection_done = StrSignal()
 signal_seg_collection_select_ok = StrSignal()
 signal_selected_label_item = IntSignal()
 signal_selected_shape = IntSignal()
+signal_shape_type = StrSignal()
 signal_xy_color2ui = ListSignal()
 
 
@@ -159,10 +159,14 @@ class BaseImgFrame(QFrame):
             pass
 
         if re_center:
-            self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
+            if img_path_or_pix_map == 'images/bg.png':
+                self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            else:
+                self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
             self.center_point()
         else:
             self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
+
         self.update()
 
     def set_interpolation(self, mode):
@@ -1039,6 +1043,12 @@ class ImgShow(BaseImgFrame):
         if len(self.widget_points):
             self.widget_points.pop()
             self.img_points.pop()
+            self.update()
+
+    def set_ann_painted_img(self, path):
+        if self.AnnMode:
+            self.scaled_img_painted = QPixmap(path).scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.scaled_img = self.scaled_img_painted
             self.update()
 
     def set_mode(self, cls=False, m_cls=False, det=False, seg=False, seg_edit=False, ann=False):

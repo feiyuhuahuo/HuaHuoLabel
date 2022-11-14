@@ -34,34 +34,14 @@ import pdb
 # cv2.imshow("result", result)
 # cv2.imshow("result_sq", result_sq)
 # cv2.waitKey()
-#
-
-# import sys
-#
-# import numpy as np
-# import cv2
-# import glob
-# from PySide6.QtCore import QSize
-# from PySide6.QtGui import QImageReader, QImage
-# from PIL import Image
-#
-# QImageReader.setAllocationLimit(256)
-#
-# img = QImageReader('images/bg.png')
-# print(sys.getsizeof(img))
-# #img.setScaledSize(QSize(1024, 1024))
-# print(sys.getsizeof(img))
-# print(img.allocationLimit())
-# new_i = img.read()
-# print(sys.getsizeof(new_i))
-# print(new_i, '\n')
-# print(img.error(), '\n')
-# print(img.errorString(), '\n')
 
 
-# import os
-# imgs = glob.glob('D:\Data\硅片分选/前后崩/大图/*.bmp')
-#
+import cv2
+import os
+import glob
+import numpy as np
+imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
+
 # for k, one in enumerate(imgs):
 #     cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_GRAYSCALE)
 #     # cv2_img = cv2.resize(cv2_img, (3072, 3072))
@@ -72,34 +52,25 @@ import pdb
 #     #         piece = cv2_img[i*1024:(i+1)*1024, j*1024:(j+1)*1024]
 #     #         cv2.imencode('.bmp', piece)[1].tofile(f'D:\Data\硅片分选/表面崩边/{name}_{i}_{j}.bmp')
 #
-#     piece1 = cv2_img[:, 0: 1600]
-#     piece2 = cv2_img[:, 1600:3200]
-#     piece3 = cv2_img[:, 3200:4800]
-#     piece4 = cv2_img[:, 4800:6400]
-#     cv2.imencode('.bmp', piece1)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_1.bmp')
-#     cv2.imencode('.bmp', piece2)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_2.bmp')
-#     cv2.imencode('.bmp', piece3)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_3.bmp')
-#     cv2.imencode('.bmp', piece4)[1].tofile(f'D:\Data\硅片分选/前后崩/piece/{name}_4.bmp')
+#     piece1 = cv2_img[0:280, :]
+#     piece2 = cv2_img[280:560, :]
+#     piece3 = cv2_img[560:840, :]
+#     # piece4 = cv2_img[:, 4800:6400]
+#     cv2.imencode('.bmp', piece1)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_1.bmp')
+#     cv2.imencode('.bmp', piece2)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_2.bmp')
+#     cv2.imencode('.bmp', piece3)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_3.bmp')
+#     # cv2.imencode('.bmp', piece4)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/前后崩过检/小图/{name}_4.bmp')
 
 # import cv2
 #
 # cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
-# for one in range(4):
-#     img = cv2.imread(f'E:/c_sharp_deploy/qhb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
+# for one in range(3):
+#     img = cv2.imread(f'E:/c_sharp_deploy/zyb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
+#     # print(img.shape)
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-import glob
-imgs = glob.glob("C:/Users/feiyuhuahuo/Documents/WeChat Files\wxid_ccg22nnpy0h221\FileStorage\File/2022-11/nanjiao_seg/分割/标注/*.json")
-import cv2
-import numpy as np
-import json
 
-for i, one in enumerate(imgs):
-    print(i)
-    with open(one, 'r') as f:
-        content = json.load(f)
-        polygons, img_h, img_w = content['polygons'], content['img_height'], content['img_width']
-
-    if img_h != 1024 or img_w != 1024:
-        print(one)
+aa=()
+if aa:
+    print('sad')
