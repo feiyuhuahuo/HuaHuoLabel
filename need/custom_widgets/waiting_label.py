@@ -1,32 +1,34 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-from PySide6.QtWidgets import QLabel, QApplication
+from PySide6.QtWidgets import QLabel, QApplication, QSizePolicy
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 
 
 class WaitingLabel(QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, text=None, parent=None):
         super().__init__(parent)
-        self.resize(120, 40)
         self.num = 0
         font = QFont()
         font.setPointSize(14)
         self.setFont(font)
-        self.setText(' 等待中')
+        self.text = f' {text} ' if text else ' 等待中 '
+        self.setText(self.text + '...')
+        self.setStyleSheet("background-color: rgb(220, 220, 220); border-color: rgb(80, 80, 80); "
+                           "border-width: 2px; border-style: solid;")
+
+        self.setMinimumHeight(40)
+        policy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.setSizePolicy(policy)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.set_text)
         self.timer.start(1000)
 
-        self.setStyleSheet("background-color: rgb(240, 240, 240); border-color: rgb(80, 80, 80); "
-                           "border-width: 2px; border-style: solid;")
-
     def set_text(self):
-        text = ' 等待中.' + '.' * self.num
-        self.setText(text)
+        self.setText(self.text + '.' * (self.num + 1))
         self.num += 1
-        self.num = self.num % 6
+        self.num = self.num % 3
 
     def stop(self):
         self.timer.stop()
@@ -34,6 +36,6 @@ class WaitingLabel(QLabel):
 
 if __name__ == '__main__':
     app = QApplication()
-    wl = WaitingLabel()
+    wl = WaitingLabel('保中')
     wl.show()
     app.exec()

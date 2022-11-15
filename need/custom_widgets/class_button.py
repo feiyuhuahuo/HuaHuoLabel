@@ -1,5 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
+import pdb
+
 from PySide6.QtWidgets import QInputDialog, QPushButton, QMessageBox, QLineEdit
 from PySide6.QtCore import Qt
 from need.utils import ClassStatDict
@@ -8,6 +10,9 @@ from need.utils import ClassStatDict
 class ClassButton(QPushButton):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
+        font = self.font()
+        font.setPointSize(10)
+        self.setFont(font)
 
     def mousePressEvent(self, e):
         super().mousePressEvent(e)
