@@ -47,9 +47,8 @@ class ImgCls(QMainWindow):
         self.img_root_path = ''  # 图片根目录
         self.task = ''
         self.imgs = []
+        self.pinned_images = []
         self.label_file_dict = {}
-        self.tv_imgs = []
-        self.tv_i = 0
         self.img_num = 0
         self.cur_i = 0
         self.marquee_num = 20  # 小图的最大数量, 越大占用内存越多
@@ -69,12 +68,10 @@ class ImgCls(QMainWindow):
 
         self.window_marquee_img = None
         self.window_marquee_label = None
-        self.window_train_val_img = None
-        self.window_train_val_png = None
         self.window_compare = None
         self.window_auto_infer_progress = None
 
-        self.pinned_images = []  # todo
+
 
         self.file_select_dlg = QFileDialog(self)
         self.input_dlg = QInputDialog(self)
@@ -199,7 +196,6 @@ class ImgCls(QMainWindow):
         self.main_ui.pushButton_g_val.clicked.connect(self.copy_img_to_val)
         self.main_ui.pushButton_g_train.clicked.connect(self.copy_img_to_train)
         self.main_ui.pushButton_update_tv.clicked.connect(self.update_train_val)
-        self.main_ui.pushButton_show_tv.clicked.connect(self.show_train_val_label)
         self.main_ui.pushButton_pin.clicked.connect(self.pin_unpin_image)
         self.main_ui.pushButton_pin_last.clicked.connect(lambda: self.pin_jump(last=True))
         self.main_ui.pushButton_pin_next.clicked.connect(lambda: self.pin_jump(next=True))
@@ -240,10 +236,6 @@ class ImgCls(QMainWindow):
             self.window_marquee_img.close()
         if self.window_marquee_label:
             self.window_marquee_label.close()
-        if self.window_train_val_img:
-            self.window_train_val_img.close()
-        if self.window_train_val_png:
-            self.window_train_val_png.close()
         if self.window_compare:
             self.window_compare.close()
         if self.window_auto_infer_progress:
@@ -254,23 +246,6 @@ class ImgCls(QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_A or event.key() == Qt.Key_D:
-            # 查看训练/验证集时的图片翻页功能
-            if self.window_train_val_img and self.window_train_val_png:
-                if (not self.window_train_val_img.IsClosed) or (not self.window_train_val_png.IsClosed):
-                    if event.key() == Qt.Key_A:
-                        self.tv_i -= 1
-                    elif event.key() == Qt.Key_D:
-                        self.tv_i += 1
-
-                    self.tv_i = min(max(0, self.tv_i), len(self.tv_imgs) - 1)
-                    ori_path = self.tv_imgs[self.tv_i]
-                    self.window_train_val_img.paint_img(QPixmap(ori_path))
-                    png_path = ori_path.replace('imgs', 'labels')[:-3] + 'png'
-                    qimg_png = self.get_qimg_png(png_path)
-                    if qimg_png:
-                        self.window_train_val_png.paint_img(qimg_png)
-                    return
-
             if event.key() == Qt.Key_A:
                 self.scan_img(last=True)
             elif event.key() == Qt.Key_D:
@@ -632,7 +607,7 @@ class ImgCls(QMainWindow):
         val_img_list = [one.split(os_sep)[-1] for one in val_img_list]
 
         for one in self.imgs:
-            name = one.split(os_sep)[-1]
+            name = one.split('/')[-1]
             if ('图片已删除' not in name) and (name not in val_img_list):
                 train_label = path_to(one, img2png=True)
                 if osp.exists(train_label):
@@ -1202,7 +1177,6 @@ class ImgCls(QMainWindow):
             self.main_ui.lineEdit.setText(self.img_root_path)
             self.reset_seg()
             self.window_marquee_label = None
-            self.window_train_val_png = None
             self.task = self.img_root_path.split('/')[-1]
             self.load_one_file_dict()
             self.load_pinned_images()
@@ -1456,7 +1430,7 @@ class ImgCls(QMainWindow):
                 f.writelines(lines)
 
     def save_one_label_file(self):
-        if self.OneFileLabel and self.img_root_path:
+        if self.in_edit_mode() and self.OneFileLabel and self.label_file_dict:
             json_path = f'{self.img_root_path}/{self.WorkMode}/标注/labels.json'
             with open(json_path, 'w') as f:
                 json.dump(self.label_file_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
@@ -1807,45 +1781,6 @@ class ImgCls(QMainWindow):
     @staticmethod
     def show_menu(ob):  # 在鼠标位置显示菜单
         ob.exec(QCursor.pos())
-
-    def show_train_val_label(self):
-        if not self.has_categories():
-            return
-
-        QMessageBox.information(self.main_ui, '选择图片', '请选择一张训练集或验证集中的图片。')
-
-        self.tv_i = 0
-        tv_path = self.file_select_dlg.getExistingDirectory(self.main_ui, '选择文件夹', dir=self.img_root_path)
-
-        if tv_path:
-            self.tv_imgs = sorted(glob.glob(f'{tv_path}/*'))
-        else:
-            return
-
-        self.window_train_val_img = BaseImgFrame(title='分割原图')
-        self.window_train_val_img.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-        geo_self = self.frameGeometry()
-        geo_sub = self.window_train_val_img.frameGeometry()
-        x1 = geo_self.left()
-        y1 = int((geo_self.height() - geo_sub.height()) / 2)
-        self.window_train_val_img.move(x1, y1)
-
-        self.window_train_val_png = BaseImgFrame(title='分割标注')
-        self.window_train_val_png.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-        x2 = x1 + geo_sub.width()
-        self.window_train_val_png.move(x2, y1)
-
-        ori_path = self.tv_imgs[self.tv_i]
-        self.window_train_val_img.paint_img(QPixmap(ori_path))
-        self.window_train_val_img.show()
-
-        png_path = ori_path.replace('imgs', 'labels')[:-3] + 'png'
-        qimg_png = self.get_qimg_png(png_path)
-        if qimg_png:
-            self.window_train_val_png.paint_img(qimg_png)
-            self.window_train_val_png.show()
 
     def show_waiting_label(self):
         self.waiting_label = WaitingLabel(self)
