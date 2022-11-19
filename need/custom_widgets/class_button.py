@@ -33,7 +33,3 @@ class ClassButton(QPushButton):
                             ClassStatDict.pop(ori_text)
                         if text != '-':
                             ClassStatDict.setdefault(text, 0)
-
-                with open(f'log_files/buttons.txt', 'w', encoding='utf-8') as f:
-                    for one_c in ClassStatDict.keys():
-                        f.writelines(f'{one_c}\n')

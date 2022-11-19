@@ -191,11 +191,11 @@ def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
 
 def path_to(path, img2json=False, img2png=False, img2txt=False):
     if img2json:
-        return path.replace('分割/原图', '分割/标注')[:-3] + 'json'
+        return path.replace('/原图', '/标注')[:-3] + 'json'
     elif img2png:
-        return path.replace('分割/原图', '分割/标注')[:-3] + 'png'
+        return path.replace('/原图', '/标注')[:-3] + 'png'
     elif img2txt:
-        return path.replace('原图', '标注')[:-3] + 'txt'
+        return path.replace('/原图', '/标注')[:-3] + 'txt'
 
 
 def point_in_polygon(px, py, poly):
