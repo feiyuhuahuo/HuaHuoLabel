@@ -182,6 +182,7 @@ class ImgCls(QMainWindow):
         self.main_ui.pushButton.clicked.connect(self.open_dir)
         self.main_ui.pushButton_stat.clicked.connect(self.show_class_statistic)
         self.main_ui.pushButton_pen_color.clicked.connect(self.change_pen_color)
+        self.main_ui.pushButton_cross_color.clicked.connect(self.change_cross_color)
         self.main_ui.pushButton_35.clicked.connect(self.undo_painting)
         self.main_ui.pushButton_36.clicked.connect(self.save_ann_img)
         self.main_ui.pushButton_37.clicked.connect(self.change_font_color)
@@ -211,9 +212,10 @@ class ImgCls(QMainWindow):
         self.main_ui.spinBox_6.valueChanged.connect(self.change_pen_size)
         self.main_ui.radioButton_read.toggled.connect(self.set_read_mode)
         self.main_ui.tabWidget.currentChanged.connect(self.set_work_mode)
+        self.main_ui.checkBox_hide_cross.clicked.connect(self.set_hide_cross)
         self.main_ui.checkBox_one_label.toggled.connect(self.set_one_file_label)
         self.main_ui.checkBox_separate_label.toggled.connect(self.set_separate_label)
-        self.main_ui.checkBox_seg_edit.toggled.connect(self.set_seg_edit_mode)
+        self.main_ui.checkBox_shape_edit.toggled.connect(self.set_shape_edit_mode)
         self.main_ui.toolBox.currentChanged.connect(self.set_tool_box)
         self.main_ui.comboBox_2.currentIndexChanged.connect(self.change_shape_type)
         self.main_ui.horizontalSlider.valueChanged.connect(self.img_enhance)
@@ -514,6 +516,13 @@ class ImgCls(QMainWindow):
             widget = line.takeAt(0).widget()
             widget.setParent(None)
 
+    def change_cross_color(self):
+        if self.WorkMode == '目标检测':
+            color = QColorDialog.getColor()
+            if color.isValid():
+                self.main_ui.pushButton_cross_color.setStyleSheet('QPushButton { background-color: %s }' % color.name())
+                self.main_ui.img_widget.change_pen(det_cross_color=QColor(color.name()))
+
     def change_font_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
@@ -561,7 +570,7 @@ class ImgCls(QMainWindow):
         color = QColorDialog.getColor()
         if color.isValid():
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.pushButton_12.setStyleSheet('QPushButton { background-color: %s }' % color.name())
+                self.main_ui.pushButton_pen_color.setStyleSheet('QPushButton { background-color: %s }' % color.name())
                 self.main_ui.img_widget.change_pen(seg_pen_color=QColor(color.name()))
             elif self.main_ui.toolBox.currentIndex() == 1:
                 self.main_ui.pushButton_39.setStyleSheet('QPushButton { background-color: %s }' % color.name())
@@ -600,7 +609,7 @@ class ImgCls(QMainWindow):
             self.marquees_layout.removeWidget(widget)
 
     def clear_painted_img(self):
-        self.main_ui.img_widget.clear_scaled_img()
+        self.main_ui.img_widget.clear_scaled_img(to_undo=True)
 
     def cls_back(self):
         if self.cls_op_track and self.main_ui.groupBox_1.isEnabled():
@@ -1200,7 +1209,7 @@ class ImgCls(QMainWindow):
                 QMessageBox.warning(self.main_ui, '标注错误', f'不存在的类别：{error_class} !')
 
     def modify_seg_class_1(self):
-        if self.main_ui.checkBox_seg_edit.isChecked():
+        if self.main_ui.checkBox_shape_edit.isChecked():
             self.LabelUiCallByMo = True
             self.show_label_ui()
 
@@ -1404,6 +1413,10 @@ class ImgCls(QMainWindow):
         cv2.imencode('.jpg', img_array.astype('uint8'))[1].tofile(save_path)
         QMessageBox.information(self.main_ui, '已保存', f'图片保存于：{save_path}。')
 
+    def save_cls(self):
+        if self.OneFileLabel:
+            pass
+
     def save_edited_img(self, save_all=False):
         if save_all:
             imgs_path = [aa for aa in self.imgs if aa != 'images/图片已删除.png']
@@ -1584,6 +1597,8 @@ class ImgCls(QMainWindow):
                                 break
 
             if self.in_edit_mode():
+                if self.WorkMode == '单类别分类':
+                    self.save_cls()
                 if self.WorkMode == '多类别分类':
                     self.save_m_cls()
                 elif self.WorkMode == '分割':
@@ -1608,6 +1623,9 @@ class ImgCls(QMainWindow):
     def select_shape(self):
         signal_selected_label_item.send(self.main_ui.listWidget_2.currentRow())
 
+    def set_hide_cross(self):
+        self.main_ui.img_widget.set_hide_cross(self.main_ui.checkBox_hide_cross.isChecked())
+
     def set_m_cls_default_c(self):
         text, is_ok = QInputDialog().getText(self, '默认类别', '请输入类别名称', QLineEdit.Normal)
         if is_ok and text:
@@ -1621,14 +1639,7 @@ class ImgCls(QMainWindow):
 
     def set_read_mode(self):
         if self.WorkMode in ('目标检测', '分割'):
-            self.main_ui.checkBox_seg_edit.setDisabled(self.main_ui.radioButton_read.isChecked())
-
-    def set_seg_edit_mode(self):
-        self.main_ui.img_widget.set_mode(seg=True, seg_edit=self.main_ui.checkBox_seg_edit.isChecked())
-        self.action_modify_one_class_jsons.setDisabled(not self.main_ui.checkBox_seg_edit.isChecked())
-        self.action_del_one_class_jsons.setDisabled(not self.main_ui.checkBox_seg_edit.isChecked())
-        self.action_modify_one_shape_class.setDisabled(not self.main_ui.checkBox_seg_edit.isChecked())
-        self.action_delete_one_shape.setDisabled(not self.main_ui.checkBox_seg_edit.isChecked())
+            self.main_ui.checkBox_shape_edit.setDisabled(self.main_ui.radioButton_read.isChecked())
 
     def set_separate_label(self):
         self.SeparateLabel = self.main_ui.checkBox_separate_label.isChecked()
@@ -1639,34 +1650,34 @@ class ImgCls(QMainWindow):
         if not self.main_ui.checkBox_one_label.isChecked() and not self.main_ui.checkBox_separate_label.isChecked():
             QMessageBox.warning(self.main_ui, '未选择标注模式', '请选择至少一种标注文件模式！')
 
+    def set_shape_edit_mode(self):
+        self.main_ui.img_widget.set_additional_mode(shape_edit=self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_modify_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_del_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_modify_one_shape_class.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_delete_one_shape.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+
     def set_shape_selected(self, i):
         self.main_ui.listWidget_2.item(i).setSelected(True)
 
     def set_tool_box(self):
-        self.main_ui.img_widget.clear_scaled_img()
+        self.main_ui.img_widget.clear_scaled_img(to_undo=False)
         self.main_ui.img_widget.clear_all_polygons()
         self.main_ui.img_widget.clear_widget_img_points()
+        self.main_ui.img_widget.set_additional_mode(ann=(self.main_ui.toolBox.currentIndex() == 1))
 
-        if self.main_ui.toolBox.currentIndex() == 0:
-            tab_index = self.main_ui.tabWidget.currentIndex()
-            if tab_index == 0:
-                self.main_ui.img_widget.set_mode(cls=True)
-            elif tab_index == 1:
-                self.main_ui.img_widget.set_mode(m_cls=True)
-            elif tab_index == 2:
-                self.main_ui.img_widget.set_mode(det=True)
-            elif tab_index == 3:
-                self.main_ui.img_widget.set_mode(seg=True)
-        elif self.main_ui.toolBox.currentIndex() == 1:
-            self.main_ui.img_widget.set_mode(ann=True)
+        if self.main_ui.toolBox.currentIndex() == 1:
             self.paint_pinned_ann_img()
 
     def set_work_mode(self):
         tab_index = self.main_ui.tabWidget.currentIndex()
         self.WorkMode = self.main_ui.tabWidget.tabText(tab_index)
+        self.main_ui.comboBox_2.setCurrentIndex(0)
+        self.main_ui.comboBox_2.setDisabled(False)
+        self.reset_seg()
 
         if self.main_ui.toolBox.currentIndex() == 1:
-            self.main_ui.img_widget.set_mode(ann=True)
+            self.main_ui.img_widget.set_additional_mode(ann=True)
 
         if self.WorkMode != '单类别分类':
             self.main_ui.radioButton_read.setText('只读')
@@ -1676,21 +1687,24 @@ class ImgCls(QMainWindow):
             self.main_ui.radioButton_read.setText('剪切')
             self.main_ui.radioButton_write.setText('复制')
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.img_widget.set_mode(cls=True)
+                self.main_ui.img_widget.set_task_mode(cls=True)
         elif self.WorkMode == '多类别分类':
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.img_widget.set_mode(m_cls=True)
+                self.main_ui.img_widget.set_task_mode(m_cls=True)
         elif self.WorkMode == '目标检测':
+            self.main_ui.img_widget.reset_cursor()
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.img_widget.set_mode(det=True)
+                self.main_ui.comboBox_2.setCurrentIndex(1)
+                self.main_ui.comboBox_2.setDisabled(True)
+                self.main_ui.img_widget.set_task_mode(det=True)
         elif self.WorkMode == '分割':
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.img_widget.set_mode(seg=True)
+                self.main_ui.img_widget.set_task_mode(seg=True)
 
         self.main_ui.page_4.setDisabled(tab_index == 0 or tab_index == 1)
 
         stat = self.main_ui.radioButton_read.isChecked() or tab_index == 0 or tab_index == 1
-        self.main_ui.checkBox_seg_edit.setDisabled(stat)
+        self.main_ui.checkBox_shape_edit.setDisabled(stat)
 
         self.main_ui.pushButton_auto_infer.setDisabled(tab_index == 0 or tab_index == 1)
         self.main_ui.action_get_sub_seg_png.setDisabled(tab_index != 3)
@@ -1837,7 +1851,6 @@ class ImgCls(QMainWindow):
 
             QMessageBox.information(self.main_ui, '已完成', f'已完成')
 
-
 # todo：类别发生变化时，给予提示，提示框需要制作，message_box.py
 # todo: train val 指示按钮，比例指示条
 # todo: add to train 需要完善
@@ -1846,3 +1859,6 @@ class ImgCls(QMainWindow):
 # todo: 伪标注合成全功能
 # todo: 显示标注的信息：平均灰度，面积，等, 需要区分灰度图和彩色图
 # todo: 完善版本信息
+# todo: 绘制标注的指针样式，行为需要完善
+# todo: win11, Ubuntu20.04， ubuntu22.04 测试
+# todo: 中英双文

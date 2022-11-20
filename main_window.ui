@@ -134,49 +134,39 @@
                <string>          绘制标注</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_2">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_12">
-                 <property name="topMargin">
-                  <number>4</number>
+               <item alignment="Qt::AlignHCenter">
+                <widget class="QComboBox" name="comboBox_2">
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
                  </property>
-                 <property name="bottomMargin">
-                  <number>4</number>
-                 </property>
-                 <item alignment="Qt::AlignHCenter">
-                  <widget class="QComboBox" name="comboBox_2">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>多边形</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>矩形</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>椭圆形</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>环形</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>填充</string>
-                    </property>
-                   </item>
-                  </widget>
+                 <item>
+                  <property name="text">
+                   <string>多边形</string>
+                  </property>
                  </item>
-                </layout>
+                 <item>
+                  <property name="text">
+                   <string>矩形</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>椭圆形</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>环形</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>填充</string>
+                  </property>
+                 </item>
+                </widget>
                </item>
                <item alignment="Qt::AlignHCenter">
                 <widget class="QPushButton" name="pushButton_pen_color">
@@ -317,7 +307,7 @@
                 </widget>
                </item>
                <item alignment="Qt::AlignHCenter">
-                <widget class="QCheckBox" name="checkBox_seg_edit">
+                <widget class="QCheckBox" name="checkBox_shape_edit">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -2172,6 +2162,57 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
          <attribute name="title">
           <string>目标检测</string>
          </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_14" stretch="1,10">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_21">
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="checkBox_hide_cross">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>隐藏十字线</string>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QPushButton" name="pushButton_cross_color">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(120, 120, 120);</string>
+              </property>
+              <property name="text">
+               <string>十字线颜色</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_det_info">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
         <widget class="QWidget" name="tab_seg">
          <attribute name="title">
@@ -2241,7 +2282,7 @@ QCheckBox::indicator:unchecked {
            </layout>
           </item>
           <item>
-           <widget class="QLabel" name="label_9">
+           <widget class="QLabel" name="label_seg_info">
             <property name="text">
              <string>TODO：显示标注的信息：平均灰度，面积，等</string>
             </property>

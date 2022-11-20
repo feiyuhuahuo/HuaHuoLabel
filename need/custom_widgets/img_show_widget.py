@@ -237,6 +237,7 @@ class ImgShow(BaseImgFrame):
         self.ann_point_cur = QPoint(0, 0)
         self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
 
+        self.det_cross_color = QColor(120, 120, 120)
         self.seg_pen_size = 2
         self.seg_pen_color = QColor('red')
         self.ann_pen_size = 4
@@ -272,14 +273,17 @@ class ImgShow(BaseImgFrame):
 
         self.ClsMode = True
         self.MClsMode = False
+        self.DetMode = False
         self.SegMode = False
-        self.SegEditMode = False
+
+        self.ShapeEditMode = False
         self.AnnMode = False
 
         self.LeftClick = False  # 用于实现图片拖曳和标注拖曳功能
         self.PolygonLastPointDone = False  # 用于SegMode标识画完一个多边形
         # 如果触发了一次 '内环越界'，就置为True，在下次mouseReleaseEvent再置为False，确保不会不停的触发'内环越界'
         self.OutInConflict = False
+        self.HideCross = False
 
         self.FlagDrawCollection = False
         signal_selected_label_item.signal.connect(self.draw_selected_shape)
@@ -339,48 +343,59 @@ class ImgShow(BaseImgFrame):
         if img_pixel_x is not None:  # 实时显示坐标，像素值
             signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
 
-        if self.SegMode and QApplication.keyboardModifiers() == Qt.ControlModifier:  # 画标注功能
-            self.update()
-            if self.shape_type == '填充' and len(self.img_points):
-                self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-
-        elif self.SegMode and self.SegEditMode:
-            self.polygon_editing_i = self.get_editing_polygon()
-            if self.LeftClick and QApplication.keyboardModifiers() != Qt.ShiftModifier:
-                if self.corner_index is not None:
-                    self.corner_point_move(self.corner_index)
-
-                if self.polygon_editing_i is not None:
-                    self.move_polygons()
-                else:
-                    self.move_pix_img()
-
-        elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            self.ann_draw()
+        if self.AnnMode:
+            if QApplication.keyboardModifiers() == Qt.ControlModifier:
+                self.ann_draw()
+            else:
+                self.move_pix_img()
         else:
-            self.move_pix_img()
+            if (self.DetMode or self.SegMode) and QApplication.keyboardModifiers() == Qt.ControlModifier:
+                self.update()
+                if self.shape_type == '填充' and len(self.img_points):
+                    self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+
+            elif (self.DetMode or self.SegMode) and self.ShapeEditMode:
+                self.polygon_editing_i = self.get_editing_polygon()
+
+                if self.LeftClick:
+                    if QApplication.keyboardModifiers() != Qt.ShiftModifier:
+                        if self.corner_index is not None:
+                            self.corner_point_move(self.corner_index)
+
+                        if self.polygon_editing_i is not None:
+                            self.move_polygons()
+                        else:
+                            self.move_pix_img()
+                else:
+                    self.update()
+
+            elif self.DetMode:
+                self.update()
+            else:
+                self.move_pix_img()
 
     def mousePressEvent(self, e):
-        if not self.SegMode:
+        if not (self.DetMode or self.SegMode):
             self.setCursor(Qt.ClosedHandCursor)
 
-        if self.SegMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            if self.PolygonLastPointDone:
-                self.shape_done_open_label_window()
+        if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if self.AnnMode:
+                self.setCursor(self.pencil_cursor)
+                self.ann_point_cur = e.position() - self.img_tl
+                self.ann_point_last = self.ann_point_cur
+
+                command = AnnUndo(self, self.scaled_img.copy())
+                self.undo_stack.push(command)  # 添加command用于撤销功能
             else:
-                self.cursor_in_widget = e.position()
-                if self.shape_type == '填充':
-                    self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-                else:
-                    self.add_widget_img_pair(self.cursor_in_widget)
-
-        elif self.AnnMode and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            self.setCursor(self.pencil_cursor)
-            self.ann_point_cur = e.position() - self.img_tl
-            self.ann_point_last = self.ann_point_cur
-
-            command = AnnUndo(self, self.scaled_img.copy())
-            self.undo_stack.push(command)  # 添加command用于撤销功能
+                if self.DetMode or self.SegMode:
+                    if self.PolygonLastPointDone:
+                        self.shape_done_open_label_window()
+                    else:
+                        self.cursor_in_widget = e.position()
+                        if self.shape_type == '填充':
+                            self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+                        else:
+                            self.add_widget_img_pair(self.cursor_in_widget)
         else:
             if e.button() == Qt.LeftButton:
                 self.LeftClick = True
@@ -393,10 +408,10 @@ class ImgShow(BaseImgFrame):
         if e.button() == Qt.LeftButton:
             self.LeftClick = False
 
-        if not self.SegMode and QApplication.keyboardModifiers() != Qt.ControlModifier:
+        if not (self.DetMode or self.SegMode) and QApplication.keyboardModifiers() != Qt.ControlModifier:
             self.setCursor(Qt.OpenHandCursor)
 
-        if QApplication.keyboardModifiers() == Qt.ControlModifier and self.SegMode:
+        if QApplication.keyboardModifiers() == Qt.ControlModifier and (self.DetMode or self.SegMode):
             if self.shape_type in ('矩形', '椭圆形'):
                 point_br = e.position()
                 b_left, b_up, b_right, b_down = self.get_border_coor()
@@ -409,18 +424,28 @@ class ImgShow(BaseImgFrame):
                     self.clear_widget_img_points()
             elif self.shape_type == '填充':
                 signal_open_label_window.send(True)
-        elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.SegEditMode:
+        elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
             self.erase_paint_pixel(self.fill_editing_i)
 
     def paintEvent(self, e):  # 程序调用show()和update()之后就会调用此函数
         self.painter.begin(self)
         self.painter.drawPixmap(self.img_tl, self.scaled_img)
 
-        if self.SegMode:
+        print(self.ClsMode, self.MClsMode, self.DetMode, self.SegMode)
+        print(self.AnnMode)
+
+        if self.DetMode:
+            if not self.HideCross:
+                self.painter.setPen(QPen(self.det_cross_color, 1, Qt.DashLine))
+                x, y = self.cursor_in_widget.toTuple()
+                self.painter.drawLine(0, y, 9999, y)
+                self.painter.drawLine(x, 0, x, 9999)
+
+        if self.DetMode or self.SegMode:
             self.PolygonLastPointDone = False
             self.draw_completed_polygons()
 
-            if self.SegEditMode:
+            if self.ShapeEditMode:
                 self.corner_index = self.cursor_close_to_corner()
                 self.draw_editing_polygon()
 
@@ -488,7 +513,7 @@ class ImgShow(BaseImgFrame):
             new_img_y = (1 / 2 + offset_y) * (img_h - new_img_h) + old_y
             self.img_tl = QPointF(new_img_x, new_img_y)
 
-            if self.SegMode:  # 已标注图形的伸缩
+            if self.DetMode or self.SegMode:  # 已标注图形的伸缩
                 scale_factor = (new_img_w / img_w, new_img_h / img_h)
                 self.shape_scale_move(QPointF(old_x, old_y), scale_factor)
 
@@ -689,7 +714,10 @@ class ImgShow(BaseImgFrame):
                             return corner_index
         return corner_index
 
-    def change_pen(self, seg_pen_size=None, seg_pen_color=None, ann_pen_size=None, ann_pen_color=None):
+    def change_pen(self, det_cross_color=None, seg_pen_size=None, seg_pen_color=None,
+                   ann_pen_size=None, ann_pen_color=None):
+        if det_cross_color is not None:
+            self.det_cross_color = det_cross_color
         if seg_pen_size is not None:
             self.seg_pen_size = seg_pen_size
         if seg_pen_color is not None:
@@ -709,9 +737,10 @@ class ImgShow(BaseImgFrame):
         self.shape_type = shape_type
         self.clear_widget_img_points()
 
-    def clear_scaled_img(self):
-        command = AnnUndo(self, self.scaled_img.copy())
-        self.undo_stack.push(command)
+    def clear_scaled_img(self, to_undo=True):
+        if to_undo:
+            command = AnnUndo(self, self.scaled_img.copy())
+            self.undo_stack.push(command)
 
         self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
         self.update()
@@ -757,7 +786,7 @@ class ImgShow(BaseImgFrame):
         return False
 
     def del_polygons(self):
-        if self.SegMode and self.SegEditMode and self.polygon_editing_i is not None:
+        if (self.DetMode or self.SegMode) and self.ShapeEditMode and self.polygon_editing_i is not None:
             self.all_polygons.pop(self.polygon_editing_i)
             signal_del_shape.send(self.polygon_editing_i)
             self.polygon_editing_i = None
@@ -1045,17 +1074,18 @@ class ImgShow(BaseImgFrame):
             self.img_points.pop()
             self.update()
 
+    def reset_cursor(self):
+        self.cursor_in_widget = QPointF(-10, -10)
+
     def set_ann_painted_img(self, path):
         if self.AnnMode:
             self.scaled_img_painted = QPixmap(path).scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.scaled_img = self.scaled_img_painted
             self.update()
 
-    def set_mode(self, cls=False, m_cls=False, det=False, seg=False, seg_edit=False, ann=False):
-        self.ClsMode, self.MClsMode, self.DetMode, self.SegMode, self.SegEditMode, self.AnnMode = \
-            cls, m_cls, det, seg, seg_edit, ann
-
-        self.setMouseTracking(not self.AnnMode)
+    def set_task_mode(self, cls=False, m_cls=False, det=False, seg=False):
+        self.ClsMode, self.MClsMode, self.DetMode, self.SegMode = cls, m_cls, det, seg
+        self.setMouseTracking(True)
 
         if cls:
             self.setCursor(Qt.OpenHandCursor)
@@ -1065,13 +1095,23 @@ class ImgShow(BaseImgFrame):
             self.setCursor(Qt.CrossCursor)
         if seg:
             self.setCursor(Qt.CrossCursor)
-        if seg_edit:
-            self.unsetCursor()
-        if ann:
-            self.setCursor(Qt.OpenHandCursor)
 
-        if not ann:
-            self.clear_scaled_img()
+    def set_additional_mode(self, shape_edit=False, ann=False):  # 这两个模式是冲突的
+        self.ShapeEditMode, self.AnnMode = shape_edit, ann
+
+        if shape_edit:
+            self.unsetCursor()
+
+        if ann:
+            self.setMouseTracking(False)
+            self.setCursor(Qt.OpenHandCursor)
+        else:
+            self.clear_scaled_img(to_undo=False)
+
+    def set_hide_cross(self, hide):
+        self.HideCross = hide
+        self.reset_cursor()
+        self.update()
 
     def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
         if self.shape_type == '环形':
@@ -1109,5 +1149,5 @@ class ImgShow(BaseImgFrame):
 
     def show_menu(self, ob):  # 在鼠标位置显示菜单
         self.add_poly_to_collection.setDisabled(self.polygon_editing_i is None)
-        self.draw_collection_shape.setDisabled(not self.SegMode)
+        self.draw_collection_shape.setDisabled(not (self.DetMode or self.SegMode))
         ob.exec(QCursor.pos())
