@@ -5,16 +5,17 @@ import cv2
 import numpy as np
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QMessageBox
-from need.utils import ClassStatDict, get_seg_mask
+from need.utils import get_seg_mask
 from need.custom_signals import IntSignal
 
 signal_docj_done = IntSignal()
 
 
 class DeleteOneClassJsons(QThread):
-    def __init__(self, imgs, old_c, old_c_i):
+    def __init__(self, imgs, classes, old_c, old_c_i):
         super().__init__()
         self.imgs = imgs
+        self.classes = classes
         self.old_c = old_c
         self.old_c_i = old_c_i
 
@@ -39,16 +40,15 @@ class DeleteOneClassJsons(QThread):
             # save png
             cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
             img_h, img_w = cv2_img.shape[:2]
-            seg_class_names = [aa for aa in ClassStatDict.keys()]
-            seg_mask = get_seg_mask(seg_class_names, polygons_copy, img_h, img_w)
+            seg_mask = get_seg_mask(self.classes, polygons_copy, img_h, img_w)
 
             if seg_mask.__class__ == str:
                 QMessageBox.critical(self, '类别不存在', f'类别"{seg_mask}"不存在。')
                 return
 
-            if len(polygons_copy) and not (0 < seg_mask.max() <= len(seg_class_names)):
+            if len(polygons_copy) and not (0 < seg_mask.max() <= len(self.classes)):
                 QMessageBox.critical(self, '标注错误',
-                                     f'当前仅有{len(seg_class_names)}类，但标注最大值为{seg_mask.max()}。')
+                                     f'当前仅有{len(self.classes)}类，但标注最大值为{seg_mask.max()}。')
                 return
 
             cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(json_path[:-4] + 'png')

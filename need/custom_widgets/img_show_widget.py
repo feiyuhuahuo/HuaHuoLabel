@@ -276,6 +276,7 @@ class ImgShow(BaseImgFrame):
         self.DetMode = False
         self.SegMode = False
 
+        self.DrawMode = True
         self.ShapeEditMode = False
         self.AnnMode = False
 
@@ -375,7 +376,7 @@ class ImgShow(BaseImgFrame):
                 self.move_pix_img()
 
     def mousePressEvent(self, e):
-        if not (self.DetMode or self.SegMode):
+        if self.AnnMode or self.ClsMode or self.MClsMode:
             self.setCursor(Qt.ClosedHandCursor)
 
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -408,6 +409,9 @@ class ImgShow(BaseImgFrame):
         if e.button() == Qt.LeftButton:
             self.LeftClick = False
 
+        if self.AnnMode:
+            self.setCursor(Qt.OpenHandCursor)
+
         if not (self.DetMode or self.SegMode) and QApplication.keyboardModifiers() != Qt.ControlModifier:
             self.setCursor(Qt.OpenHandCursor)
 
@@ -430,9 +434,6 @@ class ImgShow(BaseImgFrame):
     def paintEvent(self, e):  # 程序调用show()和update()之后就会调用此函数
         self.painter.begin(self)
         self.painter.drawPixmap(self.img_tl, self.scaled_img)
-
-        print(self.ClsMode, self.MClsMode, self.DetMode, self.SegMode)
-        print(self.AnnMode)
 
         if self.DetMode:
             if not self.HideCross:
@@ -1083,35 +1084,37 @@ class ImgShow(BaseImgFrame):
             self.scaled_img = self.scaled_img_painted
             self.update()
 
+    def set_hide_cross(self, hide):
+        self.HideCross = hide
+        self.reset_cursor()
+        self.update()
+
     def set_task_mode(self, cls=False, m_cls=False, det=False, seg=False):
         self.ClsMode, self.MClsMode, self.DetMode, self.SegMode = cls, m_cls, det, seg
         self.setMouseTracking(True)
 
-        if cls:
+        if cls or m_cls:
             self.setCursor(Qt.OpenHandCursor)
-        if m_cls:
-            self.setCursor(Qt.OpenHandCursor)
-        if det:
-            self.setCursor(Qt.CrossCursor)
-        if seg:
+        if det or seg:
             self.setCursor(Qt.CrossCursor)
 
-    def set_additional_mode(self, shape_edit=False, ann=False):  # 这两个模式是冲突的
-        self.ShapeEditMode, self.AnnMode = shape_edit, ann
+    def set_tool_mode(self, draw=True, shape_edit=False, ann=False):
+        self.DrawMode, self.ShapeEditMode, self.AnnMode = draw, shape_edit, ann
+
+        if draw:
+            self.setCursor(Qt.CrossCursor)
+            self.setMouseTracking(True)
 
         if shape_edit:
             self.unsetCursor()
+        else:
+            self.setCursor(Qt.CrossCursor)
 
         if ann:
             self.setMouseTracking(False)
             self.setCursor(Qt.OpenHandCursor)
         else:
             self.clear_scaled_img(to_undo=False)
-
-    def set_hide_cross(self, hide):
-        self.HideCross = hide
-        self.reset_cursor()
-        self.update()
 
     def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
         if self.shape_type == '环形':

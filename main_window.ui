@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1189</width>
-    <height>921</height>
+    <height>926</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -122,7 +122,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>474</height>
+                <height>477</height>
                </rect>
               </property>
               <property name="font">
@@ -340,7 +340,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>474</height>
+                <height>477</height>
                </rect>
               </property>
               <attribute name="label">
@@ -609,7 +609,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>138</width>
-                <height>474</height>
+                <height>477</height>
                </rect>
               </property>
               <attribute name="label">
@@ -1422,7 +1422,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
-                <widget class="QPushButton" name="pushButton_2">
+                <widget class="ClassButton" name="pushButton_2">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1434,7 +1434,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_3">
+                <widget class="ClassButton" name="pushButton_3">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1446,7 +1446,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_4">
+                <widget class="ClassButton" name="pushButton_4">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1458,7 +1458,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_5">
+                <widget class="ClassButton" name="pushButton_5">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1474,7 +1474,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_14">
                <item>
-                <widget class="QPushButton" name="pushButton_6">
+                <widget class="ClassButton" name="pushButton_6">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1486,7 +1486,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_7">
+                <widget class="ClassButton" name="pushButton_7">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1498,7 +1498,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_8">
+                <widget class="ClassButton" name="pushButton_8">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1510,7 +1510,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_9">
+                <widget class="ClassButton" name="pushButton_9">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1526,7 +1526,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_15">
                <item>
-                <widget class="QPushButton" name="pushButton_10">
+                <widget class="ClassButton" name="pushButton_10">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1538,7 +1538,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_11">
+                <widget class="ClassButton" name="pushButton_11">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1550,7 +1550,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_12">
+                <widget class="ClassButton" name="pushButton_12">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1562,7 +1562,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_13">
+                <widget class="ClassButton" name="pushButton_13">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1578,7 +1578,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_16">
                <item>
-                <widget class="QPushButton" name="pushButton_14">
+                <widget class="ClassButton" name="pushButton_14">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1590,7 +1590,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_15">
+                <widget class="ClassButton" name="pushButton_15">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1602,7 +1602,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_16">
+                <widget class="ClassButton" name="pushButton_16">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1614,7 +1614,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_17">
+                <widget class="ClassButton" name="pushButton_17">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1630,7 +1630,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_19">
                <item>
-                <widget class="QPushButton" name="pushButton_18">
+                <widget class="ClassButton" name="pushButton_18">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1642,7 +1642,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_19">
+                <widget class="ClassButton" name="pushButton_19">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1654,7 +1654,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_20">
+                <widget class="ClassButton" name="pushButton_20">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1666,7 +1666,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_21">
+                <widget class="ClassButton" name="pushButton_21">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1682,7 +1682,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_20">
                <item>
-                <widget class="QPushButton" name="pushButton_22">
+                <widget class="ClassButton" name="pushButton_22">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1694,7 +1694,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_23">
+                <widget class="ClassButton" name="pushButton_23">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1706,7 +1706,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_24">
+                <widget class="ClassButton" name="pushButton_24">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1718,7 +1718,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_25">
+                <widget class="ClassButton" name="pushButton_25">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1815,7 +1815,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_40">
                <item>
-                <widget class="QPushButton" name="pushButton_112">
+                <widget class="ClassButton" name="pushButton_112">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1827,7 +1827,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_113">
+                <widget class="ClassButton" name="pushButton_113">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1839,7 +1839,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_114">
+                <widget class="ClassButton" name="pushButton_114">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1851,7 +1851,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_115">
+                <widget class="ClassButton" name="pushButton_115">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1867,7 +1867,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_41">
                <item>
-                <widget class="QPushButton" name="pushButton_116">
+                <widget class="ClassButton" name="pushButton_116">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1879,7 +1879,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_117">
+                <widget class="ClassButton" name="pushButton_117">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1891,7 +1891,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_118">
+                <widget class="ClassButton" name="pushButton_118">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1903,7 +1903,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_119">
+                <widget class="ClassButton" name="pushButton_119">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1919,7 +1919,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_42">
                <item>
-                <widget class="QPushButton" name="pushButton_120">
+                <widget class="ClassButton" name="pushButton_120">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1931,7 +1931,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_121">
+                <widget class="ClassButton" name="pushButton_121">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1943,7 +1943,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_122">
+                <widget class="ClassButton" name="pushButton_122">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1955,7 +1955,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_123">
+                <widget class="ClassButton" name="pushButton_123">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1971,7 +1971,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_43">
                <item>
-                <widget class="QPushButton" name="pushButton_124">
+                <widget class="ClassButton" name="pushButton_124">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1983,7 +1983,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_125">
+                <widget class="ClassButton" name="pushButton_125">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -1995,7 +1995,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_126">
+                <widget class="ClassButton" name="pushButton_126">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2007,7 +2007,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_127">
+                <widget class="ClassButton" name="pushButton_127">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2023,7 +2023,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_45">
                <item>
-                <widget class="QPushButton" name="pushButton_128">
+                <widget class="ClassButton" name="pushButton_128">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2035,7 +2035,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_129">
+                <widget class="ClassButton" name="pushButton_129">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2047,7 +2047,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_130">
+                <widget class="ClassButton" name="pushButton_130">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2059,7 +2059,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_131">
+                <widget class="ClassButton" name="pushButton_131">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2075,7 +2075,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_46">
                <item>
-                <widget class="QPushButton" name="pushButton_132">
+                <widget class="ClassButton" name="pushButton_132">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2087,7 +2087,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_133">
+                <widget class="ClassButton" name="pushButton_133">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2099,7 +2099,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_134">
+                <widget class="ClassButton" name="pushButton_134">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2111,7 +2111,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_135">
+                <widget class="ClassButton" name="pushButton_135">
                  <property name="font">
                   <font>
                    <pointsize>10</pointsize>
@@ -2293,6 +2293,186 @@ QCheckBox::indicator:unchecked {
        </widget>
       </item>
       <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item alignment="Qt::AlignHCenter">
+          <widget class="QRadioButton" name="radioButton_read">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>图片分类通过剪切进行</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(220, 220, 220);
+    border:                 2px solid white;  
+}</string>
+           </property>
+           <property name="text">
+            <string>剪切</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">buttonGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignHCenter">
+          <widget class="QRadioButton" name="radioButton_write">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>图片分类通过复制进行</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(220, 220, 220);
+    border:                 2px solid white;  
+}</string>
+           </property>
+           <property name="text">
+            <string>复制</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">buttonGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignHCenter">
+          <widget class="QCheckBox" name="checkBox_one_label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>所有标注用一个统一的文件保存</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+           </property>
+           <property name="text">
+            <string>统一标注文件</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignHCenter">
+          <widget class="QCheckBox" name="checkBox_separate_label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>每张图片都会保存单独的标注文件</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+           </property>
+           <property name="text">
+            <string>划分至文件夹</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QGroupBox" name="groupBox_6">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -2383,95 +2563,6 @@ QCheckBox::indicator:unchecked {
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_read">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>图片分类通过剪切进行</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(220, 220, 220);
-    border:                 2px solid white;  
-}</string>
-           </property>
-           <property name="text">
-            <string>剪切</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup</string>
-           </attribute>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_write">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>图片分类通过复制进行</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(220, 220, 220);
-    border:                 2px solid white;  
-}</string>
-           </property>
-           <property name="text">
-            <string>复制</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup</string>
-           </attribute>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -2493,7 +2584,7 @@ QRadioButton::indicator:unchecked {
          <number>5</number>
         </property>
         <item>
-         <widget class="QLabel" name="label_15">
+         <widget class="QLabel" name="label_train">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -2510,12 +2601,12 @@ QRadioButton::indicator:unchecked {
 </string>
           </property>
           <property name="text">
-           <string>train | ok: 0, ng: 0</string>
+           <string> train: 0</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_16">
+         <widget class="QLabel" name="label_val">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -2528,11 +2619,11 @@ QRadioButton::indicator:unchecked {
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">\\background-color: rgb(80, 161, 241);
-background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 rgb(243, 81, 122), stop:0.30001 rgb(85, 170, 255));</string>
+           <string notr="true">\\background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 rgb(243, 81, 122), stop:0.30001 rgb(85, 170, 255));
+background-color: rgb(243, 81, 122);</string>
           </property>
           <property name="text">
-           <string>val | ok: 0, ng: 0</string>
+           <string>val: 0 </string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2599,68 +2690,10 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 r
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QCheckBox" name="checkBox_separate_label">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>每张图片都会保存单独的标注文件</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-           </property>
-           <property name="text">
-            <string>独立标注文件</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="3">
           <widget class="QPushButton" name="pushButton_100">
            <property name="text">
             <string>对比图片</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QCheckBox" name="checkBox_one_label">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>所有标注用一个统一的文件保存</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-           </property>
-           <property name="text">
-            <string>统一标注文件</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -3582,12 +3615,17 @@ QRadioButton::indicator:unchecked {
    <header>img_show</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>ClassButton</class>
+   <extends>QPushButton</extends>
+   <header>classbutton.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

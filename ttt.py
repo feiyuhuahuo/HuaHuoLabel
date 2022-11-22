@@ -71,9 +71,6 @@ imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-import cv2
-img =cv2.imread('444.png', cv2.IMREAD_UNCHANGED)
-img = img[17:207, 21:211, :]
-# cv2.imshow('aa', img)
-# cv2.waitKey()
-cv2.imwrite('99.png', img)
+aa={}
+if not aa:
+    print('*****')

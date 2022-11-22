@@ -9,7 +9,49 @@ from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from math import sqrt, pow
 
-ClassStatDict = OrderedDict()  # 用于记录分类和分割类别的数量
+
+class ClassStatistic:  # 只有读、写两种接口，避免混乱
+    def __init__(self):
+        self.stat_dict = OrderedDict()
+        self.copy_dict = self.stat_dict.copy()
+
+    def read(self, k='', keys=False, kv_pair=False, length=False):
+        if k:
+            return self.stat_dict[k]
+        elif keys:
+            return self.stat_dict.keys()
+        elif kv_pair:
+            return self.stat_dict.items()
+        elif length:
+            return len(self.stat_dict)
+
+    def write(self, k_set='', k_plus='', k_minus='', k_del='', clear=False):
+        if self.copy_dict != self.stat_dict:
+            print(f'----------错误，ClassStat未通过write()接口进行修改----------')
+            return
+
+        if k_set:
+            self.stat_dict.setdefault(k_set, 0)
+        elif k_plus:
+            self.stat_dict.setdefault(k_plus, 0)
+            self.stat_dict[k_plus] += 1
+        elif k_minus:
+            if k_minus not in self.stat_dict.keys():
+                print(f'----------错误，ClassStat未找到键：{k_minus}----------')
+            else:
+                self.stat_dict[k_minus] -= 1
+        elif k_del:
+            if k_del not in self.stat_dict.keys():
+                print(f'----------错误，ClassStat未找到键：{k_del}----------')
+            else:
+                self.stat_dict.pop(k_del)
+        elif clear:
+            self.stat_dict.clear()
+
+        self.copy_dict = self.stat_dict.copy()
+
+
+ClassStat = ClassStatistic()
 
 # CSS 通用color
 ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
@@ -54,6 +96,14 @@ class AnnUndo(QUndoCommand):
         self.board.scaled_img = self.undo_img
         self.board.scaled_img_painted = self.board.scaled_img.copy()
         self.board.update()
+
+
+def cls_has_classified(path):  # 查看单类别分类模式下，图片是否已分类
+    split = uniform_path(path).split('/')[-2]
+    if split != '单类别分类':
+        return split
+    else:
+        return False
 
 
 def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
