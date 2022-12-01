@@ -71,6 +71,5 @@ imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-aa={}
-if not aa:
-    print('*****')
+aa='sdsad         \n'
+print(aa.strip(' ') + 'gg')

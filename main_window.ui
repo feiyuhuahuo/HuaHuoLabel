@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1189</width>
-    <height>926</height>
+    <width>1198</width>
+    <height>936</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -122,7 +122,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>477</height>
+                <height>484</height>
                </rect>
               </property>
               <property name="font">
@@ -340,7 +340,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>477</height>
+                <height>484</height>
                </rect>
               </property>
               <attribute name="label">
@@ -609,7 +609,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>138</width>
-                <height>477</height>
+                <height>484</height>
                </rect>
               </property>
               <attribute name="label">
@@ -1278,7 +1278,7 @@ background-color: rgb(85, 170, 255);
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>793</width>
+             <width>802</width>
              <height>171</height>
             </rect>
            </property>
@@ -1393,7 +1393,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
         </property>
         <widget class="QWidget" name="tab_cls">
          <attribute name="title">
-          <string>单类别分类</string>
+          <string>单分类</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
@@ -1750,6 +1750,18 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              </spacer>
             </item>
             <item>
+             <widget class="QCheckBox" name="checkBox_cls_wo">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>只显示未分类图片</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QPushButton" name="pushButton_101">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1769,7 +1781,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                </font>
               </property>
               <property name="toolTip">
-               <string>仅能撤销分类操作</string>
+               <string>撤销图片移动操作</string>
               </property>
               <property name="text">
                <string>回退</string>
@@ -1786,7 +1798,7 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
         </widget>
         <widget class="QWidget" name="tab_mcls">
          <attribute name="title">
-          <string>多类别分类</string>
+          <string>多分类</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
@@ -2143,6 +2155,18 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
              </spacer>
             </item>
             <item>
+             <widget class="QCheckBox" name="checkBox_mcls_wo">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>只显示未分类图片</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QPushButton" name="pushButton_50">
               <property name="font">
                <font>
@@ -2158,103 +2182,15 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_det">
+        <widget class="QWidget" name="tab_sem">
          <attribute name="title">
-          <string>目标检测</string>
+          <string>语义分割</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_14" stretch="1,10">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_21">
-            <item alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox_hide_cross">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-              </property>
-              <property name="text">
-               <string>隐藏十字线</string>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignHCenter">
-             <widget class="QPushButton" name="pushButton_cross_color">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(120, 120, 120);</string>
-              </property>
-              <property name="text">
-               <string>十字线颜色</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_det_info">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_seg">
-         <attribute name="title">
-          <string>分割</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,10">
+         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,20">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_47">
             <item alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox_save_semantic">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-              </property>
-              <property name="text">
-               <string>保存语义分割PNG</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox_has_label_only">
+             <widget class="QCheckBox" name="checkBox_sem_wi">
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
@@ -2279,14 +2215,163 @@ QCheckBox::indicator:unchecked {
               </property>
              </widget>
             </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="checkBox_sem_wo">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>只显示无标注图片</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
-           <widget class="QLabel" name="label_seg_info">
-            <property name="text">
-             <string>TODO：显示标注的信息：平均灰度，面积，等</string>
-            </property>
-           </widget>
+           <widget class="QTextBrowser" name="textBrowser_2"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_det">
+         <attribute name="title">
+          <string>目标检测</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_14" stretch="1,20">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_21">
+            <item>
+             <widget class="QPushButton" name="pushButton_cross_color">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(120, 120, 120);</string>
+              </property>
+              <property name="text">
+               <string>十字线颜色</string>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="checkBox_hide_cross">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>隐藏十字线</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBox_det_wo">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>只显示无标注图片</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTextBrowser" name="textBrowser_3"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_ins">
+         <attribute name="title">
+          <string>实例分割</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_17" stretch="1,20">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_48">
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QCheckBox" name="checkBox_ins_wo">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>只显示无标注图片</string>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QPushButton" name="pushButton_29">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>查看当前实例mask</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTextBrowser" name="textBrowser"/>
           </item>
          </layout>
         </widget>
@@ -2312,6 +2397,9 @@ QCheckBox::indicator:unchecked {
         <layout class="QHBoxLayout" name="horizontalLayout_12">
          <item alignment="Qt::AlignHCenter">
           <widget class="QRadioButton" name="radioButton_read">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -2343,6 +2431,11 @@ QRadioButton::indicator:unchecked {
 
     background-color:       rgb(220, 220, 220);
     border:                 2px solid white;  
+}
+QRadioButton::indicator:disabled {
+
+    background-color:       rgb(100, 100, 100);
+    border:                 2px solid white;  
 }</string>
            </property>
            <property name="text">
@@ -2358,6 +2451,9 @@ QRadioButton::indicator:unchecked {
          </item>
          <item alignment="Qt::AlignHCenter">
           <widget class="QRadioButton" name="radioButton_write">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -2388,6 +2484,11 @@ QRadioButton::indicator:unchecked {
 QRadioButton::indicator:unchecked {
 
     background-color:       rgb(220, 220, 220);
+    border:                 2px solid white;  
+}
+QRadioButton::indicator:disabled {
+
+    background-color:       rgb(100, 100, 100);
     border:                 2px solid white;  
 }</string>
            </property>
@@ -2430,7 +2531,7 @@ QCheckBox::indicator:unchecked {
             <string>统一标注文件</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -2655,19 +2756,13 @@ background-color: rgb(243, 81, 122);</string>
          <property name="bottomMargin">
           <number>6</number>
          </property>
-         <item row="3" column="1">
-          <widget class="QPushButton" name="pushButton_stat">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
+         <item row="3" column="4">
+          <widget class="QPushButton" name="pushButton_100">
+           <property name="toolTip">
+            <string>新建一个窗口来展示一张图片</string>
            </property>
            <property name="text">
-            <string>类别统计</string>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>images/图片7.png</normaloff>images/图片7.png</iconset>
+            <string>对比图片</string>
            </property>
           </widget>
          </item>
@@ -2690,15 +2785,57 @@ background-color: rgb(243, 81, 122);</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="3">
-          <widget class="QPushButton" name="pushButton_100">
+         <item row="2" column="1">
+          <widget class="QPushButton" name="pushButton_goto_train">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
-            <string>对比图片</string>
+            <string>加入训练集</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QPushButton" name="pushButton_g_val">
+         <item row="3" column="1">
+          <widget class="QPushButton" name="pushButton_stat">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>类别统计</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>images/图片7.png</normaloff>images/图片7.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QPushButton" name="pushButton_generate_train">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>将非验证集的图片全部加入训练集</string>
+           </property>
+           <property name="text">
+            <string>生成训练集</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="pushButton_goto_val">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -2712,8 +2849,8 @@ background-color: rgb(243, 81, 122);</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QPushButton" name="pushButton_g_train">
+         <item row="2" column="5">
+          <widget class="QPushButton" name="pushButton_clear_label">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -2722,8 +2859,11 @@ background-color: rgb(243, 81, 122);</string>
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="toolTip">
+            <string>删除不存在的图片对应的标注文件</string>
+           </property>
            <property name="text">
-            <string>生成训练集</string>
+            <string>清理标注文件</string>
            </property>
           </widget>
          </item>
@@ -3139,18 +3279,21 @@ background-color: rgb(243, 81, 122);</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_10">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="6,4,4,4">
+          <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="6,4,0,0,4,4">
            <property name="spacing">
             <number>4</number>
+           </property>
+           <property name="leftMargin">
+            <number>17</number>
            </property>
            <item alignment="Qt::AlignHCenter">
             <widget class="QLabel" name="label_48">
              <property name="text">
-              <string>顺时针转：</string>
+              <string>顺时针转</string>
              </property>
             </widget>
            </item>
-           <item alignment="Qt::AlignHCenter">
+           <item alignment="Qt::AlignLeft">
             <widget class="QSpinBox" name="spinBox_16">
              <property name="suffix">
               <string>°</string>
@@ -3172,7 +3315,27 @@ background-color: rgb(243, 81, 122);</string>
              </property>
             </widget>
            </item>
-           <item alignment="Qt::AlignHCenter">
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QLabel" name="label_50">
+             <property name="text">
+              <string>翻转</string>
+             </property>
+            </widget>
+           </item>
+           <item alignment="Qt::AlignRight">
             <widget class="QCheckBox" name="checkBox_131">
              <property name="enabled">
               <bool>true</bool>
@@ -3206,7 +3369,7 @@ background-color: rgb(243, 81, 122);</string>
              </property>
             </widget>
            </item>
-           <item alignment="Qt::AlignHCenter">
+           <item alignment="Qt::AlignRight">
             <widget class="QCheckBox" name="checkBox_132">
              <property name="enabled">
               <bool>true</bool>
@@ -3238,10 +3401,13 @@ background-color: rgb(243, 81, 122);</string>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_80" stretch="0,0,0">
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
            <item alignment="Qt::AlignHCenter">
             <widget class="QLabel" name="label_44">
              <property name="text">
-              <string>缩放算法：</string>
+              <string>缩放算法</string>
              </property>
             </widget>
            </item>
@@ -3315,12 +3481,12 @@ QRadioButton::indicator:unchecked {
             <number>4</number>
            </property>
            <property name="leftMargin">
-            <number>10</number>
+            <number>8</number>
            </property>
            <item alignment="Qt::AlignHCenter">
             <widget class="QLabel" name="label_45">
              <property name="text">
-              <string>缩放大小：</string>
+              <string>缩放大小</string>
              </property>
             </widget>
            </item>
@@ -3375,10 +3541,13 @@ QRadioButton::indicator:unchecked {
            <property name="spacing">
             <number>4</number>
            </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
            <item alignment="Qt::AlignHCenter">
             <widget class="QLabel" name="label_49">
              <property name="text">
-              <string>保存格式：</string>
+              <string>保存格式</string>
              </property>
             </widget>
            </item>
@@ -3564,7 +3733,7 @@ QRadioButton::indicator:unchecked {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1189</width>
+     <width>1198</width>
      <height>22</height>
     </rect>
    </property>

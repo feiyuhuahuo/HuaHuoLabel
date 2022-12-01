@@ -8,9 +8,10 @@ import numpy as np
 from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from math import sqrt, pow
+from need.custom_widgets.message_box import CustomMessageBox
 
 
-class ClassStatistic:  # 只有读、写两种接口，避免混乱
+class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
     def __init__(self):
         self.stat_dict = OrderedDict()
         self.copy_dict = self.stat_dict.copy()
@@ -51,14 +52,28 @@ class ClassStatistic:  # 只有读、写两种接口，避免混乱
         self.copy_dict = self.stat_dict.copy()
 
 
-ClassStat = ClassStatistic()
+class ClassStatistic:
+    def __init__(self):
+        self.__class_list = []
+
+    def add(self, c):
+        self.__class_list.append(c)
+
+    def delete(self, c):
+        self.__class_list.remove(c)
+
+    def classes(self):
+        return self.__class_list
+
+
+ClsClasses = ClassStatistic()
 
 # CSS 通用color
 ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
               'cadetblue', 'chocolate', 'coral', 'crimson', 'cyan',
               'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgreen', 'darkkhaki', 'darkolivegreen',
               'darkorange', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkturquoise',
-              'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dodgerblue',
+              'darkviolet', 'deeppink', 'deepskyblue', 'dimgray',
               'firebrick', 'fuchsia',
               'gold', 'goldenrod', 'gray', 'green',
               'hotpink',
@@ -96,14 +111,6 @@ class AnnUndo(QUndoCommand):
         self.board.scaled_img = self.undo_img
         self.board.scaled_img_painted = self.board.scaled_img.copy()
         self.board.update()
-
-
-def cls_has_classified(path):  # 查看单类别分类模式下，图片是否已分类
-    split = uniform_path(path).split('/')[-2]
-    if split != '单类别分类':
-        return split
-    else:
-        return False
 
 
 def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):

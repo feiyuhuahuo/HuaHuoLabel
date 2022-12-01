@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "E:\HuaHuoLabel\need\main.py", line 267, in keyPressEvent
-    self.scan_img(next=True)
-Traceback (most recent call last):
-  File "E:\HuaHuoLabel\need\main.py", line 268, in keyPressEvent
-    

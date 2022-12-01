@@ -17,13 +17,13 @@
    <iconset>
     <normaloff>../images/icon.ico</normaloff>../images/icon.ico</iconset>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="3,1">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="10,1">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,30">
        <property name="spacing">
-        <number>0</number>
+        <number>20</number>
        </property>
        <item>
         <widget class="QLabel" name="label">
@@ -35,27 +35,30 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>80</width>
-           <height>0</height>
+           <width>43</width>
+           <height>40</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>16777215</width>
-           <height>16777215</height>
+           <width>43</width>
+           <height>40</height>
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+          <string notr="true"/>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
          </property>
          <property name="text">
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>../images/info.png</pixmap>
+          <pixmap>../images/info_4.png</pixmap>
          </property>
          <property name="scaledContents">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -65,13 +68,46 @@
        <item>
         <widget class="QTextBrowser" name="textBrowser">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="cursor" stdset="0">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(240, 240, 240);</string>
+         </property>
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustToContents</enum>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'微软雅黑'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -103,6 +139,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>确定</string>
        </property>
@@ -110,6 +151,11 @@
      </item>
      <item>
       <widget class="QCheckBox" name="checkBox">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>不再提示</string>
        </property>
