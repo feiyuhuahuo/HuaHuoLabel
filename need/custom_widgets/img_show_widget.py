@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import json
 
-from typing import Optional, List, Union
+from typing import List, Union
 from copy import deepcopy
 import pdb
 from PySide6.QtWidgets import QInputDialog, QFrame, QMessageBox, QApplication, QMenu, QListWidgetItem
@@ -931,18 +931,11 @@ class ImgShow(BaseImgFrame):
 
         return json_polygons
 
-    def json_to_polygons(self, json_path, json_data=None):
-        if json_data is None:
-            with open(json_path, 'r') as f:
-                content = json.load(f)
-                polygons, ori_h, ori_w = content['polygons'], content['img_height'], content['img_width']
-        else:
-            polygons, ori_h, ori_w = json_data
-
+    def prepare_polygons(self, polygons, ori_h, ori_w):
         img_h, img_w = self.img.size().height(), self.img.size().width()
         if ori_h != img_h or ori_w != img_w:
-            QMessageBox.critical(self, '图片尺寸错误', f'"{json_path}"记录的图片尺寸({ori_w}, {ori_h}) != '
-                                                 f'当前的图片尺寸({img_w}, {img_h})。')
+            QMessageBox.critical(self, '图片尺寸错误', f'记录的图片尺寸({ori_w}, {ori_h}) '
+                                                 f'!= 当前的图片尺寸({img_w}, {img_h})。')
             return
 
         self.center_point()

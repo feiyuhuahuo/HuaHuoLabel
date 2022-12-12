@@ -995,15 +995,14 @@ QRadioButton::indicator:unchecked {
            <string/>
           </property>
           <property name="styleSheet">
-           <string notr="true">\\background-color: rgb(255, 0, 127);
-background-color: rgb(85, 170, 255);
-\\background-color: rgb(225, 225, 225);</string>
+           <string notr="true">background-color: rgb(200, 200, 200);
+</string>
           </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
-           <string>train</string>
+           <string>none</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -1756,6 +1755,17 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 <pointsize>10</pointsize>
                </font>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
               <property name="text">
                <string>只显示未分类图片</string>
               </property>
@@ -2161,6 +2171,17 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                 <pointsize>10</pointsize>
                </font>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
               <property name="text">
                <string>只显示未分类图片</string>
               </property>
@@ -2190,32 +2211,6 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_47">
             <item alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox_sem_wi">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-              </property>
-              <property name="text">
-               <string>只显示带标注图片</string>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignHCenter">
              <widget class="QCheckBox" name="checkBox_sem_wo">
               <property name="font">
                <font>
@@ -2237,7 +2232,33 @@ QCheckBox::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>只显示无标注图片</string>
+               <string>只显示未标注图片</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBox_sem_bg">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>将当前图片标注为全背景</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>全背景标注</string>
               </property>
              </widget>
             </item>
@@ -2312,7 +2333,7 @@ QCheckBox::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>只显示无标注图片</string>
+               <string>只显示未标注图片</string>
               </property>
              </widget>
             </item>
@@ -2352,7 +2373,7 @@ QCheckBox::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>只显示无标注图片</string>
+               <string>只显示为标注图片</string>
               </property>
              </widget>
             </item>
@@ -2364,7 +2385,7 @@ QCheckBox::indicator:unchecked {
                </font>
               </property>
               <property name="text">
-               <string>查看当前实例mask</string>
+               <string>查看当前实例标注</string>
               </property>
              </widget>
             </item>
@@ -2698,7 +2719,7 @@ QCheckBox::indicator:unchecked {
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">background-color: rgb(243, 81, 122);
+           <string notr="true">background-color: rgb(200, 200, 200);
 </string>
           </property>
           <property name="text">
@@ -2721,7 +2742,7 @@ QCheckBox::indicator:unchecked {
           </property>
           <property name="styleSheet">
            <string notr="true">\\background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 rgb(243, 81, 122), stop:0.30001 rgb(85, 170, 255));
-background-color: rgb(243, 81, 122);</string>
+background-color: rgb(200, 200, 200);</string>
           </property>
           <property name="text">
            <string>val: 0 </string>
@@ -2756,16 +2777,6 @@ background-color: rgb(243, 81, 122);</string>
          <property name="bottomMargin">
           <number>6</number>
          </property>
-         <item row="3" column="4">
-          <widget class="QPushButton" name="pushButton_100">
-           <property name="toolTip">
-            <string>新建一个窗口来展示一张图片</string>
-           </property>
-           <property name="text">
-            <string>对比图片</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="2">
           <widget class="QPushButton" name="pushButton_auto_infer">
            <property name="enabled">
@@ -2816,24 +2827,6 @@ background-color: rgb(243, 81, 122);</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="4">
-          <widget class="QPushButton" name="pushButton_generate_train">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>将非验证集的图片全部加入训练集</string>
-           </property>
-           <property name="text">
-            <string>生成训练集</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="2">
           <widget class="QPushButton" name="pushButton_goto_val">
            <property name="enabled">
@@ -2850,7 +2843,7 @@ background-color: rgb(243, 81, 122);</string>
           </widget>
          </item>
          <item row="2" column="5">
-          <widget class="QPushButton" name="pushButton_clear_label">
+          <widget class="QPushButton" name="pushButton_random_split">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -2860,10 +2853,56 @@ background-color: rgb(243, 81, 122);</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>删除不存在的图片对应的标注文件</string>
+            <string>将数据集随机划分成训练集和验证集</string>
            </property>
            <property name="text">
-            <string>清理标注文件</string>
+            <string>随机划分</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QPushButton" name="pushButton_check_label">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>检查是否有多余的或未标注的标注文件</string>
+           </property>
+           <property name="text">
+            <string>检查标注</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5">
+          <widget class="QPushButton" name="pushButton_100">
+           <property name="toolTip">
+            <string>新建一个窗口来展示一张图片</string>
+           </property>
+           <property name="text">
+            <string>对比图片</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QPushButton" name="pushButton_generate_train">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>将非验证集的图片全部加入训练集</string>
+           </property>
+           <property name="text">
+            <string>生成训练集</string>
            </property>
           </widget>
          </item>
@@ -3747,8 +3786,6 @@ QRadioButton::indicator:unchecked {
      </property>
      <addaction name="action_1_0_0"/>
     </widget>
-    <addaction name="action_get_sub_seg_png"/>
-    <addaction name="action_mc_mr"/>
     <addaction name="menu_2"/>
    </widget>
    <addaction name="menu"/>
@@ -3793,8 +3830,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup_3"/>
+  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

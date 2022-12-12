@@ -34,7 +34,7 @@ import pdb
 # cv2.imshow("result", result)
 # cv2.imshow("result_sq", result_sq)
 # cv2.waitKey()
-
+import random
 
 import cv2
 import os
@@ -71,5 +71,16 @@ imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
 #     cv2.imshow("aa", img*200)
 #     cv2.waitKey()
 
-aa='sdsad         \n'
-print(aa.strip(' ') + 'gg')
+# img = glob.glob('C:/Users/feiyuhuahuo\Desktop\jinke1\labels/val/*.png')
+# for one in img:
+#     img = cv2.imread(one, cv2.IMREAD_GRAYSCALE)
+#     print(img.shape)
+#
+#     qimg = (img == 2).astype('uint8') * 200
+#     print((img==2).sum())
+#     cv2.imshow('aa', qimg)
+#     cv2.waitKey()
+
+aa ={'aa':20}
+aa.pop('aa')
+print(aa)

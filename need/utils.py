@@ -1,6 +1,9 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import pdb
+import os
+from os import path as osp
+import glob
 import copy
 import datetime
 import cv2
@@ -8,7 +11,6 @@ import numpy as np
 from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from math import sqrt, pow
-from need.custom_widgets.message_box import CustomMessageBox
 
 
 class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
@@ -64,6 +66,9 @@ class ClassStatistic:
 
     def classes(self):
         return self.__class_list
+
+    def clear(self):
+        self.__class_list = []
 
 
 ClsClasses = ClassStatistic()
@@ -190,6 +195,11 @@ def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
     return result
 
 
+def file_remove(path):
+    if os.path.exists(path):
+        os.remove(path)
+
+
 def get_datetime():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -244,6 +254,15 @@ def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
         seg_mask += mask
 
     return seg_mask
+
+
+def img_pure_name(path):
+    path = uniform_path(path)
+
+    if path[-3:] in ('png', 'bmp', 'jpg', 'txt'):
+        return path.split('/')[-1][:-4]
+    elif path.endswith('json'):
+        return path.split('/')[-1][:-5]
 
 
 def path_to(path, img2json=False, img2png=False, img2txt=False):
@@ -348,6 +367,25 @@ def qimage_to_array(img, share_memory=False):
         return arr
     else:
         return copy.deepcopy(arr)
+
+
+def recursive_glob(path):
+    all_imgs = []
+    files = glob.glob(f'{path}/*')
+    files = [uniform_path(aa) for aa in files]
+
+    folders = [aa for aa in files if osp.isdir(aa)]
+    folders.sort()
+    if f'{path}/imgs' in folders:
+        folders.remove(f'{path}/imgs')
+
+    for one in folders:
+        imgs = glob.glob(f'{one}/*')
+        imgs = [aa for aa in imgs if aa[-3:] in ('bmp', 'jpg', 'png')]
+        imgs.sort()
+        all_imgs += imgs
+
+    return all_imgs
 
 
 def uniform_path(path):

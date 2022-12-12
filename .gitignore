@@ -7,3 +7,4 @@ out
 *__pycache__*
 .idea
 consult.py
+log_files
