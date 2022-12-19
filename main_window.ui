@@ -210,6 +210,9 @@
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::NoContextMenu</enum>
+                   </property>
                    <property name="minimum">
                     <number>1</number>
                    </property>
@@ -257,6 +260,9 @@
                  </property>
                  <property name="contextMenuPolicy">
                   <enum>Qt::CustomContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>单击屏蔽/开启类别，双击屏蔽所有其它类别</string>
                  </property>
                  <property name="verticalScrollBarPolicy">
                   <enum>Qt::ScrollBarAsNeeded</enum>
@@ -410,6 +416,9 @@ QCheckBox::indicator:unchecked {
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::NoContextMenu</enum>
+                   </property>
                    <property name="minimum">
                     <number>1</number>
                    </property>
@@ -485,6 +494,9 @@ QCheckBox::indicator:unchecked {
                     <font>
                      <pointsize>10</pointsize>
                     </font>
+                   </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::NoContextMenu</enum>
                    </property>
                    <property name="minimum">
                     <number>1</number>
@@ -603,7 +615,7 @@ QCheckBox::indicator:unchecked {
                </item>
               </layout>
              </widget>
-             <widget class="QWidget" name="page">
+             <widget class="QWidget" name="page_6">
               <property name="geometry">
                <rect>
                 <x>0</x>
@@ -879,6 +891,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="toolTip">
            <string>指示当前图片是否被收藏</string>
           </property>
@@ -913,6 +928,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="toolTip">
            <string>跳转至上一张收藏的图片</string>
           </property>
@@ -937,6 +955,9 @@ QRadioButton::indicator:unchecked {
            <font>
             <pointsize>10</pointsize>
            </font>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="toolTip">
            <string>跳转至下一张收藏的图片</string>
@@ -991,6 +1012,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="toolTip">
            <string/>
           </property>
@@ -1036,6 +1060,9 @@ QRadioButton::indicator:unchecked {
             <height>16777215</height>
            </size>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -1047,6 +1074,9 @@ QRadioButton::indicator:unchecked {
            <font>
             <pointsize>10</pointsize>
            </font>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="text">
            <string/>
@@ -1086,6 +1116,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="minimum">
            <number>1</number>
           </property>
@@ -1106,6 +1139,9 @@ QRadioButton::indicator:unchecked {
            <font>
             <pointsize>10</pointsize>
            </font>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="text">
            <string>跳转</string>
@@ -1150,6 +1186,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="toolTip">
            <string>上一张图片,快捷键A</string>
           </property>
@@ -1184,6 +1223,9 @@ QRadioButton::indicator:unchecked {
             <pointsize>10</pointsize>
            </font>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
           <property name="toolTip">
            <string>下一张图片，快捷键D</string>
           </property>
@@ -1193,6 +1235,49 @@ QRadioButton::indicator:unchecked {
           <property name="icon">
            <iconset>
             <normaloff>images/icon_50.png</normaloff>images/icon_50.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>16</width>
+            <height>16</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_delay">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>50</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="tabletTracking">
+           <bool>false</bool>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
+          <property name="toolTip">
+           <string>切图延时</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>images/delay.png</normaloff>images/delay.png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -1223,6 +1308,9 @@ QRadioButton::indicator:unchecked {
           </property>
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="toolTip">
            <string>删除当前图片</string>
@@ -1300,9 +1388,9 @@ QRadioButton::indicator:unchecked {
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="4,2">
+       <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="6,2,2">
         <item>
-         <widget class="QLabel" name="label_bottom">
+         <widget class="QLabel" name="label_path">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -1314,6 +1402,11 @@ QRadioButton::indicator:unchecked {
             <width>0</width>
             <height>32</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
           </property>
           <property name="text">
            <string>***.bmp，0/0</string>
@@ -1329,8 +1422,25 @@ QRadioButton::indicator:unchecked {
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QLabel" name="label_hwi">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>H: , W: </string>
+          </property>
+         </widget>
+        </item>
         <item alignment="Qt::AlignRight">
          <widget class="QLabel" name="label_xyrgb">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>X: , Y:            R: , G: , B:</string>
           </property>
@@ -1354,6 +1464,9 @@ QRadioButton::indicator:unchecked {
          <font>
           <pointsize>10</pointsize>
          </font>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
         </property>
         <property name="autoFillBackground">
          <bool>false</bool>
@@ -1772,7 +1885,7 @@ QCheckBox::indicator:unchecked {
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_101">
+             <widget class="QPushButton" name="pushButton_cls_back">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -2207,7 +2320,19 @@ QCheckBox::indicator:unchecked {
          <attribute name="title">
           <string>语义分割</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,20">
+         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,0">
+          <item>
+           <widget class="QListWidget" name="listWidget_sem">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
+           </widget>
+          </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_47">
             <item alignment="Qt::AlignHCenter">
@@ -2264,56 +2389,27 @@ QCheckBox::indicator:unchecked {
             </item>
            </layout>
           </item>
-          <item>
-           <widget class="QTextBrowser" name="textBrowser_2"/>
-          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="tab_det">
          <attribute name="title">
           <string>目标检测</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_14" stretch="1,20">
+         <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0,0">
+          <item>
+           <widget class="QListWidget" name="listWidget_det">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+           </widget>
+          </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_21">
-            <item>
-             <widget class="QPushButton" name="pushButton_cross_color">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(120, 120, 120);</string>
-              </property>
-              <property name="text">
-               <string>十字线颜色</string>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignHCenter">
-             <widget class="QCheckBox" name="checkBox_hide_cross">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-              </property>
-              <property name="text">
-               <string>隐藏十字线</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QCheckBox" name="checkBox_det_wo">
               <property name="font">
@@ -2337,10 +2433,45 @@ QCheckBox::indicator:unchecked {
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="checkBox_hide_cross">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+              </property>
+              <property name="text">
+               <string>隐藏十字线</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_cross_color">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(120, 120, 120);</string>
+              </property>
+              <property name="text">
+               <string>十字线颜色</string>
+              </property>
+             </widget>
+            </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QTextBrowser" name="textBrowser_3"/>
           </item>
          </layout>
         </widget>
@@ -2348,7 +2479,19 @@ QCheckBox::indicator:unchecked {
          <attribute name="title">
           <string>实例分割</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_17" stretch="1,20">
+         <layout class="QVBoxLayout" name="verticalLayout_17" stretch="0,0">
+          <item>
+           <widget class="QListWidget" name="listWidget_ins">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
+           </widget>
+          </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_48">
             <item alignment="Qt::AlignHCenter">
@@ -2373,7 +2516,7 @@ QCheckBox::indicator:unchecked {
 }</string>
               </property>
               <property name="text">
-               <string>只显示为标注图片</string>
+               <string>只显示未标注图片</string>
               </property>
              </widget>
             </item>
@@ -2390,9 +2533,6 @@ QCheckBox::indicator:unchecked {
              </widget>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QTextBrowser" name="textBrowser"/>
           </item>
          </layout>
         </widget>
@@ -2419,7 +2559,7 @@ QCheckBox::indicator:unchecked {
          <item alignment="Qt::AlignHCenter">
           <widget class="QRadioButton" name="radioButton_read">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -2473,7 +2613,7 @@ QRadioButton::indicator:disabled {
          <item alignment="Qt::AlignHCenter">
           <widget class="QRadioButton" name="radioButton_write">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -2552,7 +2692,7 @@ QCheckBox::indicator:unchecked {
             <string>统一标注文件</string>
            </property>
            <property name="checked">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -2587,7 +2727,7 @@ QCheckBox::indicator:unchecked {
             <string>划分至文件夹</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -2682,6 +2822,12 @@ QCheckBox::indicator:unchecked {
             <font>
              <pointsize>10</pointsize>
             </font>
+           </property>
+           <property name="contextMenuPolicy">
+            <enum>Qt::NoContextMenu</enum>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -2874,7 +3020,7 @@ background-color: rgb(200, 200, 200);</string>
             <string>检查是否有多余的或未标注的标注文件</string>
            </property>
            <property name="text">
-            <string>检查标注</string>
+            <string>检查图库</string>
            </property>
           </widget>
          </item>
@@ -3334,6 +3480,9 @@ background-color: rgb(200, 200, 200);</string>
            </item>
            <item alignment="Qt::AlignLeft">
             <widget class="QSpinBox" name="spinBox_16">
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
              <property name="suffix">
               <string>°</string>
              </property>
@@ -3531,6 +3680,9 @@ QRadioButton::indicator:unchecked {
            </item>
            <item alignment="Qt::AlignHCenter">
             <widget class="QSpinBox" name="spinBox_13">
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
              <property name="prefix">
               <string>宽：</string>
              </property>
@@ -3559,6 +3711,9 @@ QRadioButton::indicator:unchecked {
            </item>
            <item alignment="Qt::AlignHCenter">
             <widget class="QSpinBox" name="spinBox_14">
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
              <property name="prefix">
               <string>高：</string>
              </property>
@@ -3706,6 +3861,9 @@ QRadioButton::indicator:unchecked {
                <pointsize>10</pointsize>
               </font>
              </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
              <property name="toolTip">
               <string>根据当前的设定保存当前图片</string>
              </property>
@@ -3739,6 +3897,9 @@ QRadioButton::indicator:unchecked {
               <font>
                <pointsize>10</pointsize>
               </font>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
              </property>
              <property name="toolTip">
               <string>根据当前的设定遍历保存目录下的所有图片</string>
@@ -3830,8 +3991,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

@@ -31,6 +31,6 @@ class MarqueeLabel(QLabel):
         if stat == 'undo':
             self.setStyleSheet('')
         elif stat == 'doing':
-            self.setStyleSheet('border-width: 3px; border-style: solid; border-color: rgb(0, 200, 0);')
+            self.setStyleSheet('border-width: 4px; border-style: solid; border-color: rgb(0, 200, 0);')
         elif stat == 'done':
-            self.setStyleSheet('border-width: 3px; border-style: solid; border-color: rgb(220, 160, 30);')
+            self.setStyleSheet('border-width: 4px; border-style: solid; border-color: rgb(220, 140, 0);')

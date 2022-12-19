@@ -11,9 +11,9 @@ from PySide6.QtCore import Qt
 class CustomMessageBox(QMainWindow):
     def __init__(self, title):
         super().__init__()
-        self.ui = QUiLoader().load('../../ui_files/message.ui')  # 主界面
+        self.ui = QUiLoader().load('ui_files/message.ui')  # 主界面
         self.setCentralWidget(self.ui)
-        self.setWindowIcon(QIcon('../../images/icon.png'))
+        self.setWindowIcon(QIcon('images/icon.png'))
         self.setWindowTitle(title)
         self.ui.pushButton.clicked.connect(self.close)
         self.ui.checkBox.toggled.connect(self.set_dont_show_again)
@@ -26,15 +26,17 @@ class CustomMessageBox(QMainWindow):
     def set_dont_show_again(self):
         self.DontShowAgain = self.ui.checkBox.isChecked()
 
-    def show(self, type, text, to_log=False):
+    def show(self, type, text):
+        self.ui.textBrowser.clear()
+
         if type == 'information':
-            self.ui.label.setPixmap(QPixmap('../../images/info_4.png'))
+            self.ui.label.setPixmap(QPixmap('images/info_4.png'))
         elif type == 'question':
-            self.ui.label.setPixmap(QPixmap('../../images/question_4.png'))
+            self.ui.label.setPixmap(QPixmap('images/question_4.png'))
         elif type == 'warning':
-            self.ui.label.setPixmap(QPixmap('../../images/warning_4.png'))
+            self.ui.label.setPixmap(QPixmap('images/warning_4.png'))
         elif type == 'critical':
-            self.ui.label.setPixmap(QPixmap('../../images/critical_4.png'))
+            self.ui.label.setPixmap(QPixmap('images/critical_4.png'))
         else:
             print('Incorrect information type!')
             return
@@ -45,7 +47,7 @@ class CustomMessageBox(QMainWindow):
             super().show()
             # 设置窗口随文本多少的变化而变化, 得在调用show()之后设置
             doc = self.ui.textBrowser.document()
-            doc.setTextWidth(250)
+            doc.setTextWidth(320)
             self.ui.textBrowser.setMinimumHeight(doc.size().height())
             self.ui.textBrowser.setMinimumWidth(doc.size().width())
             self.resize(self.ui.textBrowser.size())
@@ -56,5 +58,5 @@ if __name__ == '__main__':
 
     app = QApplication()
     ui = CustomMessageBox('warning')
-    ui.show('information', 'sdahhhjjjjjjjjngfnfghfjff')
+    ui.show('information', 'sdahhhjjjjjjfjff')
     app.exec()

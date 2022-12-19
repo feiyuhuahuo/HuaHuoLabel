@@ -65,22 +65,67 @@ imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
 # import cv2
 #
 # cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
-# for one in range(3):
-#     img = cv2.imread(f'E:/c_sharp_deploy/zyb_cv2_{one}.png', cv2.IMREAD_GRAYSCALE)
-#     # print(img.shape)
-#     cv2.imshow("aa", img*200)
-#     cv2.waitKey()
-
-# img = glob.glob('C:/Users/feiyuhuahuo\Desktop\jinke1\labels/val/*.png')
-# for one in img:
-#     img = cv2.imread(one, cv2.IMREAD_GRAYSCALE)
-#     print(img.shape)
 #
-#     qimg = (img == 2).astype('uint8') * 200
-#     print((img==2).sum())
-#     cv2.imshow('aa', qimg)
-#     cv2.waitKey()
+# img = cv2.imread(f'124.png', cv2.IMREAD_GRAYSCALE) *30
+# print(img.max())
+# print(img.min())
+# print((img==30).max())
+# # print(img.shape)
+# cv2.imshow("aa", img)
+# cv2.waitKey()
 
-aa ={'aa':20}
-aa.pop('aa')
-print(aa)
+
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QApplication, QLabel, QHBoxLayout
+from PySide6.QtGui import QCursor, QPixmap, QImage
+
+
+# # noinspection PyUnresolvedReferences
+# class PP(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         loader = QUiLoader()
+#         self.main_ui = loader.load('test.ui')
+#         self.setCentralWidget(self.main_ui)
+#
+#         img = cv2.imread('1111.png', cv2.IMREAD_GRAYSCALE)
+#         cv2.imshow('aa', img)
+#         cv2.waitKey()
+#
+#         height, width = img.shape
+#         print('shape:', img.shape, 'dtype:', img.dtype)
+#         qimg = QImage(img.astype('uint8').data, width, height, width*1, QImage.Format_Grayscale8)
+#
+#         self.main_ui.label.setPixmap(QPixmap(qimg))
+#         self.show()
+#
+#
+# if __name__ == '__main__':
+#     app = QApplication()
+#     ui = PP()
+#     app.exec()
+
+# noinspection PyUnresolvedReferences
+class PP(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        loader = QUiLoader()
+        self.main_ui = loader.load('test.ui')
+        self.setCentralWidget(self.main_ui)
+        self.main_ui.pushButton.clicked.connect(self.add_l)
+        self.resize(500, 150)
+        self.show()
+
+    def add_l(self):
+        print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+        self.main_ui.horizontalLayout_2.addWidget(QLabel('  ***aaaaa**  '))
+        print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+        print('--------------')
+        self.main_ui.scrollArea.horizontalScrollBar().setValue(9999)
+
+
+if __name__ == '__main__':
+    app = QApplication()
+    ui = PP()
+    app.exec()

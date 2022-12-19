@@ -21,6 +21,7 @@ signal_one_collection_done = StrSignal()
 signal_seg_collection_select_ok = StrSignal()
 signal_selected_label_item = IntSignal()
 signal_selected_shape = IntSignal()
+signal_shape_info_update = IntSignal()
 signal_shape_type = StrSignal()
 signal_xy_color2ui = ListSignal()
 
@@ -149,14 +150,14 @@ class BaseImgFrame(QFrame):
 
         self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图，
 
-        if self.img.isNull():  # 如果图片太大，QPixmap或QImage会打不开，用QImageReader
-            QImageReader.setAllocationLimit(256)
-            img = QImageReader(img_path_or_pix_map)
-            img.setScaledSize(QSize(1024, 1024))
-            print(img.canRead())
-            print(img.size())
-            kkk = img.read()
-            pass
+        # if self.img.isNull():  # 如果图片太大，QPixmap或QImage会打不开，用QImageReader
+        #     QImageReader.setAllocationLimit(256)
+        #     img = QImageReader(img_path_or_pix_map)
+        #     img.setScaledSize(QSize(1024, 1024))
+        #     print(img.canRead())
+        #     print(img.size())
+        #     kkk = img.read()
+        #     pass
 
         if re_center:
             if img_path_or_pix_map == 'images/bg.png':
@@ -286,6 +287,9 @@ class ImgShow(BaseImgFrame):
         self.OutInConflict = False
         self.HideCross = False
 
+        self.MovingPolygon = False
+        self.MovingCorner = False
+
         self.FlagDrawCollection = False
         signal_selected_label_item.signal.connect(self.draw_selected_shape)
         signal_shape_type.signal.connect(self.change_shape_type)
@@ -317,6 +321,10 @@ class ImgShow(BaseImgFrame):
             self.move_polygons(key_down=True)
         elif event.key() == Qt.Key_Shift:
             self.fill_editing_i = self.corner_index
+
+        if self.MovingPolygon:
+            signal_shape_info_update.send(self.polygon_editing_i)
+            self.MovingPolygon = False
 
     def mouseDoubleClickEvent(self, e):  # 同时触发 mousePressEvent()
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -403,6 +411,13 @@ class ImgShow(BaseImgFrame):
                 self.start_pos = e.position()
 
     def mouseReleaseEvent(self, e):
+        if self.MovingPolygon:
+            signal_shape_info_update.send(self.polygon_editing_i)
+            self.MovingPolygon = False
+        if type(self.MovingCorner) == int:
+            signal_shape_info_update.send(self.MovingCorner)
+            self.MovingCorner = False
+
         if self.OutInConflict:
             self.OutInConflict = False
 
@@ -686,6 +701,7 @@ class ImgShow(BaseImgFrame):
 
         self.start_pos = self.cursor_in_widget
         self.update()
+        self.MovingCorner = i
 
     def cursor_close_to_corner(self):
         corner_index = None
@@ -794,12 +810,12 @@ class ImgShow(BaseImgFrame):
         self.update()
 
     def draw_editing_polygon(self):  # 画正在编辑中的polygon
-        if self.polygon_editing_i is not None:
+        if self.all_polygons and self.polygon_editing_i is not None:
             self.painter.setPen(Qt.NoPen)
             self.painter.setBrush(QColor(0, 255, 0, 150))
             editing_poly = self.all_polygons[self.polygon_editing_i]
-            shape_type = editing_poly['shape_type']
 
+            shape_type = editing_poly['shape_type']
             if shape_type in ('矩形', '椭圆形'):
                 x1, y1 = editing_poly['widget_points'][0].toTuple()
                 x2, y2 = editing_poly['widget_points'][1].toTuple()
@@ -951,7 +967,7 @@ class ImgShow(BaseImgFrame):
                     ps = self.img_coor_to_widget_coor(one['img_points'])
                 elif one['shape_type'] in ('矩形', '椭圆形'):
                     p1 = one['img_points'][0]
-                    p2 = [one['img_points'][1][0] + 1, one['img_points'][1][1] + 1]  # 右下角点+1以获得更好的显示效果
+                    p2 = [one['img_points'][1][0], one['img_points'][1][1]]
                     ps = self.img_coor_to_widget_coor([p1, p2])
 
                 one['widget_points'] = ps
@@ -1045,6 +1061,7 @@ class ImgShow(BaseImgFrame):
                 self.start_pos = self.cursor_in_widget
 
         self.update()
+        self.MovingPolygon = True
 
     @staticmethod
     def move_to_new_folder():

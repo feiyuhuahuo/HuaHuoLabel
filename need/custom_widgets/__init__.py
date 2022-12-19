@@ -7,5 +7,6 @@ from .marquee_label import MarqueeLabel
 from .select_window import SelectWindow
 from .progress_bar import ProgressWindow
 from .waiting_label import WaitingLabel
+from .message_box import CustomMessageBox
 __all__ = ['ImgShow', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'SelectWindow', 'ProgressWindow',
-           'WaitingLabel']
+           'WaitingLabel', 'CustomMessageBox']

@@ -77,7 +77,7 @@ ClsClasses = ClassStatistic()
 ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
               'cadetblue', 'chocolate', 'coral', 'crimson', 'cyan',
               'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgreen', 'darkkhaki', 'darkolivegreen',
-              'darkorange', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkturquoise',
+              'darkorange', 'darksalmon', 'darkseagreen', 'darkslategray', 'darkturquoise',
               'darkviolet', 'deeppink', 'deepskyblue', 'dimgray',
               'firebrick', 'fuchsia',
               'gold', 'goldenrod', 'gray', 'green',
@@ -92,7 +92,7 @@ ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
               'palevioletred', 'peachpuff', 'peru', 'pink', 'plum', 'purple',
               'red', 'rosybrown', 'royalblue',
               'saddlebrown', 'sienna', 'silver', 'steelblue',
-              'tan', 'teal', 'thistle', 'tomato',
+              'tan', 'teal', 'thistle',
               'violet',
               'wheat',
               'yellowgreen']
@@ -198,23 +198,27 @@ def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
 def file_remove(path):
     if os.path.exists(path):
         os.remove(path)
+        return True
+    return False
 
 
 def get_datetime():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
+def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
     all_masks = []
-    for shape in polygons:
+    for i, shape in enumerate(polygons):
         label = shape['category']
-        if label not in classes:
-            if not from_sub:
-                return label
+        if (not value) and (label not in classes):
+            return label
 
-        class_value = classes.index(label) + 1
+        if ins_seg:
+            class_value = i + 1
+        else:
+            class_value = value if value else classes.index(label) + 1
+
         mask = np.zeros((img_h, img_w), dtype=np.uint8)
-
         if shape['shape_type'] == "多边形":
             points = [np.array([list(point) for point in shape['img_points']])]
             cv2.fillPoly(mask, points, 1)
@@ -240,14 +244,13 @@ def get_seg_mask(classes, polygons, img_h, img_w, from_sub=False):
             for point in shape['img_points']:
                 mask[point[1], point[0]] = 1
 
-        mask = np.asfortranarray(mask, dtype='uint8')[:, :, None] * class_value
+        mask = np.asfortranarray(mask, dtype='uint8') * class_value
         all_masks.append(mask)
 
     # 若标注有重叠区域，需要合并
     all_masks_num = np.array([(aa > 0).sum() for aa in all_masks])  # 根据像素数量来降序排序
     indices = (-1 * all_masks_num).argsort()  # * -1 来实现降序排序
-    seg_mask = np.zeros((img_h, img_w, 1), dtype='int64')
-
+    seg_mask = np.zeros((img_h, img_w), dtype='int64')
     for ii in indices:
         mask = all_masks[ii]
         seg_mask *= (mask == 0)

@@ -6,7 +6,7 @@ from PySide6.QtGui import QFont
 
 
 class WaitingLabel(QLabel):
-    def __init__(self, text=None, parent=None):
+    def __init__(self, parent=None, text=None):
         super().__init__(parent)
         self.num = 0
         font = QFont()
