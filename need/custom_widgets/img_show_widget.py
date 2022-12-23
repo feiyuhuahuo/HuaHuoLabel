@@ -326,24 +326,26 @@ class ImgShow(BaseImgFrame):
             signal_shape_info_update.send(self.polygon_editing_i)
             self.MovingPolygon = False
 
-    def mouseDoubleClickEvent(self, e):  # 同时触发 mousePressEvent()
+    def mouseDoubleClickEvent(self, e, show_bg=False):  # 同时触发 mousePressEvent()
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
             if self.AnnMode:
                 self.ann_add_text(e.position())
         else:
-            if self.AnnMode and self.scaled_img_painted is not None:
-                action_img = self.scaled_img_painted
-            else:
-                action_img = self.img
+            if self.scaled_img is not None:
+                if self.AnnMode and self.scaled_img_painted is not None:
+                    action_img = self.scaled_img_painted
+                else:
+                    action_img = self.img
 
-            old_img_tl = self.img_tl
-            old_img_w, old_img_h = self.scaled_img.width(), self.scaled_img.height()
-            self.scaled_img = action_img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
+                old_img_tl = self.img_tl
+                old_img_w, old_img_h = self.scaled_img.width(), self.scaled_img.height()
+                interpolation = Qt.SmoothTransformation if show_bg else self.interpolation
+                self.scaled_img = action_img.scaled(self.size(), Qt.KeepAspectRatio, interpolation)
 
-            scale_factor = (self.scaled_img.width() / old_img_w, self.scaled_img.height() / old_img_h)
-            self.center_point()
-            self.shape_scale_move(old_img_tl, scale_factor)
-            self.update()
+                scale_factor = (self.scaled_img.width() / old_img_w, self.scaled_img.height() / old_img_h)
+                self.center_point()
+                self.shape_scale_move(old_img_tl, scale_factor)
+                self.update()
 
     def mouseMoveEvent(self, e):
         self.cursor_in_widget = e.position()  # 相当于self.mapFromGlobal(e.globalPosition())

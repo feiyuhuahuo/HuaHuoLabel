@@ -5,6 +5,7 @@ import json
 import os
 
 from os import sep as os_sep
+from os import path as osp
 from PySide6.QtCore import QThread
 from need.custom_signals import ListSignal
 
@@ -22,41 +23,57 @@ class ClassStatistics(QThread):
         self.SeparateLabel = separate_label
 
     def run(self):
-        add_info, stat = [], {}
+        add_info = ['----------总图库----------']
+        all_stat, t_stat, v_stat = {}, {}, {}
         total_num = 0
         if self.OneFileLabel:
             if self.label_file_dict.get('labels'):
+                total_num = len(self.label_file_dict['labels'].keys())
+
                 for one in self.label_file_dict['labels'].values():
+                    tv = one['tv']
                     if self.WorkMode == '单分类':
                         c_name = one['class']
-                        if c_name:
-                            total_num += 1
-                            stat.setdefault(c_name, 0)
-                            stat[c_name] += 1
-                        final_info = [f'已分类图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                        all_stat.setdefault(c_name, 0)
+                        all_stat[c_name] += 1
+
+                        if tv == 'train':
+                            t_stat.setdefault(c_name, 0)
+                            t_stat[c_name] += 1
+                        elif tv == 'val':
+                            v_stat.setdefault(c_name, 0)
+                            v_stat[c_name] += 1
+
                     elif self.WorkMode == '多分类':
                         c_name = one['class']
-                        if c_name:
-                            total_num += 1
-                            for one_c in c_name:
-                                stat.setdefault(one_c, 0)
-                                stat[one_c] += 1
-                        final_info = [f'已分类图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                        for one_c in c_name:
+                            all_stat.setdefault(one_c, 0)
+                            all_stat[one_c] += 1
+
+                            if tv == 'train':
+                                t_stat.setdefault(one_c, 0)
+                                t_stat[one_c] += 1
+                            elif tv == 'val':
+                                v_stat.setdefault(one_c, 0)
+                                v_stat[one_c] += 1
+
                     elif self.WorkMode in ('语义分割', '目标检测', '实例分割'):
                         polygons = one['polygons']
                         if polygons == ['bg']:
                             polygons = []
+
                         if polygons:
-                            total_num += 1
                             for one_p in polygons:
                                 c_name = one_p['category']
-                                stat.setdefault(c_name, 0)
-                                stat[c_name] += 1
-                        final_info = [f'带标注图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                                all_stat.setdefault(c_name, 0)
+                                all_stat[c_name] += 1
 
-                for k, v in stat.items():
-                    add_info.append(f'{k}: {v}')
-                add_info += final_info
+                                if tv == 'train':
+                                    t_stat.setdefault(c_name, 0)
+                                    t_stat[c_name] += 1
+                                elif tv == 'val':
+                                    v_stat.setdefault(c_name, 0)
+                                    v_stat[c_name] += 1
         elif self.SeparateLabel:
             if self.WorkMode == '单分类':
                 files = glob.glob(f'{self.img_root_path}/单分类/*')
@@ -64,45 +81,89 @@ class ClassStatistics(QThread):
                     if os.path.isdir(one):
                         c_name = one.split(os_sep)[-1]
                         if c_name != 'imgs':
-                            c_num = len(glob.glob(f'{one}/*'))
-                            add_info.append(f'{c_name}: {c_num}')
+                            c_imgs = glob.glob(f'{one}/*')
+                            c_num = len(c_imgs)
                             total_num += c_num
+                            all_stat.setdefault(c_name, c_num)
 
-                add_info += [f'已分类图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                            for one_img in c_imgs:
+                                name = one_img.split(os_sep)[-1]
+                                if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{c_name}/{name}'):
+                                    t_stat.setdefault(c_name, 0)
+                                    t_stat[c_name] += 1
+                                elif osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{c_name}/{name}'):
+                                    v_stat.setdefault(c_name, 0)
+                                    v_stat[c_name] += 1
+
             elif self.WorkMode == '多分类':
                 files = glob.glob(f'{self.img_root_path}/多分类/标注/*.txt')
                 for one in files:
+                    file_name = one.split(os_sep)[-1]
+
                     with open(one, 'r', encoding='utf-8') as f:
                         names = f.readlines()
                     if names:
                         total_num += 1
                         for one_c in names:
                             c_name = one_c.strip()
-                            stat.setdefault(c_name, 0)
-                            stat[c_name] += 1
+                            all_stat.setdefault(c_name, 0)
+                            all_stat[c_name] += 1
 
-                for k, v in stat.items():
-                    add_info.append(f'{k}: {v}')
-                add_info += [f'已分类图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/train/{file_name}'):
+                                t_stat.setdefault(c_name, 0)
+                                t_stat[c_name] += 1
+                            elif osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/val/{file_name}'):
+                                v_stat.setdefault(c_name, 0)
+                                v_stat[c_name] += 1
+
             elif self.WorkMode in ('语义分割', '目标检测', '实例分割'):
                 files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/标注/*.json')
                 for one in files:
+                    file_name = one.split(os_sep)[-1]
+                    has_t, has_v = False, False
+                    if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/train/{file_name}'):
+                        has_t = True
+                    elif osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/val/{file_name}'):
+                        has_v = True
+
                     if 'labels.json' not in one:
                         with open(one, 'r') as f:
                             content = json.load(f)
 
+                        total_num += 1
                         polygons = content['polygons']
                         if polygons == ['bg']:
-                            polygons = []
-                        if polygons:
-                            total_num += 1
+                            all_stat.setdefault('背景', 0)
+                            all_stat['背景'] += 1
+
+                            if has_t:
+                                t_stat.setdefault('背景', 0)
+                                t_stat['背景'] += 1
+                            elif has_v:
+                                v_stat.setdefault('背景', 0)
+                                v_stat['背景'] += 1
+                        else:
                             for one_shape in polygons:
                                 c_name = one_shape['category']
-                                stat.setdefault(c_name, 0)
-                                stat[c_name] += 1
+                                all_stat.setdefault(c_name, 0)
+                                all_stat[c_name] += 1
 
-                for k, v in stat.items():
-                    add_info.append(f'{k}: {v}')
-                add_info += [f'带标注图片数量：{total_num}', f'总图片数量：{self.img_num}']
+                                if has_t:
+                                    t_stat.setdefault(c_name, 0)
+                                    t_stat[c_name] += 1
+                                elif has_v:
+                                    v_stat.setdefault(c_name, 0)
+                                    v_stat[c_name] += 1
+
+        for k, v in all_stat.items():
+            add_info.append(f'{k}: {v}')
+
+        add_info += [f'\n已标注图片数量：{total_num}', f'总图片数量：{self.img_num}']
+        add_info.append('\n----------训练集----------')
+        for k, v in t_stat.items():
+            add_info.append(f'{k}: {v}')
+        add_info.append('\n----------验证集----------')
+        for k, v in v_stat.items():
+            add_info.append(f'{k}: {v}')
 
         signal_stat_info.send(add_info)

@@ -10,9 +10,9 @@ from PySide6.QtCore import QThread
 from need.utils import douglas_peuker, ColorCode
 from need.custom_signals import StrSignal, IntSignal, BoolSignal
 
-signal_progress_text = StrSignal()
-signal_progress_value = IntSignal()
-signal_progress_done = BoolSignal()
+signal_ai_progress_text = StrSignal()
+signal_ai_progress_value = IntSignal()
+signal_auto_infer_done = BoolSignal()
 
 
 class RunInference(QThread):
@@ -32,7 +32,7 @@ class RunInference(QThread):
         colors = list(ColorCode.keys())
 
         for i, one in enumerate(self.imgs):
-            signal_progress_value.send(int((i + 1) / img_num * 100))
+            signal_ai_progress_value.send(int((i + 1) / img_num * 100))
 
             img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_COLOR)
             img_shape = img.shape
@@ -84,6 +84,6 @@ class RunInference(QThread):
             with open(f'{save_path}/{json_name}', 'w') as f:
                 json.dump(json_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
-            signal_progress_text.send(f'{i + 1}/{img_num}')
+            signal_ai_progress_text.send(f'{i + 1}/{img_num}')
 
-        signal_progress_done.send(True)
+        signal_auto_infer_done.send(True)

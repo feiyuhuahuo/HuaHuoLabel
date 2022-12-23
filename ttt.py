@@ -41,44 +41,13 @@ import os
 import glob
 import numpy as np
 
-imgs = glob.glob('C:/Users/feiyuhuahuo/Downloads/左右崩过检/提取图/*')
-
-# for k, one in enumerate(imgs):
-#     cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_GRAYSCALE)
-#     # cv2_img = cv2.resize(cv2_img, (3072, 3072))
-#     name = one.split(os.path.sep)[-1][:-4]
-#     print(name)
-#     # for i in range(3):
-#     #     for j in range(3):
-#     #         piece = cv2_img[i*1024:(i+1)*1024, j*1024:(j+1)*1024]
-#     #         cv2.imencode('.bmp', piece)[1].tofile(f'D:\Data\硅片分选/表面崩边/{name}_{i}_{j}.bmp')
-#
-#     piece1 = cv2_img[0:280, :]
-#     piece2 = cv2_img[280:560, :]
-#     piece3 = cv2_img[560:840, :]
-#     # piece4 = cv2_img[:, 4800:6400]
-#     cv2.imencode('.bmp', piece1)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_1.bmp')
-#     cv2.imencode('.bmp', piece2)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_2.bmp')
-#     cv2.imencode('.bmp', piece3)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/左右崩过检/小图/{name}_3.bmp')
-#     # cv2.imencode('.bmp', piece4)[1].tofile(f'C:/Users/feiyuhuahuo/Downloads/前后崩过检/小图/{name}_4.bmp')
-
-# import cv2
-#
-# cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
-#
-# img = cv2.imread(f'124.png', cv2.IMREAD_GRAYSCALE) *30
-# print(img.max())
-# print(img.min())
-# print((img==30).max())
-# # print(img.shape)
-# cv2.imshow("aa", img)
-# cv2.waitKey()
 
 
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QMainWindow
-from PySide6.QtWidgets import QApplication, QLabel, QHBoxLayout
-from PySide6.QtGui import QCursor, QPixmap, QImage
+
+# from PySide6.QtUiTools import QUiLoader
+# from PySide6.QtWidgets import QMainWindow
+# from PySide6.QtWidgets import QApplication, QLabel, QHBoxLayout
+# from PySide6.QtGui import QCursor, QPixmap, QImage
 
 
 # # noinspection PyUnresolvedReferences
@@ -106,26 +75,29 @@ from PySide6.QtGui import QCursor, QPixmap, QImage
 #     ui = PP()
 #     app.exec()
 
-# noinspection PyUnresolvedReferences
-class PP(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        loader = QUiLoader()
-        self.main_ui = loader.load('test.ui')
-        self.setCentralWidget(self.main_ui)
-        self.main_ui.pushButton.clicked.connect(self.add_l)
-        self.resize(500, 150)
-        self.show()
+# # noinspection PyUnresolvedReferences
+# class PP(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         loader = QUiLoader()
+#         self.main_ui = loader.load('test.ui')
+#         self.setCentralWidget(self.main_ui)
+#         self.main_ui.pushButton.clicked.connect(self.add_l)
+#         self.resize(500, 150)
+#         self.show()
+#
+#     def add_l(self):
+#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+#         self.main_ui.horizontalLayout_2.addWidget(QLabel('  ***aaaaa**  '))
+#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+#         print('--------------')
+#         self.main_ui.scrollArea.horizontalScrollBar().setValue(9999)
+#
+#
+# if __name__ == '__main__':
+#     app = QApplication()
+#     ui = PP()
+#     app.exec()
 
-    def add_l(self):
-        print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
-        self.main_ui.horizontalLayout_2.addWidget(QLabel('  ***aaaaa**  '))
-        print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
-        print('--------------')
-        self.main_ui.scrollArea.horizontalScrollBar().setValue(9999)
-
-
-if __name__ == '__main__':
-    app = QApplication()
-    ui = PP()
-    app.exec()
+img_name='sdsfdsgdg.bmp'
+print(img_name[:-4])

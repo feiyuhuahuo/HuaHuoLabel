@@ -8,8 +8,10 @@ import copy
 import datetime
 import cv2
 import numpy as np
+
 from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
+from PySide6.QtWidgets import QMessageBox
 from math import sqrt, pow
 
 
@@ -211,7 +213,8 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
     for i, shape in enumerate(polygons):
         label = shape['category']
         if (not value) and (label not in classes):
-            return label
+            QMessageBox.critical(None, '类别不存在', f'类别"{label}"不存在。')
+            return None
 
         if ins_seg:
             class_value = i + 1
@@ -256,7 +259,30 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
         seg_mask *= (mask == 0)
         seg_mask += mask
 
+    if not (0 <= seg_mask.max() <= len(classes)):
+        QMessageBox.critical(None, '标注错误', f'当前有{len(classes)}类，但mask最大值为{seg_mask.max()}。')
+        return None
+
     return seg_mask
+
+
+def glob_imgs(path, work_mode):
+    if work_mode == '单分类':
+        imgs = recursive_glob(path)
+    else:
+        imgs = glob.glob(f'{path}/*')
+        imgs = [uniform_path(aa) for aa in imgs if aa[-3:] in ('bmp', 'jpg', 'png')]
+        imgs.sort()
+    return imgs
+
+
+def glob_labels(path):
+    labels = glob.glob(f'{path}/*')
+    labels = [uniform_path(aa) for aa in labels if aa[-4:] in ('json', '.png', '.txt')]
+    if f'{path}/labels.json' in labels:
+        labels.remove(f'{path}/labels.json')
+    labels.sort()
+    return labels
 
 
 def img_pure_name(path):
@@ -372,7 +398,7 @@ def qimage_to_array(img, share_memory=False):
         return copy.deepcopy(arr)
 
 
-def recursive_glob(path):
+def recursive_glob(path):  # 仅把path目录下的文件夹里的图片集合起来
     all_imgs = []
     files = glob.glob(f'{path}/*')
     files = [uniform_path(aa) for aa in files]
@@ -388,7 +414,36 @@ def recursive_glob(path):
         imgs.sort()
         all_imgs += imgs
 
+    all_imgs = [uniform_path(aa) for aa in all_imgs]
     return all_imgs
+
+
+def remove_redunant_files(files: list, title: str, text: str):
+    choice = QMessageBox.question(None, title, text)
+    if choice == QMessageBox.Yes:
+        for one in files:
+            file_remove(one)
+
+        QMessageBox.information(None, '清理完成', f'清理完成，共清理{len(files)}个文件。')
+        return True
+    return False
+
+
+def two_way_check(files_1: list, files_2: list, one_way=False):
+    names_1 = [img_pure_name(aa) for aa in files_1]
+    names_2 = [img_pure_name(aa) for aa in files_2]
+    not_in_2, not_in_1 = [], []
+
+    for i, one in enumerate(names_1):
+        if one not in names_2:
+            not_in_2.append(files_1[i])
+
+    if not one_way:
+        for i, one in enumerate(names_2):
+            if one not in names_1:
+                not_in_1.append(files_2[i])
+
+    return not_in_2, not_in_1
 
 
 def uniform_path(path):

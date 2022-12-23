@@ -1,5 +1,6 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QProgressBar, QLabel
 
 
@@ -45,6 +46,7 @@ class ProgressWindow(QWidget):
 
         self.resize(400, 80)
         self.setWindowTitle(title)
+        self.setWindowIcon(QIcon('images/icon.png'))
         self.text_prefix = text_prefix
         self.info_label = QLabel(self)
         self.info_label.setMaximumHeight(20)
