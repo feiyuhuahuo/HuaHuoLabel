@@ -97,7 +97,7 @@ class DeleteOneClassLabels(QThread):
                                 with open(tv_json, 'w') as f:
                                     json.dump(content, f, sort_keys=False, ensure_ascii=False, indent=4)
 
-                            if self.WorkMode == '目标检测':
+                            if self.WorkMode in ('目标检测', 'Obj Det'):
                                 with open(txt_path, 'w') as f:
                                     for one_p in new_polygons:
                                         c_name = one_p['category']
@@ -110,7 +110,7 @@ class DeleteOneClassLabels(QThread):
                                             [x1, y1], [x2, y2] = one_p['img_points']
                                             f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
 
-                        if self.WorkMode == '语义分割':
+                        if self.WorkMode in ('语义分割', 'Sem Seg'):
                             cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
                             img_h, img_w = cv2_img.shape[:2]
                             seg_mask = get_seg_mask(self.classes, new_polygons, img_h, img_w)

@@ -17,8 +17,11 @@
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QPushButton" name="pushButton">
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
       <property name="text">
-       <string>add</string>
+       <string>translate</string>
       </property>
      </widget>
     </item>
@@ -44,9 +47,9 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="label">
           <property name="text">
-           <string>**aaaaaa**</string>
+           <string/>
           </property>
          </widget>
         </item>

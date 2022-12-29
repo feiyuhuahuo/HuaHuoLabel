@@ -32,7 +32,7 @@ class ClassStatistics(QThread):
 
                 for one in self.label_file_dict['labels'].values():
                     tv = one['tv']
-                    if self.WorkMode == '单分类':
+                    if self.WorkMode in ('单分类', 'Single Cls'):
                         c_name = one['class']
                         all_stat.setdefault(c_name, 0)
                         all_stat[c_name] += 1
@@ -44,7 +44,7 @@ class ClassStatistics(QThread):
                             v_stat.setdefault(c_name, 0)
                             v_stat[c_name] += 1
 
-                    elif self.WorkMode == '多分类':
+                    elif self.WorkMode in ('多分类', 'Multi Cls'):
                         c_name = one['class']
                         for one_c in c_name:
                             all_stat.setdefault(one_c, 0)
@@ -57,7 +57,7 @@ class ClassStatistics(QThread):
                                 v_stat.setdefault(one_c, 0)
                                 v_stat[one_c] += 1
 
-                    elif self.WorkMode in ('语义分割', '目标检测', '实例分割'):
+                    elif self.WorkMode in ('语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
                         polygons = one['polygons']
                         if polygons == ['bg']:
                             polygons = []
@@ -75,8 +75,8 @@ class ClassStatistics(QThread):
                                     v_stat.setdefault(c_name, 0)
                                     v_stat[c_name] += 1
         elif self.SeparateLabel:
-            if self.WorkMode == '单分类':
-                files = glob.glob(f'{self.img_root_path}/单分类/*')
+            if self.WorkMode in ('单分类', 'Single Cls'):
+                files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/原图/*')
                 for one in files:
                     if os.path.isdir(one):
                         c_name = one.split(os_sep)[-1]
@@ -95,8 +95,8 @@ class ClassStatistics(QThread):
                                     v_stat.setdefault(c_name, 0)
                                     v_stat[c_name] += 1
 
-            elif self.WorkMode == '多分类':
-                files = glob.glob(f'{self.img_root_path}/多分类/标注/*.txt')
+            elif self.WorkMode in ('多分类', 'Multi Cls'):
+                files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/标注/*.txt')
                 for one in files:
                     file_name = one.split(os_sep)[-1]
 
@@ -116,7 +116,7 @@ class ClassStatistics(QThread):
                                 v_stat.setdefault(c_name, 0)
                                 v_stat[c_name] += 1
 
-            elif self.WorkMode in ('语义分割', '目标检测', '实例分割'):
+            elif self.WorkMode in ('语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
                 files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/标注/*.json')
                 for one in files:
                     file_name = one.split(os_sep)[-1]

@@ -17,8 +17,9 @@ signal_usp_progress_text = ListSignal()
 
 # 经测试，线程里面不能有静态的QMessageBox，否则唤起后软件会崩溃
 class UpdateSemanticPngs(QThread):
-    def __init__(self, imgs, img_root_path, classes):
+    def __init__(self, work_mode, imgs, img_root_path, classes):
         super().__init__()
+        self.WorkMode = work_mode
         self.imgs = imgs
         self.img_root_path = img_root_path
         self.classes = classes
@@ -36,14 +37,14 @@ class UpdateSemanticPngs(QThread):
             png_name = png_path.split('/')[-1]
 
             tv = 'none'
-            if osp.exists(f'{self.img_root_path}/语义分割/imgs/train/{img_name}'):
+            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{img_name}'):
                 tv = 'train'
-            elif osp.exists(f'{self.img_root_path}/语义分割/imgs/val/{img_name}'):
+            elif osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{img_name}'):
                 tv = 'val'
 
-            tv_img = f'{self.img_root_path}/语义分割/imgs/{tv}/{img_name}'
-            tv_json = f'{self.img_root_path}/语义分割/labels/{tv}/{img_name[:-4]}.json'
-            tv_png = f'{self.img_root_path}/语义分割/labels/{tv}/{png_name}'
+            tv_img = f'{self.img_root_path}/{self.WorkMode}/imgs/{tv}/{img_name}'
+            tv_json = f'{self.img_root_path}/{self.WorkMode}/labels/{tv}/{img_name[:-4]}.json'
+            tv_png = f'{self.img_root_path}/{self.WorkMode}/labels/{tv}/{png_name}'
 
             if osp.exists(json_path):
                 with open(json_path, 'r') as f:

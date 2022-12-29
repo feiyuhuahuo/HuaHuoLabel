@@ -34,20 +34,6 @@ import pdb
 # cv2.imshow("result", result)
 # cv2.imshow("result_sq", result_sq)
 # cv2.waitKey()
-import random
-
-import cv2
-import os
-import glob
-import numpy as np
-
-
-
-
-# from PySide6.QtUiTools import QUiLoader
-# from PySide6.QtWidgets import QMainWindow
-# from PySide6.QtWidgets import QApplication, QLabel, QHBoxLayout
-# from PySide6.QtGui import QCursor, QPixmap, QImage
 
 
 # # noinspection PyUnresolvedReferences
@@ -75,29 +61,87 @@ import numpy as np
 #     ui = PP()
 #     app.exec()
 
-# # noinspection PyUnresolvedReferences
-# class PP(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         loader = QUiLoader()
-#         self.main_ui = loader.load('test.ui')
-#         self.setCentralWidget(self.main_ui)
-#         self.main_ui.pushButton.clicked.connect(self.add_l)
-#         self.resize(500, 150)
-#         self.show()
-#
-#     def add_l(self):
-#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
-#         self.main_ui.horizontalLayout_2.addWidget(QLabel('  ***aaaaa**  '))
-#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
-#         print('--------------')
-#         self.main_ui.scrollArea.horizontalScrollBar().setValue(9999)
-#
-#
-# if __name__ == '__main__':
-#     app = QApplication()
-#     ui = PP()
-#     app.exec()
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QApplication, QMenu, QMessageBox
+from PySide6.QtGui import QCursor, QAction
+from PySide6.QtCore import QTranslator, QEvent
 
-img_name='sdsfdsgdg.bmp'
-print(img_name[:-4])
+
+class PP(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        loader = QUiLoader()
+
+        loader.setLanguageChangeEnabled(True)
+        print(loader.isLanguageChangeEnabled())
+
+        self.app = QApplication.instance()
+
+        # self.trans_window = QTranslator()
+        # self.trans_window.load('test.qm')
+        # self.app.installTranslator(self.trans_window)
+        #
+        # self.trans_main = QTranslator()
+        # self.trans_main.load('ttt.qm')
+        # self.app.installTranslator(self.trans_main)
+
+
+        self.main_ui = loader.load('test.ui')
+        self.setCentralWidget(self.main_ui)
+        self.main_ui.pushButton.clicked.connect(self.trans_ui)
+
+        self.menu = QMenu(self)
+        self.action = QAction(self.tr('hello'))
+        self.action.triggered.connect(self.trans_code)
+        self.menu.addAction(self.action)
+        self.main_ui.pushButton.customContextMenuRequested.connect(self.show_menu)
+
+        self.show()
+
+    def changeEvent(self, event):
+        if 'LanguageChange' in event.__repr__():
+            # self.action.setText(self.tr('hello'))
+            print(event)
+
+    def load_qm(self):
+        self.trans_window = QTranslator()
+        self.trans_window.load('test.qm')
+        self.app.installTranslator(self.trans_window)
+
+        self.trans_main = QTranslator()
+        self.trans_main.load('ttt.qm')
+        self.app.installTranslator(self.trans_main)
+
+    def trans_ui(self):
+        self.load_qm()
+
+    def trans_code(self):
+        if not self.main_ui.label.text():
+            self.main_ui.label.setText(self.tr('pear'))
+
+        QMessageBox.information(self, self.tr('cat'), self.tr('apple'))
+
+    def show_menu(self):
+        self.menu.exec(QCursor.pos())
+
+
+if __name__ == '__main__':
+    app = QApplication()
+    ui = PP()
+    app.exec()
+
+# self.WorkMode in ('单分类', 'Single Cls'):
+# self.WorkMode in ('多分类', 'Multi Cls'):
+# self.WorkMode in ('语义分割', 'Sem Seg'):
+# self.WorkMode in ('目标检测', 'Obj Det'):
+# self.WorkMode in ('实例分割', 'Ins Seg'):
+#
+# self.WorkMode in ('单分类', 'Single Cls', '多分类', 'Multi Cls'):
+# self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+#
+# self.WorkMode in ('语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
+# self.WorkMode in ('多分类', 'Multi Cls', '语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
+
+# (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割'))

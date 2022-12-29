@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>834</width>
-    <height>621</height>
+    <width>852</width>
+    <height>639</height>
    </rect>
   </property>
   <property name="font">
@@ -20,7 +20,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>images/图片12.png</normaloff>images/图片12.png</iconset>
+    <normaloff>images/chip_large.png</normaloff>images/chip_large.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -440,11 +440,7 @@ QCheckBox::indicator:unchecked {
          <string>打开目录</string>
         </property>
         <property name="text">
-         <string>批量推理</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>images/icon_25.png</normaloff>images/icon_25.png</iconset>
+         <string>推理所有图片</string>
         </property>
        </widget>
       </item>
@@ -457,7 +453,7 @@ QCheckBox::indicator:unchecked {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>834</width>
+     <width>852</width>
      <height>23</height>
     </rect>
    </property>

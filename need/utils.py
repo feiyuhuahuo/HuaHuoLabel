@@ -198,9 +198,15 @@ def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
 
 
 def file_remove(path):
-    if os.path.exists(path):
-        os.remove(path)
+    if type(path) == list:
+        for one in path:
+            if os.path.exists(one):
+                os.remove(one)
         return True
+    elif type(path) == str:
+        if os.path.exists(path):
+            os.remove(path)
+            return True
     return False
 
 
@@ -267,7 +273,7 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
 
 
 def glob_imgs(path, work_mode):
-    if work_mode == '单分类':
+    if work_mode in ('单分类', 'Single Cls'):
         imgs = recursive_glob(path)
     else:
         imgs = glob.glob(f'{path}/*')
@@ -295,12 +301,20 @@ def img_pure_name(path):
 
 
 def path_to(path, img2json=False, img2png=False, img2txt=False):
-    if img2json:
-        return path.replace('/原图', '/标注')[:-3] + 'json'
-    elif img2png:
-        return path.replace('/原图', '/标注')[:-3] + 'png'
-    elif img2txt:
-        return path.replace('/原图', '/标注')[:-3] + 'txt'
+    if '/原图' in path:
+        if img2json:
+            return path.replace('/原图', '/标注')[:-3] + 'json'
+        elif img2png:
+            return path.replace('/原图', '/标注')[:-3] + 'png'
+        elif img2txt:
+            return path.replace('/原图', '/标注')[:-3] + 'txt'
+    elif '/Original Images' in path:
+        if img2json:
+            return path.replace('/Original Images', '/Label Files')[:-3] + 'json'
+        elif img2png:
+            return path.replace('/Original Images', '/Label Files')[:-3] + 'png'
+        elif img2txt:
+            return path.replace('/Original Images', '/Label Files')[:-3] + 'txt'
 
 
 def point_in_polygon(px, py, poly):

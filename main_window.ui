@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>森标图片处理工具</string>
+   <string>花火标注</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="3,1">
@@ -2759,7 +2759,7 @@ QCheckBox::indicator:unchecked {
           <number>6</number>
          </property>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="pushButton_open_dir">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -3934,6 +3934,14 @@ QRadioButton::indicator:unchecked {
     </widget>
     <addaction name="menu_2"/>
    </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>选择语言</string>
+    </property>
+    <addaction name="action_cn"/>
+    <addaction name="action_en"/>
+   </widget>
+   <addaction name="menu_3"/>
    <addaction name="menu"/>
   </widget>
   <action name="action_show_seg_png">
@@ -3959,6 +3967,16 @@ QRadioButton::indicator:unchecked {
     <string>版本：1.0.0</string>
    </property>
   </action>
+  <action name="action_cn">
+   <property name="text">
+    <string>中文</string>
+   </property>
+  </action>
+  <action name="action_en">
+   <property name="text">
+    <string>English</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -3976,9 +3994,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup_4"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>
