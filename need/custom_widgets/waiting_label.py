@@ -6,13 +6,20 @@ from PySide6.QtGui import QFont
 
 
 class WaitingLabel(QLabel):
-    def __init__(self, parent=None, text=None):
+    def __init__(self, parent=None, text=None, language='CN'):
         super().__init__(parent)
         self.num = 0
         font = QFont()
         font.setPointSize(14)
         self.setFont(font)
-        self.text = f' {text} ' if text else ' 等待中 '
+        if text:
+            self.text = f' {text} '
+        else:
+            if language == 'CN':
+                self.text = ' 等待中 '
+            elif language == 'EN':
+                self.text = ' Waiting '
+
         self.setText(self.text + '...')
         self.setStyleSheet("background-color: rgb(220, 220, 220); border-color: rgb(80, 80, 80); "
                            "border-width: 2px; border-style: solid;")

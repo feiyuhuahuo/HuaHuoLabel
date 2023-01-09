@@ -228,17 +228,18 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
             class_value = value if value else classes.index(label) + 1
 
         mask = np.zeros((img_h, img_w), dtype=np.uint8)
-        if shape['shape_type'] == "多边形":
+
+        if shape['shape_type'] in ('多边形', 'Polygon'):
             points = [np.array([list(point) for point in shape['img_points']])]
             cv2.fillPoly(mask, points, 1)
-        elif shape['shape_type'] == "矩形":
+        elif shape['shape_type'] in ('矩形', 'Rectangle'):
             cv2.rectangle(mask, tuple(shape['img_points'][0]), tuple(shape['img_points'][1]), 1, -1)
-        elif shape['shape_type'] == "椭圆形":
+        elif shape['shape_type'] in ('椭圆形', 'Ellipse'):
             tl, br = tuple(shape['img_points'][0]), tuple(shape['img_points'][1])
             cx, cy = int((tl[0] + br[0]) / 2), int((tl[1] + br[1]) / 2)
             half_l, half_s = int((br[0] - tl[0]) / 2), int((br[1] - tl[1]) / 2)
             cv2.ellipse(mask, (cx, cy), (half_l, half_s), 0, 0, 360, color=1, thickness=-1)
-        elif shape['shape_type'] == "环形":
+        elif shape['shape_type'] in ('环形', 'Ring'):
             mask1 = np.zeros((img_h, img_w), dtype=np.uint8)
             mask2 = np.zeros((img_h, img_w), dtype=np.uint8)
             points1 = [np.array([tuple(point) for point in shape['img_points'][0]])]
@@ -249,7 +250,7 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
             mask2 = np.asfortranarray(mask2, dtype='uint8')
             mask2 = ~(mask2.astype('bool'))
             mask = mask1 * mask2
-        elif shape['shape_type'] == "填充":
+        elif shape['shape_type'] in ('填充', 'Fill'):
             for point in shape['img_points']:
                 mask[point[1], point[0]] = 1
 
@@ -347,21 +348,21 @@ def point_in_polygon(px, py, poly):
 
 def point_in_shape(p: tuple, poly: list, shape_type='多边形') -> bool:  # 判断点是否在某个形状内部
     px, py = p[0], p[1]
-    if shape_type == '多边形':
+    if shape_type in ('多边形', 'Polygon'):
         return point_in_polygon(px, py, poly)
-    elif shape_type == '矩形':
+    elif shape_type in ('矩形', 'Rectangle'):
         if poly[0][0] <= px <= poly[1][0] and poly[0][1] <= py <= poly[1][1]:
             return True
-    elif shape_type == '椭圆形':
+    elif shape_type in ('椭圆形', 'Ellipse'):
         cx, cy = (poly[0][0] + poly[1][0]) / 2, (poly[0][1] + poly[1][1]) / 2
         px, py = px - cx, cy - py
         a, b = (poly[1][0] - poly[0][0]) / 2, (poly[1][1] - poly[0][1]) / 2
         if px ** 2 / a ** 2 + py ** 2 / b ** 2 <= 1:
             return True
-    elif shape_type == '环形':
+    elif shape_type in ('环形', 'Ring'):
         if point_in_polygon(px, py, poly[0]) and (not point_in_polygon(px, py, poly[1])):
             return True
-    elif shape_type == '填充':
+    elif shape_type in ('填充', 'Fill'):
         if list(p) in poly:
             return True
 

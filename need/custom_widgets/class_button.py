@@ -8,20 +8,30 @@ from need.utils import ClsClasses
 
 
 class ClassButton(QPushButton):
-    def __init__(self, parent=None):  # parent=None 必须要实现
+    def __init__(self, parent=None, language='CN'):  # parent=None 必须要实现
         super().__init__(parent)
         font = self.font()
         font.setPointSize(10)
         self.setFont(font)
+        self.language = language
 
     def mousePressEvent(self, e):
         super().mousePressEvent(e)
         if e.button() == Qt.RightButton:
             ori_text = self.text()
-            text, is_ok = QInputDialog().getText(self, '类别名称', '请输入类别名称，输入"-"删除当前类别', QLineEdit.Normal)
+
+            if self.language == 'CN':
+                text, is_ok = QInputDialog().getText(self, '类别名称', '请输入类别名称，输入"-"删除当前类别。', QLineEdit.Normal)
+            elif self.language == 'EN':
+                text, is_ok = QInputDialog().getText(self, 'Class Name',
+                                                     'Please input class name, input "-" to delete.', QLineEdit.Normal)
+
             if is_ok and text:
                 if text in ClsClasses.classes():
-                    QMessageBox.warning(self, '类别重复', f'类别"{text}"已存在。')
+                    if self.language == 'CN':
+                        QMessageBox.warning(self, '类别重复', f'类别"{text}"已存在。')
+                    elif self.language == 'EN':
+                        QMessageBox.warning(self, 'Duplicate Class', f'Class "{text}" already exists.')
                 else:
                     if ori_text == '-':
                         if text != '-':

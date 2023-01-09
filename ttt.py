@@ -61,76 +61,76 @@ import pdb
 #     ui = PP()
 #     app.exec()
 
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QMainWindow
-from PySide6.QtWidgets import QApplication, QMenu, QMessageBox
-from PySide6.QtGui import QCursor, QAction
-from PySide6.QtCore import QTranslator, QEvent
-
-
-class PP(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        loader = QUiLoader()
-
-        loader.setLanguageChangeEnabled(True)
-        print(loader.isLanguageChangeEnabled())
-
-        self.app = QApplication.instance()
-
-        # self.trans_window = QTranslator()
-        # self.trans_window.load('test.qm')
-        # self.app.installTranslator(self.trans_window)
-        #
-        # self.trans_main = QTranslator()
-        # self.trans_main.load('ttt.qm')
-        # self.app.installTranslator(self.trans_main)
-
-
-        self.main_ui = loader.load('test.ui')
-        self.setCentralWidget(self.main_ui)
-        self.main_ui.pushButton.clicked.connect(self.trans_ui)
-
-        self.menu = QMenu(self)
-        self.action = QAction(self.tr('hello'))
-        self.action.triggered.connect(self.trans_code)
-        self.menu.addAction(self.action)
-        self.main_ui.pushButton.customContextMenuRequested.connect(self.show_menu)
-
-        self.show()
-
-    def changeEvent(self, event):
-        if 'LanguageChange' in event.__repr__():
-            # self.action.setText(self.tr('hello'))
-            print(event)
-
-    def load_qm(self):
-        self.trans_window = QTranslator()
-        self.trans_window.load('test.qm')
-        self.app.installTranslator(self.trans_window)
-
-        self.trans_main = QTranslator()
-        self.trans_main.load('ttt.qm')
-        self.app.installTranslator(self.trans_main)
-
-    def trans_ui(self):
-        self.load_qm()
-
-    def trans_code(self):
-        if not self.main_ui.label.text():
-            self.main_ui.label.setText(self.tr('pear'))
-
-        QMessageBox.information(self, self.tr('cat'), self.tr('apple'))
-
-    def show_menu(self):
-        self.menu.exec(QCursor.pos())
-
-
-if __name__ == '__main__':
-    app = QApplication()
-    ui = PP()
-    app.exec()
+# from PySide6.QtUiTools import QUiLoader
+# from PySide6.QtWidgets import QMainWindow
+# from PySide6.QtWidgets import QApplication, QMenu, QMessageBox
+# from PySide6.QtGui import QCursor, QAction
+# from PySide6.QtCore import QTranslator, QEvent
+#
+#
+# class PP(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#
+#         loader = QUiLoader()
+#
+#         loader.setLanguageChangeEnabled(True)
+#         print(loader.isLanguageChangeEnabled())
+#
+#         self.app = QApplication.instance()
+#
+#         # self.trans_window = QTranslator()
+#         # self.trans_window.load('test.qm')
+#         # self.app.installTranslator(self.trans_window)
+#         #
+#         # self.trans_main = QTranslator()
+#         # self.trans_main.load('ttt.qm')
+#         # self.app.installTranslator(self.trans_main)
+#
+#
+#         self.main_ui = loader.load('test.ui')
+#         self.setCentralWidget(self.main_ui)
+#         self.main_ui.pushButton.clicked.connect(self.trans_ui)
+#
+#         self.menu = QMenu(self)
+#         self.action = QAction(self.tr('hello'))
+#         self.action.triggered.connect(self.trans_code)
+#         self.menu.addAction(self.action)
+#         self.main_ui.pushButton.customContextMenuRequested.connect(self.show_menu)
+#
+#         self.show()
+#
+#     def changeEvent(self, event):
+#         if 'LanguageChange' in event.__repr__():
+#             # self.action.setText(self.tr('hello'))
+#             print(event)
+#
+#     def load_qm(self):
+#         self.trans_window = QTranslator()
+#         self.trans_window.load('test.qm')
+#         self.app.installTranslator(self.trans_window)
+#
+#         self.trans_main = QTranslator()
+#         self.trans_main.load('ttt.qm')
+#         self.app.installTranslator(self.trans_main)
+#
+#     def trans_ui(self):
+#         self.load_qm()
+#
+#     def trans_code(self):
+#         if not self.main_ui.label.text():
+#             self.main_ui.label.setText(self.tr('pear'))
+#
+#         QMessageBox.information(self, self.tr('cat'), self.tr('apple'))
+#
+#     def show_menu(self):
+#         self.menu.exec(QCursor.pos())
+#
+#
+# if __name__ == '__main__':
+#     app = QApplication()
+#     ui = PP()
+#     app.exec()
 
 # self.WorkMode in ('单分类', 'Single Cls'):
 # self.WorkMode in ('多分类', 'Multi Cls'):
@@ -145,3 +145,47 @@ if __name__ == '__main__':
 # self.WorkMode in ('多分类', 'Multi Cls', '语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
 
 # (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割'))
+
+
+
+
+kk = [['是否是发', '10', 'asd', 'asd'],
+['萨芬', 'as', '瑟夫sdf', '安抚'],
+['士大夫', '算法', '20', '20']]
+
+for i in range(3):
+    # print(f"{kk[i][0]:10}{kk[i][1]:10}\t{kk[i][2]:10}\t{kk[i][3]:10}")
+    print(f'{kk[i][0]:{chr(12288)}<7}{kk[i][1]:{chr(12288)}<7}\t{kk[i][2]:<10}')
+
+ss =['黑点', 4, 4]
+jj = ['脏污', 17, 31]
+print(f'{ss[0]:{chr(12288)}<7}{ss[1]:<8}\t{ss[2]}')
+print(f'{jj[0]:{chr(12288)}<7}{jj[1]:<8}\t{jj[2]}')
+
+# from PySide6.QtUiTools import QUiLoader
+# from PySide6.QtWidgets import QMainWindow
+# from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QLabel
+#
+#
+# class PP(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         loader = QUiLoader()
+#         self.main_ui = loader.load('problems/test_bar.ui')
+#         self.setCentralWidget(self.main_ui)
+#         self.main_ui.pushButton.clicked.connect(self.add_l)
+#         self.resize(500, 150)
+#         self.show()
+#
+#     def add_l(self):
+#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+#         self.main_ui.horizontalLayout_2.addWidget(QLabel('  ***aaaaa**  '))
+#         print(self.main_ui.scrollArea.horizontalScrollBar().maximum())
+#         print('--------------')
+#         self.main_ui.scrollArea.horizontalScrollBar().setValue(9999)
+#
+#
+# if __name__ == '__main__':
+#     app = QApplication()
+#     ui = PP()
+#     app.exec()

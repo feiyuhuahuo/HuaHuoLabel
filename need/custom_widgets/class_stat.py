@@ -16,7 +16,7 @@ class ClassStatWidget(QWidget):
         font = QFont()
         font.setPointSize(12)
         self.class_list.setFont(font)
-        self.class_list.resize(200, 500)
+        self.class_list.resize(400, 700)
 
         if len(add_info):
             for one in add_info:

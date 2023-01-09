@@ -15,8 +15,9 @@ signal_docl_done = BoolSignal()
 
 
 class DeleteOneClassLabels(QThread):
-    def __init__(self, img_dir, work_mode, one_file_label, separate_label, label_file_dict, classes, del_c):
+    def __init__(self, imgs, img_dir, work_mode, one_file_label, separate_label, label_file_dict, classes, del_c):
         super().__init__()
+        self.imgs = imgs
         self.img_dir = img_dir
         self.WorkMode = work_mode
         self.OneFileLabel = one_file_label
@@ -24,14 +25,14 @@ class DeleteOneClassLabels(QThread):
         self.label_file_dict = label_file_dict
         self.classes = classes
         self.del_c = del_c
+        self.del_i = self.classes.index(self.del_c)
         self.classes.remove(self.del_c)
 
     def run(self):
-        imgs = glob.glob(f'{self.img_dir}/原图/*')
-        imgs = [uniform_path(aa) for aa in imgs]
-        imgs.sort()
+        for i, one in enumerate(self.imgs):
+            if '图片已删除' in one:
+                continue
 
-        for i, one in enumerate(imgs):
             img_name = one.split('/')[-1]
 
             tv = 'none'
@@ -74,43 +75,42 @@ class DeleteOneClassLabels(QThread):
                     content = json.load(f)
 
                 polygons = content['polygons']
-                if polygons != ['bg']:
-                    new_polygons = []
-                    for one_p in polygons:
-                        if one_p['category'] != self.del_c:
-                            new_polygons.append(one_p.copy())
+                if polygons == ['bg']:
+                    continue
 
-                    if len(new_polygons) == 0:
-                        file_remove(tv_img)
-                        file_remove(json_path)
-                        file_remove(tv_json)
-                        file_remove(png_path)
-                        file_remove(tv_png)
-                        file_remove(txt_path)
-                        file_remove(tv_txt)
-                    else:
-                        if len(new_polygons) != len(polygons):
-                            content['polygons'] = new_polygons
-                            with open(json_path, 'w') as f:
+                new_polygons = []
+                for one_p in polygons:
+                    if one_p['category'] != self.del_c:
+                        new_polygons.append(one_p.copy())
+
+                if len(new_polygons) == 0:
+                    file_remove([tv_img, json_path, tv_json, png_path, tv_png, txt_path, tv_txt])
+                else:
+                    if len(new_polygons) != len(polygons):
+                        content['polygons'] = new_polygons
+                        with open(json_path, 'w') as f:
+                            json.dump(content, f, sort_keys=False, ensure_ascii=False, indent=4)
+                        if osp.exists(tv_json):
+                            with open(tv_json, 'w') as f:
                                 json.dump(content, f, sort_keys=False, ensure_ascii=False, indent=4)
-                            if osp.exists(tv_json):
-                                with open(tv_json, 'w') as f:
-                                    json.dump(content, f, sort_keys=False, ensure_ascii=False, indent=4)
 
-                            if self.WorkMode in ('目标检测', 'Obj Det'):
-                                with open(txt_path, 'w') as f:
+                        if self.WorkMode in ('目标检测', 'Obj Det'):
+                            with open(txt_path, 'w') as f:
+                                for one_p in new_polygons:
+                                    c_name = one_p['category']
+                                    [x1, y1], [x2, y2] = one_p['img_points']
+                                    f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
+                            if osp.exists(tv_txt):
+                                with open(tv_txt, 'w') as f:
                                     for one_p in new_polygons:
                                         c_name = one_p['category']
                                         [x1, y1], [x2, y2] = one_p['img_points']
                                         f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
-                                if osp.exists(tv_txt):
-                                    with open(tv_txt, 'w') as f:
-                                        for one_p in new_polygons:
-                                            c_name = one_p['category']
-                                            [x1, y1], [x2, y2] = one_p['img_points']
-                                            f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
 
-                        if self.WorkMode in ('语义分割', 'Sem Seg'):
+                    if self.WorkMode in ('语义分割', 'Sem Seg'):
+                        cates = [one['category'] for one in new_polygons]
+                        cates = [self.classes.index(one) for one in cates]
+                        if max(cates) >= self.del_i:  # 只有类别索引最大值大于等于删除的类别索引，才需要重绘PNG
                             cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
                             img_h, img_w = cv2_img.shape[:2]
                             seg_mask = get_seg_mask(self.classes, new_polygons, img_h, img_w)

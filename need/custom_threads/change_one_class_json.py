@@ -2,15 +2,14 @@
 # -*- coding:utf-8 -*-
 import json
 import cv2
-import glob
 import numpy as np
 
 from os import path as osp
 from PySide6.QtCore import QThread
-from need.utils import get_seg_mask, uniform_path, path_to
-from need.custom_signals import BoolSignal
+from need.utils import get_seg_mask, path_to
+from need.custom_signals import ListSignal
 
-signal_cocc_done = BoolSignal()
+signal_cocc_done = ListSignal()
 
 
 class ChangeOneClassCategory(QThread):
@@ -23,9 +22,16 @@ class ChangeOneClassCategory(QThread):
         self.OneFileLabel = one_file_label
         self.SeparateLabel = separate_label
         self.label_file_dict = label_file_dict
-        self.classes = classes
+        self.old_classes = classes
         self.old_c = old_c
         self.new_c = new_c
+        self.classes = self.old_classes.copy()
+
+        if new_c in self.old_classes:
+            self.classes.remove(old_c)
+        else:
+            ind = self.old_classes.index(old_c)
+            self.classes[ind] = new_c
 
     def run(self):
         for i, one in enumerate(self.imgs):
@@ -66,11 +72,14 @@ class ChangeOneClassCategory(QThread):
                 with open(json_path, 'r') as f:
                     content = json.load(f)
                     polygons = content['polygons']
-                    if polygons != ['bg']:
-                        for one_p in polygons:
-                            if one_p['category'] == self.old_c:
-                                one_p['category'] = self.new_c
-                                Changed = True
+
+                if polygons == ['bg']:
+                    continue
+
+                for one_p in polygons:
+                    if one_p['category'] == self.old_c:
+                        one_p['category'] = self.new_c
+                        Changed = True
 
                 if Changed:
                     with open(json_path, 'w') as f:
@@ -93,12 +102,17 @@ class ChangeOneClassCategory(QThread):
                                     f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
 
                 if self.WorkMode in ('语义分割', 'Sem Seg'):
-                    cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
-                    img_h, img_w = cv2_img.shape[:2]
-                    seg_mask = get_seg_mask(self.classes, polygons, img_h, img_w)
-                    if seg_mask is not None:
-                        cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(png_path)
-                        if osp.exists(tv_png):
-                            cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
+                    cates = [one['category'] for one in polygons]
+                    cates = [self.classes.index(one) for one in cates]
+                    # 只有新类别在原类别列表中，且类别索引最大值大于等于删除的类别索引，才需要重绘PNG
+                    if self.new_c in self.old_classes and max(cates) >= self.old_classes.index(self.old_c):
+                        cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
+                        img_h, img_w = cv2_img.shape[:2]
 
-        signal_cocc_done.send(True)
+                        seg_mask = get_seg_mask(self.classes, polygons, img_h, img_w)
+                        if seg_mask is not None:
+                            cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(png_path)
+                            if osp.exists(tv_png):
+                                cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
+
+        signal_cocc_done.send([True, self.new_c])

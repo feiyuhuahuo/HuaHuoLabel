@@ -46,7 +46,7 @@ class ImgCls(QMainWindow):
         super().__init__()
         self.load_trans_qm()
 
-        self.WorkMode = '单分类'
+        self.WorkMode = self.tr('单分类')
         self.OneFileLabel = True
         self.SeparateLabel = False
         self.ImgHoldOn = False
@@ -66,7 +66,6 @@ class ImgCls(QMainWindow):
         self.input_dlg = QInputDialog(self)
 
         loader = QUiLoader()
-        loader.setLanguageChangeEnabled(True)
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
         self.main_ui = loader.load('main_window.ui')  # 主界面
@@ -141,8 +140,8 @@ class ImgCls(QMainWindow):
         self.action_delete_one_shape = QAction(self.tr('删除标注'), self)
         self.action_delete_one_shape.triggered.connect(self.main_ui.img_widget.del_polygons)
         self.menu_seg_annotation.addAction(self.action_modify_one_shape_class)
-        self.menu_seg_annotation.addAction(self.action_delete_all)
         self.menu_seg_annotation.addAction(self.action_delete_one_shape)
+        self.menu_seg_annotation.addAction(self.action_delete_all)
 
         self.menu_img_enhance = QMenu(self)
         self.main_ui.groupBox_img_enhance.customContextMenuRequested.connect(
@@ -485,6 +484,8 @@ class ImgCls(QMainWindow):
         self.window_auto_infer_progress.set_text(f'已完成，推理结果存放在 "{self.img_root_path}/自动标注"。')
 
     def button_action(self):
+        if not self.img_root_path:
+            return
         button = self.sender()
         c_name = button.text()
         img_path = self.imgs[self.cur_i]
@@ -551,7 +552,7 @@ class ImgCls(QMainWindow):
 
         new_line = QHBoxLayout()
         for i in range(4):
-            new_button = ClassButton()
+            new_button = ClassButton(language=self.language)
             new_button.setText('-')
             new_button.clicked.connect(self.button_action)
             new_line.addWidget(new_button)
@@ -607,13 +608,6 @@ class ImgCls(QMainWindow):
                               self.tr('确定将所有<font color=red>{}</font>修改为'
                                       '<font color=red>{}</font>吗？').format(c_name, new_c))
             if re == QMB.Yes:
-                classes = self.classes_list()
-                if new_c in classes:
-                    row = self.main_ui.listWidget.currentRow()
-                    self.main_ui.listWidget.takeItem(row)
-                else:
-                    current_item.setText(new_c)
-
                 img_dir = f'{self.img_root_path}/{self.WorkMode}'
                 self.thread_cocc = ChangeOneClassCategory(self.imgs, img_dir, self.WorkMode, self.OneFileLabel,
                                                           self.SeparateLabel, deepcopy(self.label_file_dict),
@@ -621,12 +615,21 @@ class ImgCls(QMainWindow):
                 self.thread_cocc.start()
                 self.show_waiting_label()
 
-    def change_one_class_category_done(self, done):
+    def change_one_class_category_done(self, info):
+        done, new_c = info
         if done:
             if self.OneFileLabel:
                 self.label_file_dict = self.thread_cocc.label_file_dict
 
-            QMB.information(self.main_ui, self.tr('修改完成'), self.tr('已完成, 请重新打开目录。'))
+            classes = self.classes_list()
+            if new_c in classes:
+                row = self.main_ui.listWidget.currentRow()
+                self.main_ui.listWidget.takeItem(row)
+            else:
+                self.main_ui.listWidget.currentItem().setText(new_c)
+
+            self.save_classes_txt()
+            QMB.information(self.main_ui, self.tr('修改完成'), self.tr('已完成, 类别列表已备份，请重新打开目录。'))
             self.set_work_mode()
 
         self.waiting_label.stop()
@@ -657,71 +660,76 @@ class ImgCls(QMainWindow):
 
     def check_dataset(self):
         if self.img_root_path:
-            self.check_labels()
-            self.check_train_val_set()
+            if self.check_labels():
+                self.check_train_val_set()
         else:
-            QMB.information(self.main_ui, self.tr(f'图片根目录为空'), self.tr(f'请先加载图片。'))
+            QMB.information(self.main_ui, self.tr('图片根目录为空'), self.tr('请先加载图片。'))
 
     def check_labels(self):
-        result = []
         if self.OneFileLabel:
             redu_num, unla_num = 0, 0
-            del_list = []
-            self_imgs = [aa.split('/')[-1] for aa in self.imgs]
+            redu_list, unla_list = [], []
+            img_names = [aa.split('/')[-1] for aa in self.imgs]
+
             for one in self.label_file_dict['labels'].keys():
-                if one not in self_imgs:
-                    del_list.append(one)
+                if one not in img_names:
+                    redu_list.append(one)
                     redu_num += 1
 
-            for one in self_imgs:
-                if not self.label_file_dict['labels'].get(one):
-                    unla_num += 1
-
-            QMB.information(self.main_ui, self.tr('统一标注文件'),
-                            self.tr('{}条标注记录找不到对应原图，{}张图片未标注。').format(redu_num, unla_num))
+            QMB.information(self.main_ui, self.tr('统一标注文件'), self.tr('{}条标注记录找不到对应"原图"。').format(redu_num))
 
             if redu_num > 0:
-                choice = QMB.question(self.main_ui, self.tr('清理标注'), self.tr('清理找不到对应原图的标注记录吗？'))
+                choice = QMB.question(self.main_ui, self.tr('清理标注'), self.tr('清理找不到对应"原图"的标注记录吗？'))
                 if choice == QMB.Yes:
-                    for one in del_list:
+                    for one in redu_list:
                         self.label_file_dict['labels'].pop(one)
 
                     QMB.information(self.main_ui, self.tr('清理完成'), self.tr('共清理{}条记录。').format(redu_num))
-                    redu_num = 0
 
-            result.append(redu_num)
-            result.append(unla_num)
+            for one in img_names:
+                if not self.label_file_dict['labels'].get(one):
+                    unla_list.append(one)
+                    unla_num += 1
 
+            QMB.information(self.main_ui, self.tr('统一标注文件'), self.tr('{}张"原图"未标注。').format(unla_num))
+
+            if unla_num > 0:
+                if remove_redunant_files(unla_list, self.tr('清理"原图"'), self.tr('清理未标注的"原图"吗？')):
+                    QMB.information(self.main_ui, self.tr('重新打开目录'), self.tr('清理"原图"后需要重新打开目录。'))
+                    self.set_work_mode()
+                    return False
         if self.SeparateLabel:
             redu_num, unla_num = 0, 0
-
+            redu_list, unla_list = [], []
             if self.WorkMode == self.tr('单分类'):
                 for one in self.imgs:
                     category = self.cls_has_classified(one)
                     if not category:
+                        unla_list.append(one)
                         unla_num += 1
 
-                QMB.information(self.main_ui, self.tr('独立标注文件'), self.tr('{}张图片未标注。').format(unla_num))
-
+                QMB.information(self.main_ui, self.tr('独立标注文件'), self.tr('{}张"原图"未标注。').format(unla_num))
             elif self.WorkMode in (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
                 label_files = glob_labels(f'{self.img_root_path}/{self.WorkMode}/{self.label_folder}')
-                unlabeled_list, redundant_list = two_way_check(self.imgs, label_files)
-                unla_num, redu_num = len(unlabeled_list), len(redundant_list)
+                unla_list, redu_list = two_way_check(self.imgs, label_files)
+                unla_num, redu_num = len(unla_list), len(redu_list)
 
                 QMB.information(self.main_ui, self.tr('独立标注文件'),
-                                self.tr('统计完成，{}个标注文件找不到对应的原图，{}张图片未标注。').format(redu_num, unla_num))
+                                self.tr('统计完成，{}个标注文件找不到对应的"原图"，{}张"原图"未标注。').format(redu_num, unla_num))
 
                 if redu_num > 0:
-                    remove_redunant_files(redundant_list, self.tr('清理标注'), self.tr('清理找不到对应原图的标注文件吗？'))
-                    redu_num = 0
+                    remove_redunant_files(redu_list, self.tr('清理标注'), self.tr('清理找不到对应"原图"的标注文件吗？'))
 
-            result.append(redu_num)
-            result.append(unla_num)
-
-        return result
+            if unla_num > 0:
+                if remove_redunant_files(unla_list, self.tr('清理"原图"'), self.tr('清理未标注的"原图"吗？')):
+                    QMB.information(self.main_ui, self.tr('重新打开目录'), self.tr('清理"原图"后需要重新打开目录。'))
+                    self.set_work_mode()
+                    return False
+        return True
 
     def check_train_val_set(self):
         if self.SeparateLabel:
+            # 1 -------------------------------------------------------
             t_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/train', self.WorkMode)
             v_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/val', self.WorkMode)
             t_redu, _ = two_way_check(t_imgs, self.imgs, one_way=True)
@@ -735,11 +743,16 @@ class ImgCls(QMainWindow):
                 result = remove_redunant_files(t_redu, self.tr('清理训练集'), self.tr('清理训练集里不在"原图"中的图片吗？'))
                 if result:
                     t_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/train', self.WorkMode)
+                    self.train_num = len(t_imgs)
+                    self.set_tv_bar()
             if v_redu:
                 result = remove_redunant_files(v_redu, self.tr('清理验证集'), self.tr('清理验证集里不在"原图"中的图片吗？'))
                 if result:
                     v_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/val', self.WorkMode)
+                    self.val_num = len(v_imgs)
+                    self.set_tv_bar()
 
+            # 2 -------------------------------------------------------
             t_names = [aa.split('/')[-1] for aa in t_imgs]
             v_names = [aa.split('/')[-1] for aa in v_imgs]
             dupli_names = list(set(t_names).intersection(set(v_names)))
@@ -755,6 +768,8 @@ class ImgCls(QMainWindow):
 
                     QMB.information(self.main_ui, self.tr('清理完成'), self.tr('共清理{}个文件。').format(dupli_num))
                     t_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/train', self.WorkMode)
+                    self.train_num = len(t_imgs)
+                    self.set_tv_bar()
 
                 if choice == QMB.No:
                     choice = QMB.question(self.main_ui, self.tr('重复的图片'),
@@ -767,7 +782,10 @@ class ImgCls(QMainWindow):
 
                         QMB.information(self.main_ui, self.tr('清理完成'), self.tr('共清理{}个文件。').format(dupli_num))
                         v_imgs = glob_imgs(f'{self.img_root_path}/{self.WorkMode}/imgs/val', self.WorkMode)
+                        self.val_num = len(v_imgs)
+                        self.set_tv_bar()
 
+            # 3 -------------------------------------------------------
             if self.WorkMode in (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
                 t_labels = glob_labels(f'{self.img_root_path}/{self.WorkMode}/labels/train')
                 v_labels = glob_labels(f'{self.img_root_path}/{self.WorkMode}/labels/val')
@@ -775,19 +793,23 @@ class ImgCls(QMainWindow):
                 t_r_imgs, t_r_labels = two_way_check(t_imgs, t_labels)
                 v_r_imgs, v_r_labels = two_way_check(v_imgs, v_labels)
 
-                QMB.information(self.main_ui, '独立标注文件', f'训练集中 {len(t_r_imgs)} 张图片找不到对应的标注，'
-                                                        f'{len(t_r_labels)} 个标注找不到对应的原图。\n'
-                                                        f'验证集中 {len(v_r_imgs)} 张图片找不到对应的标注，'
-                                                        f'{len(v_r_labels)} 个标注找不到对应的原图。')
+                QMB.information(self.main_ui, self.tr('独立标注文件'),
+                                self.tr('训练集中{}张图片找不到对应的标注，{}个标注找不到对应的图片。\n'
+                                        '验证集中{}张图片找不到对应的标注，{}个标注找不到对应的图片。')
+                                .format((len(t_r_imgs)), len(t_r_labels), len(v_r_imgs), len(v_r_labels)))
 
                 if t_r_imgs:
-                    remove_redunant_files(t_r_imgs, '清理训练集', '清理训练集中找不到对应标注的图片吗？')
+                    if remove_redunant_files(t_r_imgs, self.tr('清理训练集'), self.tr('清理训练集中找不到对应标注的图片吗？')):
+                        self.get_tv_num()
+                        self.set_tv_bar()
                 if t_r_labels:
-                    remove_redunant_files(t_r_labels, '清理训练集', '清理训练集中找不到对应图片的标注吗？')
+                    remove_redunant_files(t_r_labels, self.tr('清理训练集'), self.tr('清理训练集中找不到对应图片的标注吗？'))
                 if v_r_imgs:
-                    remove_redunant_files(v_r_imgs, '清理验证集', '清理验证集中找不到对应标注的图片吗？')
+                    if remove_redunant_files(v_r_imgs, self.tr('清理验证集'), self.tr('清理验证集中找不到对应标注的图片吗？')):
+                        self.get_tv_num()
+                        self.set_tv_bar()
                 if v_r_labels:
-                    remove_redunant_files(v_r_labels, '清理验证集', '清理验证集中找不到对应图片的标注吗？')
+                    remove_redunant_files(v_r_labels, self.tr('清理验证集'), self.tr('清理验证集中找不到对应图片的标注吗？'))
 
     def choose_new_color(self):
         existed_color = []
@@ -853,7 +875,8 @@ class ImgCls(QMainWindow):
                     self.marquees_layout.itemAt(cur_mar_i).widget().set_stat('undo')
 
             self.show_label_to_ui()
-            QMB.information(self.main_ui, '已撤销', f'已撤销: {img_name}, {ori_path} --> {cur_path}。')
+            QMB.information(self.main_ui, self.tr('撤销操作'), self.tr('已撤销: ') +
+                            f'{img_name}, {ori_path} --> {cur_path}。')
 
     def cls_has_classified(self, img_path=None):  # 查看单分类，多分类模式下，图片是否已分类
         path = img_path if img_path else self.imgs[self.cur_i]
@@ -893,7 +916,6 @@ class ImgCls(QMainWindow):
                     button = item.itemAt(j).widget()
                     if button.text() == category:
                         button.setStyleSheet('QPushButton { background-color: lightgreen }')
-                        has_this_class = True
                         return
 
             if not has_this_class:
@@ -959,7 +981,7 @@ class ImgCls(QMainWindow):
             raise SystemError('func: del_existed_file, 路径相同, 请检查。')
 
         if osp.exists(file_path):
-            choice = QMB.question(self.main_ui, '文件已存在', f'"{file_path}"已存在，要覆盖吗？')
+            choice = QMB.question(self.main_ui, self.tr('文件已存在'), self.tr('{}已存在，要覆盖吗？').format(file_path))
             if choice == QMB.Yes:
                 os.remove(file_path)
                 return True
@@ -968,22 +990,26 @@ class ImgCls(QMainWindow):
         else:
             return True
 
-    def del_img(self, del_path=None):
+    def del_img(self, dst_path=None):
         if not (0 <= self.cur_i < len(self.imgs)):
             return
         if self.imgs[self.cur_i] == 'images/图片已删除.png':
             return
 
-        if del_path is None:
-            del_path = f'{self.img_root_path}/deleted'
+        del_path = f'{self.img_root_path}/deleted'
         os.makedirs(del_path, exist_ok=True)
 
         img_path = self.imgs[self.cur_i]
         img_name = img_path.split('/')[-1]
+
         if self.EditImgMode:
             file_remove(img_path)
         else:
-            path_del_img = f'{del_path}/{self.WorkMode}/{self.image_folder}'
+            if dst_path is None:
+                path_del_img = f'{del_path}/{self.WorkMode}/{self.image_folder}'
+            else:
+                path_del_img = dst_path
+
             os.makedirs(path_del_img, exist_ok=True)
             self.file_move(img_path, path_del_img)
 
@@ -1064,24 +1090,30 @@ class ImgCls(QMainWindow):
 
     def delete_one_class_jsons(self):
         c_name = self.main_ui.listWidget.currentItem().text()
-        re = QMB.question(self.main_ui, '删除类别', f'确定删除所有<font color=red>"{c_name}"</font>"标注吗？')
+        re = QMB.question(self.main_ui, self.tr('删除类别'), self.tr('确定删除所有<font color=red>{}</font>标注吗？')
+                          .format(c_name))
 
         if re == QMB.Yes:
             img_dir = f'{self.img_root_path}/{self.WorkMode}'
-            self.thread_docl = DeleteOneClassLabels(img_dir, self.WorkMode, self.OneFileLabel, self.SeparateLabel,
-                                                    deepcopy(self.label_file_dict), self.classes_list(), c_name)
+            # 删除某一类后，若图片无标注，则对应的标注文件会删除，原图不会，train和val里的对应图片和标注都会删除
+            self.thread_docl = DeleteOneClassLabels(self.imgs, img_dir, self.WorkMode, self.OneFileLabel,
+                                                    self.SeparateLabel, deepcopy(self.label_file_dict),
+                                                    self.classes_list(), c_name)
             self.thread_docl.start()
             self.show_waiting_label()
 
     def delete_one_class_jsons_done(self, done):
         if done:
-            item = self.main_ui.listWidget.takeItem(self.main_ui.listWidget.currentRow())
-            del item
+            if self.OneFileLabel:
+                self.label_file_dict = self.thread_docl.label_file_dict
+
+            self.main_ui.listWidget.takeItem(self.main_ui.listWidget.currentRow())
+            self.save_classes_txt()
+            QMB.information(self.main_ui, self.tr('删除完成'), self.tr('已完成, 类别列表已备份，请重新打开目录。'))
             self.set_work_mode()
 
         self.waiting_label.stop()
         self.waiting_label.close()
-        QMB.information(self.main_ui, '已完成', '已完成, 请重新打开目录。')
 
     def disable_some_widgets(self):
         self.main_ui.tabWidget.setDisabled(True)
@@ -1096,7 +1128,7 @@ class ImgCls(QMainWindow):
         self.main_ui.label_train_val.setDisabled(True)
 
     def edit_img(self):
-        folder = self.file_select_dlg.getExistingDirectory(self.main_ui, '选择文件夹')
+        folder = self.file_select_dlg.getExistingDirectory(self.main_ui, self.tr('选择文件夹'))
         if folder:
             self.EditImgMode = True
             self.disable_some_widgets()
@@ -1105,7 +1137,8 @@ class ImgCls(QMainWindow):
             self.after_get_self_imgs()
 
     def export_classes(self):
-        txt, is_ok = QInputDialog().getText(self, '名称', '请输入导出txt的名称。', QLineEdit.Normal, text='classes')
+        txt, is_ok = QInputDialog().getText(self, self.tr('名称'), self.tr('请输入导出txt的名称。'),
+                                            QLineEdit.Normal, text='classes')
         if is_ok:
             lines = ''
             txt_path = f'{self.img_root_path}/{self.WorkMode}/{txt}.txt'
@@ -1115,7 +1148,7 @@ class ImgCls(QMainWindow):
             with open(txt_path, 'w', encoding='utf-8') as f:
                 f.writelines(lines)
 
-            QMB.information(self.main_ui, '已完成', f'已导出到"{txt_path}"。')
+            QMB.information(self.main_ui, self.tr('已完成'), self.tr('已导出到{}。').format(txt_path))
 
     def file_copy(self, src_path, dst_path):
         new_file_path = osp.join(dst_path, src_path.split('/')[-1])
@@ -1127,26 +1160,36 @@ class ImgCls(QMainWindow):
         if self.del_existed_file(src_path, new_file_path):
             shutil.move(src_path, dst_dir)
 
-    def generate_train(self):
-        result = self.check_labels()
-        for one in result:
-            if one != 0:
-                QMB.critical(self.main_ui, '标注存在问题', '存在多余的或未标注的图片，请先清理标注后再重试。')
-                return
+    def has_labeled(self, img_path):
+        img_name = img_path.split('/')[-1]
+        if self.OneFileLabel:
+            if self.label_file_dict['labels'].get(img_name):
+                return True
+            return False
+        elif self.SeparateLabel:
+            if self.WorkMode in (self.tr('单分类'),  self.tr('多分类')):
+                if self.cls_has_classified(img_path):
+                    return True
+            elif self.WorkMode in (self.tr('语义分割'),  self.tr('目标检测'), self.tr('实例分割')):
+                json_path = path_to(img_path, img2json=True)
+                if osp.exists(json_path):
+                    return True
+            return False
 
+    def generate_train(self):
         val_img_list, Going = [], True
         if self.OneFileLabel:
             for one in self.label_file_dict['labels'].keys():
                 if self.label_file_dict['labels'][one]['tv'] == 'val':
                     val_img_list.append(one)
         elif self.SeparateLabel:
-            choice = QMB.question(self.main_ui, '标注可能被覆盖', f'"{self.WorkMode}/imgs/train"将被覆盖，继续吗？')
+            choice = QMB.question(self.main_ui, self.tr('文件将被覆盖'), self.tr('"{}/imgs/train"将被覆盖，继续吗？')
+                                  .format(self.WorkMode))
             if choice == QMB.Yes:
                 self.train_num = 0
                 if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train'):
                     shutil.rmtree(f'{self.img_root_path}/{self.WorkMode}/imgs/train')
-                if self.WorkMode in ('多分类', 'Multi Cls', '语义分割', 'Sem Seg',
-                                     '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
+                if self.WorkMode in (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
                     if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/train'):
                         shutil.rmtree(f'{self.img_root_path}/{self.WorkMode}/labels/train')
 
@@ -1156,10 +1199,10 @@ class ImgCls(QMainWindow):
 
         if Going:
             for one in self.imgs:
-                if one.split('/')[-1] not in val_img_list:
+                if self.has_labeled(one) and one.split('/')[-1] not in val_img_list:
                     self.add_to_train_val('train', one)
 
-            QMB.information(self.main_ui, '已完成', '已完成。')
+            QMB.information(self.main_ui, self.tr('已完成'), self.tr('已完成。'))
 
     def get_img_tv(self, img_path):
         img_name = img_path.split('/')[-1]
@@ -1188,8 +1231,8 @@ class ImgCls(QMainWindow):
             points = polygon['img_points']
             width = points[1][0] - points[0][0]
             height = points[1][1] - points[0][1]
-            text = f"类别：{polygon['category']}\n宽度：{width}\n高度：{height}\n"
-        elif self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+            text = self.tr('类别：{}\n宽度：{}\n高度：{}\n').format(polygon['category'], width, height)
+        elif self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
             img_path = self.imgs[self.cur_i]
             img_w, img_h = QPixmap(img_path).size().toTuple()
             mask = get_seg_mask(['fake'], [polygon], img_h, img_w, value=1)
@@ -1198,7 +1241,7 @@ class ImgCls(QMainWindow):
             cv2_img = cv2.imdecode(np.fromfile(img_path, dtype='uint8'), cv2.IMREAD_COLOR)
             img_masked = cv2_img * (mask[:, :, None])
             color_avg = (img_masked.sum((0, 1)) / area).astype('uint8').tolist()
-            text = f"类别：{polygon['category']}\n面积：{area}\n平均灰度：{color_avg}\n"
+            text = self.tr('类别：{}\n面积：{}\n平均灰度：{}\n').format(polygon['category'], area, color_avg)
 
         return text
 
@@ -1242,6 +1285,7 @@ class ImgCls(QMainWindow):
 
     def get_tv_num(self):
         if self.OneFileLabel:
+            self.train_num, self.val_num = 0, 0
             for one in self.label_file_dict['labels'].values():
                 if one['tv'] == 'train':
                     self.train_num += 1
@@ -1265,8 +1309,8 @@ class ImgCls(QMainWindow):
             self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat('done')
             self.cur_i += 1
             self.cur_mar_i += 1
-            self.main_ui.label_path.setText('已完成。')
-            QMB.information(self.main_ui, '已完成', '已完成。')
+            self.main_ui.label_path.setText(self.tr('已完成。'))
+            QMB.information(self.main_ui, self.tr('已完成'), self.tr('已完成。'))
 
     def go_next_marquee_window(self):
         if self.window_marquee_label:
@@ -1329,11 +1373,11 @@ class ImgCls(QMainWindow):
             self.paint_changed_cv2_img()
 
     def img_hold_on(self):
-        if self.action_hold_on.text() == '切图保持':
-            self.action_hold_on.setText('切图还原')
+        if self.action_hold_on.text() == self.tr('切图保持'):
+            self.action_hold_on.setText(self.tr('切图还原'))
             self.ImgHoldOn = True
-        elif self.action_hold_on.text() == '切图还原':
-            self.action_hold_on.setText('切图保持')
+        elif self.action_hold_on.text() == self.tr('切图还原'):
+            self.action_hold_on.setText(self.tr('切图保持'))
             self.ImgHoldOn = False
 
     def img_jump(self, i=None):
@@ -1407,7 +1451,7 @@ class ImgCls(QMainWindow):
                     button.clicked.connect(self.button_action)
 
     def load_classes(self):
-        txt = self.file_select_dlg.getOpenFileName(self.main_ui, '选择txt', filter='txt (*.txt)')[0]
+        txt = self.file_select_dlg.getOpenFileName(self.main_ui, self.tr('选择txt'), filter='txt (*.txt)')[0]
         if txt:
             if self.WorkMode == self.tr('单分类'):
                 self.reset_seg_widgets()
@@ -1445,7 +1489,7 @@ class ImgCls(QMainWindow):
                 with open(json_path, 'r') as f:
                     self.label_file_dict = json.load(f)
             except:
-                QMB.critical(self.main_ui, '文件错误', '"labels.json"读取失败，请检查文件！')
+                QMB.critical(self.main_ui, self.tr('文件错误'), self.tr('"labels.json"读取失败，请检查文件！'))
                 return
 
             record_imgs = sorted(list(self.label_file_dict['labels'].keys()))
@@ -1457,8 +1501,8 @@ class ImgCls(QMainWindow):
                     miss_list.append(one)
 
             if len(miss_list) > 0:
-                choice = QMB.question(self.main_ui, '图片列表不匹配',
-                                      f'{len(miss_list)}条标注记录未找到对应的原图，删除这些记录吗?')
+                choice = QMB.question(self.main_ui, self.tr('图片列表不匹配'),
+                                      self.tr('{}条标注记录未找到对应的"原图"，删除这些记录吗?').format(len(miss_list)))
                 if choice == QMB.Yes:
                     for one in miss_list:
                         self.label_file_dict['labels'].pop(one)
@@ -1477,23 +1521,25 @@ class ImgCls(QMainWindow):
 
     def load_trans_qm(self):
         self.app = QApplication.instance()
-        self.trans_main_window = QTranslator()  # QTranslator需要作为自己的属性，不然容易出bug，容易出现不翻译的情况
-        self.trans_main = QTranslator()
         with open('project.json', 'r') as f:
             self.language = json.load(f)['language']
 
-        if self.language == 'CN':
-            self.trans_main_window.load('')
-            self.trans_main.load('')
-
         if self.language == 'EN':
+            self.trans_main_window = QTranslator()  # QTranslator需要作为自己的属性，不然容易出bug，容易出现不翻译的情况
+            self.trans_main = QTranslator()
+            self.trans_img_show = QTranslator()
+
             self.trans_main_window.load('ts_files/main_window.qm')
             self.trans_main.load('ts_files/main.qm')
+            self.trans_img_show.load('ts_files/img_show_widget.qm')
 
-        self.app.installTranslator(self.trans_main_window)
-        self.app.installTranslator(self.trans_main)
+            self.app.installTranslator(self.trans_main_window)
+            self.app.installTranslator(self.trans_main)
+            self.app.installTranslator(self.trans_img_show)
+
         self.image_folder = self.tr('原图')
         self.label_folder = self.tr('标注')
+        self.ann_folder = self.tr('注释图片')
 
     def log_info(self, text):
         with open(f'log_files/log_{self.log_created_time}.txt', 'a+', encoding='utf-8') as f:
@@ -1510,7 +1556,8 @@ class ImgCls(QMainWindow):
 
             if self.sys_error_text[-2].startswith(':'):
                 show_info = ''.join(self.sys_error_text) + '\n'
-                QMB.warning(self.main_ui, '系统错误', f'<font color=red>{show_info}</font><br>请反馈给开发者。')
+                QMB.warning(self.main_ui, self.tr('系统错误'),
+                            self.tr('<font color=red>{}</font><br>请反馈给开发者。').format(show_info))
                 with open(f'log_files/log_{self.log_created_time}.txt', 'a+', encoding='utf-8') as f:
                     f.writelines(show_info)
 
@@ -1613,20 +1660,20 @@ class ImgCls(QMainWindow):
         img_path, show_png = info
 
         if self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
-            if show_png and self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+            if show_png and self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
                 classes = self.classes_list()
                 if len(classes) == 0:
-                    QMB.warning(self.main_ui, '类别数量为0', '当前类别数量为0，请先加载类别。')
+                    QMB.warning(self.main_ui, self.tr('类别数量为0'), self.tr('当前类别数量为0，请先加载类别。'))
                     return
 
                 qimg_png = self.get_qimg_png(img_path)
                 if qimg_png:
-                    self.window_marquee_label = BaseImgFrame(title='标注图片')
+                    self.window_marquee_label = BaseImgFrame(title=self.tr('标注图片'))
                     self.window_marquee_label.setWindowFlags(Qt.WindowStaysOnTopHint)
                     self.window_marquee_label.paint_img(qimg_png)
                     self.window_marquee_label.show()
             else:
-                self.window_marquee_img = BaseImgFrame(title='原始图片')
+                self.window_marquee_img = BaseImgFrame(title=self.tr('原始图片'))
                 self.window_marquee_img.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.window_marquee_img.paint_img(QPixmap(img_path))
                 self.window_marquee_img.show()
@@ -1650,7 +1697,7 @@ class ImgCls(QMainWindow):
         return stat
 
     def move_to_new_folder(self):
-        path = self.file_select_dlg.getExistingDirectory(self.main_ui, '选择文件夹')
+        path = self.file_select_dlg.getExistingDirectory(self.main_ui, self.tr('选择文件夹'))
         if path:
             self.del_img(path)
 
@@ -1734,14 +1781,14 @@ class ImgCls(QMainWindow):
         self.label_ui.close()
 
     def oc_shape_info(self):
-        if self.action_oc_shape_info.text() == '禁用（提高切图速度）':
+        if self.action_oc_shape_info.text() == self.tr('禁用（提高切图速度）'):
             self.clear_shape_info()
-            self.action_oc_shape_info.setText('启用（降低切图速度）')
-        elif self.action_oc_shape_info.text() == '启用（降低切图速度）':
-            self.action_oc_shape_info.setText('禁用（提高切图速度）')
+            self.action_oc_shape_info.setText(self.tr('启用（降低切图速度）'))
+        elif self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
+            self.action_oc_shape_info.setText(self.tr('禁用（提高切图速度）'))
 
     def open_dir(self):
-        file_path = self.file_select_dlg.getExistingDirectory(self.main_ui, '选择文件夹')
+        file_path = self.file_select_dlg.getExistingDirectory(self.main_ui, self.tr('选择文件夹'))
         if os.path.isdir(file_path):
             if self.main_ui.lineEdit.text():
                 self.save_classes_txt()
@@ -1752,13 +1799,12 @@ class ImgCls(QMainWindow):
             self.clear_shape_info()
             self.reset_seg_widgets()
 
-            self.img_root_path = file_path
-            self.main_ui.lineEdit.setText(self.img_root_path)
-            self.task = self.img_root_path.split('/')[-1]
-
-            self.set_action_disabled()
-            if self.prepare_self_imgs():
+            if self.prepare_self_imgs(file_path):
+                self.img_root_path = file_path
+                self.main_ui.lineEdit.setText(self.img_root_path)
+                self.task = self.img_root_path.split('/')[-1]
                 self.after_get_self_imgs()
+                self.set_action_disabled()
                 self.load_pinned_images()
                 if self.load_one_file_dict():
                     self.show_label_to_ui()
@@ -1775,14 +1821,14 @@ class ImgCls(QMainWindow):
         if self.img_root_path:
             img_name = self.current_img_name()
             if img_name in self.pinned_imgs:
-                ann_jpg = f'{self.img_root_path}/注释图片/{img_name[:-4]}.jpg'
+                ann_jpg = f'{self.img_root_path}/{self.ann_folder}/{img_name[:-4]}.jpg'
                 if osp.exists(ann_jpg):
                     self.main_ui.img_widget.set_ann_painted_img(ann_jpg)
 
     def pin_jump(self, last=False, next=False):
         _, self.LookingAll = self.looking_classes()
         if not self.LookingAll:
-            QMB.warning(self.main_ui, '模式冲突', '存在屏蔽的类别时，该功能无法启用，请先取消屏蔽的类别。')
+            QMB.warning(self.main_ui, self.tr('模式冲突'), self.tr('存在屏蔽的类别时，该功能无法启用，请先取消屏蔽的类别。'))
             return
 
         jump = True
@@ -1826,6 +1872,8 @@ class ImgCls(QMainWindow):
         self.update_shape_list_num()
 
         img_path = self.imgs[self.cur_i]
+        if '图片已删除' in img_path:
+            return
 
         if self.OneFileLabel:
             img_name = img_path.split('/')[-1]
@@ -1870,10 +1918,10 @@ class ImgCls(QMainWindow):
         # polygons的嵌套的数据结构导致数据容易发生原位修改，哪怕使用了.get()方法和函数传参也一样，具体原理未知
         self.main_ui.img_widget.prepare_polygons(deepcopy(polygons), img_h, img_w)
 
-    def prepare_self_imgs(self):
-        path = f'{self.img_root_path}/{self.WorkMode}/{self.image_folder}'
+    def prepare_self_imgs(self, path):
+        path = f'{path}/{self.WorkMode}/{self.image_folder}'
         if not os.path.isdir(path):
-            QMB.warning(self.main_ui, '未找到文件夹', f'未找到 "{path}" 文件夹。')
+            QMB.warning(self.main_ui, self.tr('未找到文件夹'), self.tr('未找到 "{}" 文件夹。').format(path))
             return False
 
         self.imgs = glob_imgs(path, self.WorkMode)
@@ -1893,52 +1941,49 @@ class ImgCls(QMainWindow):
     def raise_label_mode_conflict(self):
         if self.img_root_path:
             # 加了QMB后，可以阻止点击QcheckBox时切换状态，原因未知
-            QMB.critical(self.main_ui, '错误操作', '请误在标注途中切换标注模式，否则容易造成标注文件混乱！')
+            QMB.critical(self.main_ui, self.tr('错误操作'), self.tr('请误在标注途中切换标注模式，否则容易造成标注文件混乱！'))
 
     def random_train_val(self):
-        result = self.check_labels()
-        for one in result:
-            if one != 0:
-                QMB.critical(self.main_ui, '标注存在问题', '存在多余的或未标注的图片，请先清理标注后再重试。')
-                return
-
-        content, is_ok = self.input_dlg.getText(self.main_ui, f'划分比例', '请输入训练集和验证集的划分比例',
+        content, is_ok = self.input_dlg.getText(self.main_ui, self.tr('划分比例'), self.tr('请输入训练集和验证集的划分比例'),
                                                 QLineEdit.Normal, text='7:1')
 
         if is_ok:
             if self.SeparateLabel:
-                choice = QMB.question(self.main_ui, '标注可能被覆盖',
-                                      f'"{self.WorkMode}/imgs"和"{self.WorkMode}/labels"将被覆盖，继续吗？')
+                choice = QMB.question(self.main_ui, self.tr('标注可能被覆盖'),
+                                      self.tr('"{0}/imgs"和"{0}/labels"将被覆盖，继续吗？').format(self.WorkMode))
                 if choice == QMB.Yes:
                     if not self.OneFileLabel:
                         self.train_num, self.val_num = 0, 0
                     if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs'):
                         shutil.rmtree(f'{self.img_root_path}/{self.WorkMode}/imgs')
-                    if self.WorkMode in ('多分类', 'Multi Cls', '语义分割', 'Sem Seg',
-                                         '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
+                    if self.WorkMode in (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
                         if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels'):
                             shutil.rmtree(f'{self.img_root_path}/{self.WorkMode}/labels')
 
             content = content.replace('：', ':')
             content = [aa.strip() for aa in content.split(':')]
             if len(content) != 2:
-                QMB.critical(self.main_ui, '格式错误', '输入的格式错误！')
+                QMB.critical(self.main_ui, self.tr('格式错误'), self.tr('输入的格式错误！'))
                 return
+
+            shuffled_imgs = self.imgs.copy()
+            shuffled_imgs = [one for one in shuffled_imgs if self.has_labeled(one)]
+            random.shuffle(shuffled_imgs)
+            img_num = len(shuffled_imgs)
 
             t_r, v_r = content
             t_r, v_r = int(t_r), int(v_r)
-            t_num = int((t_r / (t_r + v_r)) * self.img_num)
-            v_num = self.img_num - t_num
+            t_num = int((t_r / (t_r + v_r)) * img_num)
+            v_num = img_num - t_num
 
-            shuffled_imgs = self.imgs.copy()
-            random.shuffle(shuffled_imgs)
-            for i in range(self.img_num):
+            for i in range(img_num):
                 if i < t_num:
                     self.add_to_train_val('train', shuffled_imgs[i])
                 else:
                     self.add_to_train_val('val', shuffled_imgs[i])
 
-            QMB.information(self.main_ui, '已完成', f'已完成，共划分{t_num}张图片至训练集，{v_num}张图片至验证集。')
+            QMB.information(self.main_ui, self.tr('已完成'),
+                            self.tr('已完成，共划分{}张图片至训练集，{}张图片至验证集。').format(t_num, v_num))
 
     def reset_init_variables(self):
         self.img_root_path = ''  # 图片根目录
@@ -1979,13 +2024,13 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.collection_ui.ui.listWidget.clear()
 
     def save_ann_img(self):
-        os.makedirs(f'{self.img_root_path}/注释图片', exist_ok=True)
+        os.makedirs(f'{self.img_root_path}/{self.ann_folder}', exist_ok=True)
         img = self.main_ui.img_widget.get_ann_img()
         img_array = qimage_to_array(img)
         img_name = self.current_img_name()[:-4]
-        save_path = f'{self.img_root_path}/注释图片/{img_name}.jpg'
+        save_path = f'{self.img_root_path}/{self.ann_folder}/{img_name}.jpg'
         cv2.imencode('.jpg', img_array.astype('uint8'))[1].tofile(save_path)
-        QMB.information(self.main_ui, '已保存', f'图片保存于：{save_path}。')
+        QMB.information(self.main_ui, self.tr('已保存'), self.tr('图片保存于：{}。').format(save_path))
 
     def save_classes_txt(self):
         lines = ''
@@ -2072,12 +2117,14 @@ class ImgCls(QMainWindow):
     def save_edited_img(self, save_all=False):
         if save_all:
             imgs_path = [aa for aa in self.imgs if aa != 'images/图片已删除.png']
-            re = QMB.question(self.main_ui, '覆盖图片', f'"{self.img_root_path}"下的所有图片将被覆盖，继续吗？')
+            re = QMB.question(self.main_ui, self.tr('覆盖图片'),
+                              self.tr('"{}"下的所有图片将被覆盖，继续吗？').format(self.img_root_path))
             if re != QMB.Yes:
                 return
         else:
             imgs_path = [self.imgs[self.cur_i]]
-            re = QMB.question(self.main_ui, '覆盖图片', f'"{self.imgs[self.cur_i]}"将被覆盖，继续吗？')
+            re = QMB.question(self.main_ui, self.tr('覆盖图片'),
+                              self.tr('"{}"将被覆盖，继续吗？').format(self.imgs[self.cur_i]))
             if re != QMB.Yes:
                 return
 
@@ -2115,7 +2162,7 @@ class ImgCls(QMainWindow):
 
             cv2.imencode(suffix, cv2_img.astype('uint8'))[1].tofile(one[:-4] + suffix)
 
-        QMB.information(self.main_ui, '保存完成', f'保存完成，共{len(imgs_path)}张图片。')
+        QMB.information(self.main_ui, self.tr('保存完成'), self.tr('保存完成，共{}张图片。').format(len(imgs_path)))
 
     def save_m_cls(self):
         lines = []
@@ -2177,7 +2224,7 @@ class ImgCls(QMainWindow):
                 with open(json_path, 'w') as f:
                     json.dump(self.label_file_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
-                self.main_ui.label_path.setText(f'{json_path}已保存。')
+                self.main_ui.label_path.setText(self.tr('"{}"已保存。').format(json_path))
 
     def save_one_shape(self, text):
         if self.LabelUiCallByMo:
@@ -2213,7 +2260,7 @@ class ImgCls(QMainWindow):
         if not self.img_root_path:
             return
         if self.cur_i < 0 or self.cur_i > self.img_num:
-            QMB.critical(self.main_ui, '索引超限', f'当前self.cur_i为{self.cur_i}，超出限制！')
+            QMB.critical(self.main_ui, self.tr('索引超限'), self.tr('当前图片索引为{}，超出限制！').format(self.cur_i))
             return
 
         if not self.EditImgMode:
@@ -2222,7 +2269,8 @@ class ImgCls(QMainWindow):
                 _, self.LookingAll = self.looking_classes()
                 if not self.LookingAll:
                     if self.main_ui.checkBox_scan_unlabeled.isChecked():
-                        QMB.critical(self.main_ui, '功能冲突', '浏览未标注图片功能和浏览部分类别功能冲突，请先关闭其中一项。')
+                        QMB.critical(self.main_ui, self.tr('功能冲突'),
+                                     self.tr('浏览未标注功能和浏览部分类别功能冲突，请先关闭其中一项。'))
                         return
 
                     count = self.scan_part_classes(last=last, next=next)
@@ -2255,7 +2303,7 @@ class ImgCls(QMainWindow):
             self.show_img_status_info()
             self.show_label_to_ui()
             self.set_tv_label()
-            if self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+            if self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
                 self.go_next_marquee_window()
             if self.WorkMode == self.tr('语义分割'):
                 self.set_semantic_bg()
@@ -2346,7 +2394,7 @@ class ImgCls(QMainWindow):
         if self.WorkMode == self.tr('语义分割') and self.SeparateLabel \
                 and self.main_ui.radioButton_write.isChecked():
             if not self.sem_cm_window.DontShowAgain:
-                self.sem_cm_window.show('warning', '类别列表发生变化，请注意更新以往的png标注。')
+                self.sem_cm_window.show(self.tr('警告！'), self.tr('类别列表发生变化，请注意更新以往的png标注。'))
 
     def set_action_disabled(self):
         self.action_load_cls_classes.setDisabled(self.img_root_path == '')
@@ -2390,7 +2438,7 @@ class ImgCls(QMainWindow):
                 self.app.exit(99)
 
     def set_m_cls_default_c(self):
-        text, is_ok = QInputDialog().getText(self, '默认类别', '请输入类别名称', QLineEdit.Normal)
+        text, is_ok = QInputDialog().getText(self, self.tr('默认类别'), self.tr('请输入类别名称'), QLineEdit.Normal)
         if is_ok and text:
             self.mcls_default_c = text
 
@@ -2398,7 +2446,7 @@ class ImgCls(QMainWindow):
         self.OneFileLabel = self.main_ui.checkBox_one_label.isChecked()
 
         if not self.SeparateLabel and not self.OneFileLabel:
-            QMB.warning(self.main_ui, '未选择标注模式', '请选择至少一种标注文件模式！')
+            QMB.warning(self.main_ui, self.tr('未选择标注模式'), self.tr('请选择至少一种标注文件模式！'))
             self.main_ui.checkBox_one_label.setChecked(True)
 
     def set_read_mode(self):
@@ -2406,7 +2454,7 @@ class ImgCls(QMainWindow):
             self.main_ui.checkBox_shape_edit.setDisabled(self.main_ui.radioButton_read.isChecked())
 
     def set_scan_delay(self):
-        delay, is_ok = self.input_dlg.getInt(self.main_ui, '切图延时', '单位：ms', 0, 0, 9999, 100)
+        delay, is_ok = self.input_dlg.getInt(self.main_ui, self.tr('切图延时'), self.tr('单位：ms'), 0, 0, 9999, 100)
         if is_ok:
             self.scan_delay = delay
 
@@ -2420,6 +2468,9 @@ class ImgCls(QMainWindow):
 
     def set_semantic_bg(self):
         img_path = self.imgs[self.cur_i]
+        if '图片已删除' in img_path:
+            return
+
         img_name = img_path.split('/')[-1]
         check_stat = False
         if self.OneFileLabel:
@@ -2446,7 +2497,7 @@ class ImgCls(QMainWindow):
             self.main_ui.pushButton_update_png.setDisabled(not self.SeparateLabel)
 
         if not self.SeparateLabel and not self.OneFileLabel:
-            QMB.warning(self.main_ui, '未选择标注模式', '请选择至少一种标注文件模式！')
+            QMB.warning(self.main_ui, self.tr('未选择标注模式'), self.tr('请选择至少一种标注文件模式！'))
             self.main_ui.checkBox_one_label.setChecked(True)
 
     def set_shape_edit_mode(self):
@@ -2550,18 +2601,18 @@ class ImgCls(QMainWindow):
         self.WorkMode = self.main_ui.tabWidget.tabText(tab_index)
 
         if self.WorkMode != self.tr('单分类'):
-            self.main_ui.radioButton_read.setText('只读')
-            self.main_ui.radioButton_write.setText('编辑')
-            self.main_ui.checkBox_separate_label.setText('独立标注文件')
+            self.main_ui.radioButton_read.setText(self.tr('只读'))
+            self.main_ui.radioButton_write.setText(self.tr('编辑'))
+            self.main_ui.checkBox_separate_label.setText(self.tr('独立标注文件'))
             self.main_ui.radioButton_read.setDisabled(False)
             self.main_ui.radioButton_write.setDisabled(False)
 
         if self.WorkMode == self.tr('单分类'):
-            self.main_ui.radioButton_read.setText('剪切')
-            self.main_ui.radioButton_write.setText('复制')
+            self.main_ui.radioButton_read.setText(self.tr('剪切'))
+            self.main_ui.radioButton_write.setText(self.tr('复制'))
             self.main_ui.radioButton_read.setDisabled(self.main_ui.checkBox_one_label.isChecked())
             self.main_ui.radioButton_write.setDisabled(self.main_ui.checkBox_one_label.isChecked())
-            self.main_ui.checkBox_separate_label.setText('划分至文件夹')
+            self.main_ui.checkBox_separate_label.setText(self.tr('划分至文件夹'))
             if self.main_ui.toolBox.currentIndex() == 0:
                 self.main_ui.img_widget.set_task_mode(cls=True)
         elif self.WorkMode == self.tr('多分类'):
@@ -2573,7 +2624,7 @@ class ImgCls(QMainWindow):
                 self.main_ui.comboBox_2.setCurrentIndex(1)
                 self.main_ui.comboBox_2.setDisabled(True)
                 self.main_ui.img_widget.set_task_mode(det=True)
-        elif self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+        elif self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
             if self.main_ui.toolBox.currentIndex() == 0:
                 self.main_ui.img_widget.set_task_mode(seg=True)
 
@@ -2589,22 +2640,24 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.clear_all_polygons()
 
     def show_class_statistic(self):
-        self.thread_cs = ClassStatistics(self.WorkMode, self.img_root_path, self.img_num, self.OneFileLabel,
-                                         self.label_file_dict, self.SeparateLabel)
+        self.thread_cs = ClassStatistics(self.WorkMode, self.img_root_path, self.img_num, self.classes_list(),
+                                         self.OneFileLabel, self.label_file_dict, self.SeparateLabel, self.language)
+
+        self.thread_cs.start()
         self.show_waiting_label()
-        self.thread_cs.run()
 
     def show_class_statistic_done(self, info):
         self.waiting_label.stop()
         self.waiting_label.close()
         self.window_class_stat = ClassStatWidget(info)
-        self.window_class_stat.show()
         self.window_class_stat.resize(self.window_class_stat.class_list.size())
+        self.window_class_stat.show()
 
     def show_compare_img(self):
-        path = self.file_select_dlg.getOpenFileName(self.main_ui, '选择图片', filter='图片类型 (*.png *.jpg *.bmp)')[0]
+        path = self.file_select_dlg.getOpenFileName(self.main_ui, self.tr('选择图片'),
+                                                    filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
         if path:
-            self.window_compare = BaseImgFrame(title='对比图片')
+            self.window_compare = BaseImgFrame(title=self.tr('图片窗口'))
             self.window_compare.paint_img(path)
             self.window_compare.show()
 
@@ -2636,7 +2689,7 @@ class ImgCls(QMainWindow):
             self.main_ui.img_widget.paint_img(qimg)
 
         if path == 'images/图片已删除.png':
-            self.main_ui.label_path.setText('图片已删除。')
+            self.main_ui.label_path.setText(self.tr('图片已删除。'))
         else:
             img_w, img_h = self.main_ui.img_widget.img.size().width(), self.main_ui.img_widget.img.size().height()
             self.bottom_img_text = path
@@ -2675,7 +2728,7 @@ class ImgCls(QMainWindow):
         ob.exec(QCursor.pos())
 
     def show_shape_info(self, polygon):
-        if self.action_oc_shape_info.text() == '启用（降低切图速度）':
+        if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
             return
 
         lw = self.current_shape_info_widget()
@@ -2687,7 +2740,7 @@ class ImgCls(QMainWindow):
             lw.addItem(item)
 
     def show_waiting_label(self):
-        self.waiting_label = WaitingLabel(self)
+        self.waiting_label = WaitingLabel(self, language=self.language)
         geo_self = self.frameGeometry()
         x1 = int(geo_self.width() / 2)
         y1 = int(geo_self.height() / 3)
@@ -2706,7 +2759,7 @@ class ImgCls(QMainWindow):
 
     def update_class_list_num(self):
         num = self.main_ui.listWidget.count()
-        self.main_ui.label_7.setText(f'类别列表（{num}）')
+        self.main_ui.label_7.setText(self.tr('类别列表（{}）').format(num))
 
     def update_progress_value(self, info):
         class_name, value = info
@@ -2721,22 +2774,22 @@ class ImgCls(QMainWindow):
     def update_sem_pngs(self):
         classes = self.classes_list()
         if not classes:
-            QMB.warning(None, '类别列表为空', '请先加载类别。')
+            QMB.warning(None, self.tr('类别列表为空'), self.tr('请先加载类别。'))
             signal_usp_done.send(False)
             return
 
         self.thread_usp = UpdateSemanticPngs(self.WorkMode, self.imgs, self.img_root_path, classes)
         self.thread_usp.start()
-        self.window_usp_progress = ProgressWindow(title='PNG更新', text_prefix='更新PNG标注中：')
+        self.window_usp_progress = ProgressWindow(title=self.tr('PNG更新'), text_prefix=self.tr('更新PNG标注中：'))
         self.window_usp_progress.show()
 
     def update_sem_pngs_done(self, info):
         done, num = info
         if done:
-            self.window_usp_progress.set_text(f'{num}张，已完成。')
+            self.window_usp_progress.set_text(self.tr('{}张，已完成。').format(num))
 
     def update_shape_info_text(self, i):
-        if self.action_oc_shape_info.text() == '启用（降低切图速度）':
+        if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
             return
 
         lw = self.current_shape_info_widget()
@@ -2746,7 +2799,7 @@ class ImgCls(QMainWindow):
 
     def update_shape_list_num(self):
         num = self.main_ui.listWidget_2.count()
-        self.main_ui.label_10.setText(f'标注列表（{num}）')
+        self.main_ui.label_10.setText(self.tr('标注列表（{}）').format(num))
 
         if self.WorkMode == self.tr('语义分割'):
             self.main_ui.checkBox_sem_bg.setDisabled(num > 0)
@@ -2754,13 +2807,15 @@ class ImgCls(QMainWindow):
 # todo: 伪标注合成全功能
 # todo: marquee 进度条同步有问题？  搁置
 # todo: auto inference, 多分类， 目标检测， 实例分割
+# todo: 完善log
 
 # before open to github
 # todo: auto inference， 另起一个文件？ 单分类， 语义分割
 # todo: 完善版本信息、license
 # todo: win11 测试 Ubuntu20.04， ubuntu22.04 打包 测试
-# todo: 中英双文
 # todo: json 转换的scripts
+
+# todo: 中英双文
 
 # 未解决的问题
 # https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side

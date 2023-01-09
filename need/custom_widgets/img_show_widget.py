@@ -1,7 +1,5 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-import json
-
 from typing import List, Union
 from copy import deepcopy
 import pdb
@@ -38,9 +36,9 @@ class BaseImgFrame(QFrame):
         self.resize(512, 512)
         # todo: bug, 不知道为什么基类的menu右键的时候不显示
         self.menu = QMenu(self)
-        self.action_bilinear = QAction('双线性插值缩放', self)
+        self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
         self.action_bilinear.triggered.connect(lambda: self.set_interpolation(Qt.SmoothTransformation))
-        self.action_nearest = QAction('最近邻插值缩放', self)
+        self.action_nearest = QAction(self.tr('最近邻插值缩放'), self)
         self.action_nearest.setIcon(QPixmap('images/icon_11.png'))
         self.action_nearest.triggered.connect(lambda: self.set_interpolation(Qt.FastTransformation))
         self.menu.addAction(self.action_nearest)
@@ -149,7 +147,6 @@ class BaseImgFrame(QFrame):
             return
 
         self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图，
-
         # if self.img.isNull():  # 如果图片太大，QPixmap或QImage会打不开，用QImageReader
         #     QImageReader.setAllocationLimit(256)
         #     img = QImageReader(img_path_or_pix_map)
@@ -231,7 +228,7 @@ class ImgShow(BaseImgFrame):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
         self.scaled_img_painted = None
-        self.collection_ui = SelectWindow(title='收藏的标注', button_signal=signal_seg_collection_select_ok)
+        self.collection_ui = SelectWindow(title=self.tr('收藏的标注'), button_signal=signal_seg_collection_select_ok)
         self.collected_shapes = {}
 
         self.ann_point_last = QPoint(0, 0)
@@ -252,7 +249,7 @@ class ImgShow(BaseImgFrame):
         self.widget_points_huan = []
         self.img_points_huan = []
 
-        self.shape_type = '多边形'
+        self.shape_type = self.tr('多边形')
         self.cursor_in_widget = QPointF(0., 0.)  # 鼠标在控件坐标系的实时坐标
         self.polygon_editing_i = None  # 正在编辑的标注的索引，即标注高亮时对应的索引
         self.fill_editing_i = None  # 正在编辑的填充标注的索引
@@ -296,17 +293,17 @@ class ImgShow(BaseImgFrame):
         signal_seg_collection_select_ok.signal.connect(self.collection_ui_ok)
         signal_select_window_close.signal.connect(self.clear_widget_img_points)
 
-        self.add_poly_to_collection = QAction('收藏标注', self)
+        self.add_poly_to_collection = QAction(self.tr('收藏标注'), self)
         self.add_poly_to_collection.triggered.connect(lambda: self.collection_ui_show(False))
         self.add_poly_to_collection.setDisabled(True)
         self.menu.addAction(self.add_poly_to_collection)
 
-        self.draw_collection_shape = QAction('绘制收藏的标注', self)
+        self.draw_collection_shape = QAction(self.tr('绘制收藏的标注'), self)
         self.draw_collection_shape.triggered.connect(lambda: self.collection_ui_show(True))
         self.draw_collection_shape.setDisabled(True)
         self.menu.addAction(self.draw_collection_shape)
 
-        self.menu.addAction('移动至新文件夹').triggered.connect(self.move_to_new_folder)
+        self.menu.addAction(self.tr('移动至新文件夹')).triggered.connect(self.move_to_new_folder)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
@@ -362,7 +359,7 @@ class ImgShow(BaseImgFrame):
         else:
             if (self.DetMode or self.SegMode) and QApplication.keyboardModifiers() == Qt.ControlModifier:
                 self.update()
-                if self.shape_type == '填充' and len(self.img_points):
+                if self.shape_type == self.tr('填充') and len(self.img_points):
                     self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
 
             elif (self.DetMode or self.SegMode) and self.ShapeEditMode:
@@ -403,7 +400,7 @@ class ImgShow(BaseImgFrame):
                         self.shape_done_open_label_window()
                     else:
                         self.cursor_in_widget = e.position()
-                        if self.shape_type == '填充':
+                        if self.shape_type == self.tr('填充'):
                             self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
                         else:
                             self.add_widget_img_pair(self.cursor_in_widget)
@@ -433,7 +430,7 @@ class ImgShow(BaseImgFrame):
             self.setCursor(Qt.OpenHandCursor)
 
         if QApplication.keyboardModifiers() == Qt.ControlModifier and (self.DetMode or self.SegMode):
-            if self.shape_type in ('矩形', '椭圆形'):
+            if self.shape_type in (self.tr('矩形'), self.tr('椭圆形')):
                 point_br = e.position()
                 b_left, b_up, b_right, b_down = self.get_border_coor()
 
@@ -443,7 +440,7 @@ class ImgShow(BaseImgFrame):
                         signal_open_label_window.send(True)
                 else:
                     self.clear_widget_img_points()
-            elif self.shape_type == '填充':
+            elif self.shape_type == self.tr('填充'):
                 signal_open_label_window.send(True)
         elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
             self.erase_paint_pixel(self.fill_editing_i)
@@ -470,7 +467,7 @@ class ImgShow(BaseImgFrame):
             if QApplication.keyboardModifiers() == Qt.ControlModifier:
                 if len(self.widget_points):
                     self.painter.setPen(QPen(self.seg_pen_color, self.seg_pen_size))
-                    if self.shape_type in ('矩形', '椭圆形'):
+                    if self.shape_type in (self.tr('矩形'), self.tr('椭圆形')):
                         if len(self.widget_points) in (0, 3):  # 一些误操作导致长度错误，直接清空重画
                             self.clear_widget_img_points()
                         else:
@@ -481,12 +478,12 @@ class ImgShow(BaseImgFrame):
                                 x1, y1 = self.widget_points[0].toTuple()
                                 x2, y2 = self.cursor_in_widget.toTuple()
 
-                            if self.shape_type == '矩形':
+                            if self.shape_type == self.tr('矩形'):
                                 self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                            elif self.shape_type == '椭圆形':
+                            elif self.shape_type == self.tr('椭圆形'):
                                 self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
 
-                    elif self.shape_type in ('多边形', '环形'):
+                    elif self.shape_type in (self.tr('多边形'), self.tr('环形')):
                         if len(self.widget_points) >= 2:  # 画已完成的完整线段
                             for i in range(len(self.widget_points) - 1):
                                 self.painter.drawLine(self.widget_points[i], self.widget_points[i + 1])
@@ -499,7 +496,7 @@ class ImgShow(BaseImgFrame):
                             if result:
                                 self.PolygonLastPointDone = True
 
-                    elif self.shape_type == '填充':
+                    elif self.shape_type == self.tr('填充'):
                         self.fill_img_pixel(self.img_points, self.seg_pen_color)
 
         self.painter.end()
@@ -555,9 +552,9 @@ class ImgShow(BaseImgFrame):
 
     def ann_add_text(self, ori_position):  # 注释模式添加文字功能
         input_dlg = QInputDialog()
-        input_dlg.setWindowTitle('文字注释')
+        input_dlg.setWindowTitle(self.tr('文字注释'))
         input_dlg.resize(400, 100)
-        input_dlg.setLabelText('请输入注释：')
+        input_dlg.setLabelText(self.tr('请输入注释：'))
         is_ok = input_dlg.exec()
 
         self.painter.begin(self.scaled_img)
@@ -602,7 +599,7 @@ class ImgShow(BaseImgFrame):
             polygon = self.collected_shapes[text].copy()
             self.shape_type = polygon['shape_type']
 
-            if self.shape_type == '环形':
+            if self.shape_type == self.tr('环形'):
                 self.widget_points_huan, self.img_points_huan = [], []
                 widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
                 self.widget_points_huan.append(widget_points_out)
@@ -619,7 +616,7 @@ class ImgShow(BaseImgFrame):
             self.FlagDrawCollection = False
         else:  # 收藏标注
             if text in self.collected_shapes.keys():
-                QMessageBox.warning(self, '名称重复', f'"{text}"已存在。')
+                QMessageBox.warning(self, self.tr('名称重复'), self.tr('{}已存在。').format(text))
             else:
                 self.collected_shapes[text] = self.all_polygons[self.polygon_editing_i]
                 self.collection_ui.ui.listWidget.addItem(QListWidgetItem(text))
@@ -645,11 +642,11 @@ class ImgShow(BaseImgFrame):
         b_left, b_up, b_right, b_down = self.get_border_coor()
         polygon = self.all_polygons[i]
 
-        if polygon['shape_type'] == '填充':  # 填充标注不具备这个功能
+        if polygon['shape_type'] == self.tr('填充'):  # 填充标注不具备这个功能
             return
 
         # 处理widget_points
-        if polygon['shape_type'] == '环形':
+        if polygon['shape_type'] == self.tr('环形'):
             new_x, new_y = (polygon['widget_points'][j][k] + offset).toTuple()
             new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
 
@@ -658,16 +655,16 @@ class ImgShow(BaseImgFrame):
                 if j == 0:
                     in_c = polygon['widget_points'][1]
                     for one in in_c:
-                        if not point_in_shape(one.toTuple(), out_c, '多边形'):
+                        if not point_in_shape(one.toTuple(), out_c, self.tr('多边形')):
                             self.LeftClick = False
                             self.OutInConflict = True
-                            QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                            QMessageBox.warning(self, self.tr('内环越界'), self.tr('内环不完全在外环内部。'))
                             return
                 if j == 1:
-                    if not point_in_shape((new_x, new_y), out_c, '多边形'):
+                    if not point_in_shape((new_x, new_y), out_c, self.tr('多边形')):
                         self.LeftClick = False
                         self.OutInConflict = True
-                        QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                        QMessageBox.warning(self, self.tr('内环越界'), self.tr('内环不完全在外环内部。'))
                         return
 
             polygon['widget_points'][j][k] = QPointF(new_x, new_y)
@@ -677,11 +674,11 @@ class ImgShow(BaseImgFrame):
             polygon['widget_points'][j] = QPointF(new_x, new_y)
 
         # 处理对应的img_points
-        if polygon['shape_type'] == '多边形':
+        if polygon['shape_type'] == self.tr('多边形'):
             x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j])
             if x is not None:
                 polygon['img_points'][j] = (x, y)
-        elif polygon['shape_type'] in ('矩形', '椭圆形'):
+        elif polygon['shape_type'] in (self.tr('矩形'), self.tr('椭圆形')):
             if j == 0:
                 x1, y1 = polygon['widget_points'][j].toTuple()
                 x2, y2 = polygon['widget_points'][1].toTuple()
@@ -696,7 +693,7 @@ class ImgShow(BaseImgFrame):
                 x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k])
                 if x is not None:
                     polygon['img_points'][k] = (x, y)
-        elif polygon['shape_type'] == '环形':
+        elif polygon['shape_type'] == self.tr('环形'):
             x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k])
             if x is not None:
                 polygon['img_points'][j][k] = (x, y)
@@ -709,20 +706,20 @@ class ImgShow(BaseImgFrame):
         corner_index = None
 
         for i, polygon in enumerate(self.all_polygons):
-            if polygon['shape_type'] == '环形':
+            if polygon['shape_type'] == self.tr('环形'):
                 for j, huan in enumerate(polygon['widget_points']):
                     for k, point in enumerate(huan):
                         if self.close_to_corner(point):
                             corner_index = (i, j, k)
                             return corner_index
-            elif polygon['shape_type'] == '填充':
+            elif polygon['shape_type'] == self.tr('填充'):
                 img_p_x, img_p_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
                 img_p = [img_p_x, img_p_y]
                 if img_p in polygon['img_points']:
                     return i
             else:
                 for j, point in enumerate(polygon['widget_points']):
-                    if polygon['shape_type'] == '椭圆形':
+                    if polygon['shape_type'] == self.tr('椭圆形'):
                         p_i = self.close_to_corner(polygon['widget_points'], is_ellipse=True)
                         if type(p_i) == int:
                             corner_index = (i, p_i)
@@ -794,7 +791,7 @@ class ImgShow(BaseImgFrame):
             cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
 
             cursor = self.cursor_in_widget.toTuple()
-            if not point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type='椭圆形'):
+            if not point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type=self.tr('椭圆形')):
                 if x1 <= cursor[0] <= cx and y1 <= cursor[1] <= cy:
                     self.painter.drawEllipse(x1 - 0 * radius, y1 - 0 * radius, 12, 12)
                     return 0
@@ -818,22 +815,22 @@ class ImgShow(BaseImgFrame):
             editing_poly = self.all_polygons[self.polygon_editing_i]
 
             shape_type = editing_poly['shape_type']
-            if shape_type in ('矩形', '椭圆形'):
+            if shape_type in (self.tr('矩形'), self.tr('椭圆形')):
                 x1, y1 = editing_poly['widget_points'][0].toTuple()
                 x2, y2 = editing_poly['widget_points'][1].toTuple()
-                if shape_type == '矩形':
+                if shape_type == self.tr('矩形'):
                     self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                elif shape_type == '椭圆形':
+                elif shape_type == self.tr('椭圆形'):
                     self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
-            elif shape_type == '多边形':
+            elif shape_type == self.tr('多边形'):
                 self.painter.drawPolygon(editing_poly['widget_points'])
-            elif shape_type == '环形':
+            elif shape_type == self.tr('环形'):
                 polygon1 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][0]])
                 polygon2 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][1]])
                 self.r1, self.r2 = QRegion(polygon1), QRegion(polygon2)
                 self.painter.setClipRegion(self.r1 - self.r2)
                 self.painter.fillRect(self.r1.boundingRect(), QColor(0, 255, 0, 150))
-            elif shape_type == '填充':
+            elif shape_type == self.tr('填充'):
                 self.fill_img_pixel(editing_poly['img_points'], QColor(0, 255, 0, 150))
 
             signal_selected_shape.send(self.polygon_editing_i)
@@ -841,23 +838,23 @@ class ImgShow(BaseImgFrame):
     def draw_completed_polygons(self):  # 在标注时画已完成的完整图形
         for one in self.all_polygons:
             self.painter.setPen(QPen(QColor(one['qcolor']), self.seg_pen_size))
-            if one['shape_type'] == '多边形':
+            if one['shape_type'] == self.tr('多边形'):
                 self.painter.drawPolygon(one['widget_points'])
-            elif one['shape_type'] in ('矩形', '椭圆形'):
+            elif one['shape_type'] in (self.tr('矩形'), self.tr('椭圆形')):
                 if len(one['widget_points']):
                     x1, y1 = one['widget_points'][0].toTuple()
                     x2, y2 = one['widget_points'][1].toTuple()
-                    if one['shape_type'] == '矩形':
+                    if one['shape_type'] == self.tr('矩形'):
                         self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                    elif one['shape_type'] == '椭圆形':
+                    elif one['shape_type'] == self.tr('椭圆形'):
                         self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
-            elif one['shape_type'] == '环形':
+            elif one['shape_type'] == self.tr('环形'):
                 for one_p in one['widget_points']:
                     self.painter.drawPolygon(one_p)
-            elif one['shape_type'] == '填充':
+            elif one['shape_type'] == self.tr('填充'):
                 self.fill_img_pixel(one['img_points'], QColor(one['qcolor']))
 
-        if self.shape_type == '环形' and len(self.widget_points_huan):
+        if self.shape_type == self.tr('环形') and len(self.widget_points_huan):
             self.painter.drawPolygon(self.widget_points_huan[0])
 
     def draw_selected_shape(self, i):
@@ -908,11 +905,11 @@ class ImgShow(BaseImgFrame):
             point = self.cursor_in_widget.toTuple()
             shape_type = one['shape_type']
 
-            if shape_type == '环形':
+            if shape_type == self.tr('环形'):
                 wp1 = [aa.toTuple() for aa in one['widget_points'][0]]
                 wp2 = [aa.toTuple() for aa in one['widget_points'][1]]
                 shape_points = [wp1, wp2]
-            elif shape_type == '填充':
+            elif shape_type == self.tr('填充'):
                 img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
                 point = (img_pixel_x, img_pixel_y)
                 shape_points = one['img_points']
@@ -939,7 +936,7 @@ class ImgShow(BaseImgFrame):
 
         if len(json_polygons):
             for one in json_polygons:
-                if one['shape_type'] == '环形':
+                if one['shape_type'] == self.tr('环形'):
                     out_c, in_c = one['widget_points'][0], one['widget_points'][1]
                     widget_points = [[aa.toTuple() for aa in out_c], [aa.toTuple() for aa in in_c]]
                 else:
@@ -952,8 +949,8 @@ class ImgShow(BaseImgFrame):
     def prepare_polygons(self, polygons, ori_h, ori_w):
         img_h, img_w = self.img.size().height(), self.img.size().width()
         if ori_h != img_h or ori_w != img_w:
-            QMessageBox.critical(self, '图片尺寸错误', f'记录的图片尺寸({ori_w}, {ori_h}) '
-                                                 f'!= 当前的图片尺寸({img_w}, {img_h})。')
+            QMessageBox.critical(self, self.tr('图片尺寸错误'), self.tr('记录的图片尺寸({}, {}) != 当前的图片尺寸({}, {})。')
+                                 .format(ori_w, ori_h, img_w, img_h))
             return
 
         self.center_point()
@@ -961,13 +958,13 @@ class ImgShow(BaseImgFrame):
 
         if img_w2real_w is not None:
             for one in polygons:
-                if one['shape_type'] == '环形':
+                if one['shape_type'] == self.tr('环形'):
                     p1 = self.img_coor_to_widget_coor(one['img_points'][0])
                     p2 = self.img_coor_to_widget_coor(one['img_points'][1])
                     ps = [p1, p2]
-                elif one['shape_type'] in ('多边形', '填充'):
+                elif one['shape_type'] in (self.tr('多边形'), self.tr('填充')):
                     ps = self.img_coor_to_widget_coor(one['img_points'])
-                elif one['shape_type'] in ('矩形', '椭圆形'):
+                elif one['shape_type'] in (self.tr('矩形'), self.tr('椭圆形')):
                     p1 = one['img_points'][0]
                     p2 = [one['img_points'][1][0], one['img_points'][1][1]]
                     ps = self.img_coor_to_widget_coor([p1, p2])
@@ -999,13 +996,13 @@ class ImgShow(BaseImgFrame):
         widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
         shape_type = editing_polygon['shape_type']
 
-        if shape_type != '填充' and self.corner_index is not None:
+        if shape_type != self.tr('填充') and self.corner_index is not None:
             return  # 标注工具不是填充时，角点移动功能优先，即self.corner_index is not None时为角点移动功能
 
         offset = None
         img_w, img_h = self.img.width(), self.img.height()
         if key_left:
-            if shape_type == '填充':
+            if shape_type == self.tr('填充'):
                 for i, one_point in enumerate(img_points):
                     one_point[0] -= 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1013,7 +1010,7 @@ class ImgShow(BaseImgFrame):
             else:
                 offset = QPointF(-int(img_w / 300), 0)
         elif key_right:
-            if shape_type == '填充':
+            if shape_type == self.tr('填充'):
                 for i, one_point in enumerate(img_points):
                     one_point[0] += 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1021,7 +1018,7 @@ class ImgShow(BaseImgFrame):
             else:
                 offset = QPointF(int(img_w / 300), 0)
         elif key_up:
-            if shape_type == '填充':
+            if shape_type == self.tr('填充'):
                 for i, one_point in enumerate(img_points):
                     one_point[1] -= 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1029,7 +1026,7 @@ class ImgShow(BaseImgFrame):
             else:
                 offset = QPointF(0, -int(img_h / 300))
         elif key_down:
-            if shape_type == '填充':
+            if shape_type == self.tr('填充'):
                 for i, one_point in enumerate(img_points):
                     one_point[1] += 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1041,7 +1038,7 @@ class ImgShow(BaseImgFrame):
             offset = self.cursor_in_widget - self.start_pos
 
         if offset is not None:
-            if shape_type == '环形':
+            if shape_type == self.tr('环形'):
                 for i, one_wp in enumerate(widget_points):
                     for j, one_point in enumerate(one_wp):
                         one_point += offset
@@ -1070,7 +1067,7 @@ class ImgShow(BaseImgFrame):
         signal_move2new_folder.send(True)
 
     def one_polygon_done(self, qcolor, category):
-        if self.shape_type == '环形':
+        if self.shape_type == self.tr('环形'):
             self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': self.shape_type,
                                       'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
             self.clear_widget_img_points_huan()
@@ -1129,7 +1126,7 @@ class ImgShow(BaseImgFrame):
             self.clear_scaled_img(to_undo=False)
 
     def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
-        if self.shape_type == '环形':
+        if self.shape_type == self.tr('环形'):
             self.widget_points_huan.append(self.widget_points.copy())
             self.img_points_huan.append(self.img_points.copy())
             if len(self.widget_points_huan) < 2:
@@ -1138,8 +1135,8 @@ class ImgShow(BaseImgFrame):
             else:
                 out_c = [aa.toTuple() for aa in self.widget_points_huan[0]]
                 for one in self.widget_points_huan[1]:
-                    if not point_in_shape(one.toTuple(), out_c, '多边形'):
-                        QMessageBox.warning(self, '内环越界', '内环不完全在外环内部。')
+                    if not point_in_shape(one.toTuple(), out_c, self.tr('多边形')):
+                        QMessageBox.warning(self, self.tr('内环越界'), self.tr('内环不完全在外环内部。'))
                         self.widget_points_huan.pop(1)
                         return
 
@@ -1149,7 +1146,7 @@ class ImgShow(BaseImgFrame):
 
     def shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):
         for one in self.all_polygons:
-            if one['shape_type'] == '环形':
+            if one['shape_type'] == self.tr('环形'):
                 wp1 = self.shape_scale_convert(one['widget_points'][0], old_img_tl, scale_factor)
                 wp2 = self.shape_scale_convert(one['widget_points'][1], old_img_tl, scale_factor)
                 one['widget_points'] = [wp1, wp2]

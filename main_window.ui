@@ -2934,7 +2934,7 @@ background-color: rgb(200, 200, 200);</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>将非验证集的图片全部加入训练集</string>
+            <string>将已标注的、非验证集的数据全部加入到训练集</string>
            </property>
            <property name="text">
             <string>生成训练集</string>
@@ -2952,7 +2952,7 @@ background-color: rgb(200, 200, 200);</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>将数据集随机划分成训练集和验证集</string>
+            <string>将已标注的数据随机划分成训练集和验证集</string>
            </property>
            <property name="text">
             <string>随机划分</string>

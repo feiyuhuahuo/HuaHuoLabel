@@ -409,9 +409,9 @@
         <translation>Add to Val</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="2937"/>
-        <source>将非验证集的图片全部加入训练集</source>
-        <translation>Add all the non val set images to train set</translation>
+        <location filename="../main_window.ui" line="2955"/>
+        <source>将已标注的数据随机划分成训练集和验证集</source>
+        <translation>Random divide labeled data to train set and val set</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="2940"/>
@@ -419,9 +419,9 @@
         <translation>Gen Train</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="2955"/>
-        <source>将数据集随机划分成训练集和验证集</source>
-        <translation>Randomly divide the dataset totrain set and val set</translation>
+        <location filename="../main_window.ui" line="2937"/>
+        <source>将已标注的、非验证集的数据全部加入到训练集</source>
+        <translation>Add all labeled and non val set data to train set</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="2958"/>
@@ -619,6 +619,21 @@
         <translation>Language</translation>
     </message>
     <message>
+        <location filename="../main_window.ui" line="3949"/>
+        <source>查看训练/验证集标注</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main_window.ui" line="3957"/>
+        <source>生成指定类别分割标注</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main_window.ui" line="3962"/>
+        <source>去除MCMR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../main_window.ui" line="3967"/>
         <source>版本：1.0.0</source>
         <translation>Version 1.0.0</translation>
@@ -632,10 +647,6 @@
         <location filename="../main_window.ui" line="3977"/>
         <source>English</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>英文</source>
-        <translation type="vanished">English</translation>
     </message>
 </context>
 </TS>

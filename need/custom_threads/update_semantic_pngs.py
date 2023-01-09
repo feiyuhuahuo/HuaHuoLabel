@@ -1,6 +1,5 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-
 import json
 import cv2
 
@@ -28,6 +27,9 @@ class UpdateSemanticPngs(QThread):
     def run(self):
         num = 0
         for i, one in enumerate(self.imgs):
+            if '图片已删除' in one:
+                continue
+
             signal_usp_progress_value.send([self.__class__, int((i + 1) / self.img_num * 100)])
 
             img_name = one.split('/')[-1]
@@ -68,6 +70,6 @@ class UpdateSemanticPngs(QThread):
                     file_remove(tv_png)
 
                 num += 1
-                signal_usp_progress_text.send([self.__class__, f'{num}张。'])
+                signal_usp_progress_text.send([self.__class__, f'{num}'])
 
         signal_usp_done.send([True, f'{num}'])
