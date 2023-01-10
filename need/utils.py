@@ -13,6 +13,7 @@ from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from PySide6.QtWidgets import QMessageBox
 from math import sqrt, pow
+from need.custom_widgets.message_box import CustomMessageBox
 
 
 class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
@@ -61,7 +62,8 @@ class ClassStatistic:
         self.__class_list = []
 
     def add(self, c):
-        self.__class_list.append(c)
+        if c not in self.__class_list:
+            self.__class_list.append(c)
 
     def delete(self, c):
         self.__class_list.remove(c)
@@ -290,6 +292,32 @@ def glob_labels(path):
         labels.remove(f'{path}/labels.json')
     labels.sort()
     return labels
+
+
+def hhl_info(language):
+    if language == 'CN':
+        ui = CustomMessageBox('about', '关于花火标注')
+        ui.hide_dont_show_again()
+        ui.add_text('版本1.0.0。\n'
+                    '\n'
+                    '花火标注是一款使用PySide6开发的多功能标注工具，支持包括单类别分类、多类别分类、语义分割、目标检测和实例分割在内的5种计算'
+                    '机视觉任务的数据标注。花火标注还支持自动标注、数据集管理、伪标注合成等多种功能，可以帮助您更加方便、高效得训练AI模型。\n'
+                    '\n'
+                    '花火标注采用GNU GPL许可证，您可以随意使用该工具。但在未取得作者许可的情况下，请勿使用该软件进行商业行为。\n')
+    elif language == 'EN':
+        ui = CustomMessageBox('about', 'About HuaHuoLabel')
+        ui.hide_dont_show_again()
+        ui.add_text('Version 1.0.0.\n'
+                    '\n'
+                    'HuaHuoLabel is a multifunctional label tool developed with PySide6. It can help label data for '
+                    'five computer vision tasks including single category classification, multiple category '
+                    'classification, semantic segmentation, object detection and instance segmentation. HuaHuoLabel '
+                    'also supports auto-labeling, dataset management and pseudo label generation. With the help of '
+                    'HuaHuoLabel, you can train your AI model more conveniently and efficiently.\n'
+                    '\n'
+                    'HuaHuoLabel uses GNU GPL license. You can use this tool at will. However, do not use it for '
+                    'commercial activities without the permission of the author.\n')
+    return ui
 
 
 def img_pure_name(path):

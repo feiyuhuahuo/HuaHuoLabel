@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1198</width>
-    <height>936</height>
+    <width>1309</width>
+    <height>930</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="3,1">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_8" stretch="12,0,0,4,1">
+     <layout class="QVBoxLayout" name="verticalLayout_8" stretch="12,0,4,1">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="10,0">
         <item>
@@ -122,7 +122,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>465</height>
+                <height>480</height>
                </rect>
               </property>
               <property name="font">
@@ -346,7 +346,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>135</width>
-                <height>465</height>
+                <height>480</height>
                </rect>
               </property>
               <attribute name="label">
@@ -549,7 +549,7 @@ QCheckBox::indicator:unchecked {
                   </font>
                  </property>
                  <property name="toolTip">
-                  <string>撤销</string>
+                  <string>快捷键Ctrl+Z</string>
                  </property>
                  <property name="text">
                   <string>撤销</string>
@@ -583,7 +583,7 @@ QCheckBox::indicator:unchecked {
                   </font>
                  </property>
                  <property name="toolTip">
-                  <string>撤销</string>
+                  <string>快捷键Ctrl+S</string>
                  </property>
                  <property name="text">
                   <string>保存</string>
@@ -621,7 +621,7 @@ QCheckBox::indicator:unchecked {
                 <x>0</x>
                 <y>0</y>
                 <width>138</width>
-                <height>465</height>
+                <height>480</height>
                </rect>
               </property>
               <attribute name="label">
@@ -865,67 +865,9 @@ QRadioButton::indicator:unchecked {
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_57">
+       <layout class="QHBoxLayout" name="horizontalLayout_56">
         <item>
-         <widget class="QCheckBox" name="checkBox_scan_unlabeled">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-          </property>
-          <property name="text">
-           <string>只看未标注</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_scan_val">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>每张图片都会保存单独的标注文件</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:      white;
-    border:                 2px solid white;  
-}</string>
-          </property>
-          <property name="text">
-           <string>只看验证集</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_5">
+         <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -937,10 +879,6 @@ QCheckBox::indicator:unchecked {
           </property>
          </spacer>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_56">
         <item>
          <widget class="QPushButton" name="pushButton_pin">
           <property name="sizePolicy">
@@ -991,84 +929,6 @@ QCheckBox::indicator:unchecked {
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_pin_last">
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="contextMenuPolicy">
-           <enum>Qt::NoContextMenu</enum>
-          </property>
-          <property name="toolTip">
-           <string>跳转至上一张收藏的图片</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>images/icon_28.png</normaloff>images/icon_28.png</iconset>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_pin_next">
-          <property name="minimumSize">
-           <size>
-            <width>40</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="contextMenuPolicy">
-           <enum>Qt::NoContextMenu</enum>
-          </property>
-          <property name="toolTip">
-           <string>跳转至下一张收藏的图片</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>images/icon_27.png</normaloff>images/icon_27.png</iconset>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="line_5">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(100, 100, 100);</string>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="lineWidth">
-           <number>1</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="label_train_val">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -1109,17 +969,141 @@ QCheckBox::indicator:unchecked {
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_2">
+         <widget class="Line" name="line_2">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(100, 100, 100);</string>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="lineWidth">
+           <number>1</number>
+          </property>
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_scan_pinned">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-         </spacer>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+          </property>
+          <property name="text">
+           <string>只看收藏</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_scan_unlabeled">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+          </property>
+          <property name="text">
+           <string>只看未标注</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_scan_val">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+          </property>
+          <property name="text">
+           <string>只看验证集</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line_3">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(100, 100, 100);</string>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="lineWidth">
+           <number>1</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLineEdit" name="lineEdit_2">
@@ -1265,7 +1249,7 @@ QCheckBox::indicator:unchecked {
            <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="toolTip">
-           <string>上一张图片,快捷键A</string>
+           <string>上一张图片, 快捷键A</string>
           </property>
           <property name="text">
            <string/>
@@ -1302,7 +1286,7 @@ QCheckBox::indicator:unchecked {
            <enum>Qt::NoContextMenu</enum>
           </property>
           <property name="toolTip">
-           <string>下一张图片，快捷键D</string>
+           <string>下一张图片, 快捷键D</string>
           </property>
           <property name="text">
            <string/>
@@ -1440,7 +1424,7 @@ QCheckBox::indicator:unchecked {
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>802</width>
+             <width>913</width>
              <height>171</height>
             </rect>
            </property>
@@ -1501,7 +1485,7 @@ QCheckBox::indicator:unchecked {
          <widget class="QLabel" name="label_hwi">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
@@ -1513,7 +1497,7 @@ QCheckBox::indicator:unchecked {
          <widget class="QLabel" name="label_xyrgb">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
@@ -1938,6 +1922,9 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_cls_back">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -3918,7 +3905,7 @@ QRadioButton::indicator:unchecked {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1198</width>
+     <width>1309</width>
      <height>22</height>
     </rect>
    </property>
@@ -3926,13 +3913,7 @@ QRadioButton::indicator:unchecked {
     <property name="title">
      <string>其它功能</string>
     </property>
-    <widget class="QMenu" name="menu_2">
-     <property name="title">
-      <string>关于花火标注</string>
-     </property>
-     <addaction name="action_1_0_0"/>
-    </widget>
-    <addaction name="menu_2"/>
+    <addaction name="action_about"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -3977,6 +3958,16 @@ QRadioButton::indicator:unchecked {
     <string>English</string>
    </property>
   </action>
+  <action name="actionf">
+   <property name="text">
+    <string>f </string>
+   </property>
+  </action>
+  <action name="action_about">
+   <property name="text">
+    <string>关于花火标注</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -3994,8 +3985,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>
