@@ -83,7 +83,7 @@ ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
               'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgreen', 'darkkhaki', 'darkolivegreen',
               'darkorange', 'darksalmon', 'darkseagreen', 'darkslategray', 'darkturquoise',
               'darkviolet', 'deeppink', 'deepskyblue', 'dimgray',
-              'firebrick', 'fuchsia',
+              'fuchsia',
               'gold', 'goldenrod', 'gray', 'green',
               'hotpink',
               'indianred', 'indigo',
@@ -459,17 +459,6 @@ def recursive_glob(path):  # 仅把path目录下的文件夹里的图片集合�
 
     all_imgs = [uniform_path(aa) for aa in all_imgs]
     return all_imgs
-
-
-def remove_redunant_files(files: list, title: str, text: str):
-    choice = QMessageBox.question(None, title, text)
-    if choice == QMessageBox.Yes:
-        for one in files:
-            file_remove(one)
-
-        QMessageBox.information(None, '清理完成', f'清理完成，共清理{len(files)}个文件。')
-        return True
-    return False
 
 
 def two_way_check(files_1: list, files_2: list, one_way=False):

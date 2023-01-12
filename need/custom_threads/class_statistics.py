@@ -3,11 +3,13 @@
 import glob
 import json
 import os
+import pdb
 
 from os import sep as os_sep
 from os import path as osp
 from PySide6.QtCore import QThread
 from need.custom_signals import ListSignal
+from need.utils import uniform_path
 
 signal_stat_info = ListSignal()
 
@@ -38,8 +40,8 @@ class ClassStatistics(QThread):
             add_info.append('类别           图片数量        目标数量        目标/图片')
             add_info.append('-----------------------总图库-----------------------')
         elif self.language == 'EN':
-            add_info.append('Class     Image Count  Object Count  Object/Image')
-            add_info.append('-----------------------Total Set-----------------------')
+            add_info.append('Class     Image Num  Object Num  Object/Image')
+            add_info.append('----------------------Total Set----------------------')
 
         img_all, img_t, img_v, shape_all, shape_t, shape_v = {}, {}, {}, {}, {}, {}
         total_num = 0
@@ -118,28 +120,34 @@ class ClassStatistics(QThread):
         elif self.SeparateLabel:
             if self.WorkMode in ('单分类', 'Single Cls'):
                 files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/{self.img_folder}/*')
-                for one in files:
-                    if os.path.isdir(one):
-                        c_name = one.split(os_sep)[-1]
-                        if c_name != 'imgs':
-                            c_imgs = glob.glob(f'{one}/*')
-                            c_num = len(c_imgs)
-                            total_num += c_num
-                            shape_all.setdefault(c_name, c_num)
-                            img_all.setdefault(c_name, c_num)
+                files = [uniform_path(one) for one in files]
 
-                            for one_img in c_imgs:
-                                name = one_img.split(os_sep)[-1]
-                                if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{c_name}/{name}'):
-                                    shape_t.setdefault(c_name, 0)
-                                    shape_t[c_name] += 1
-                                    img_t.setdefault(c_name, 0)
-                                    img_t[c_name] += 1
-                                if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{c_name}/{name}'):
-                                    shape_v.setdefault(c_name, 0)
-                                    shape_v[c_name] += 1
-                                    img_v.setdefault(c_name, 0)
-                                    img_v[c_name] += 1
+                for one in files:
+                    if not os.path.isdir(one):
+                        continue
+
+                    c_name = one.split('/')[-1]
+                    if c_name != 'imgs':
+                        c_imgs = glob.glob(f'{one}/*')
+                        c_num = len(c_imgs)
+                        total_num += c_num
+                        shape_all.setdefault(c_name, 0)
+                        shape_all[c_name] += c_num
+                        img_all.setdefault(c_name, 0)
+                        img_all[c_name] += c_num
+
+                        for one_img in c_imgs:
+                            name = one_img.split(os_sep)[-1]
+                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{c_name}/{name}'):
+                                shape_t.setdefault(c_name, 0)
+                                shape_t[c_name] += 1
+                                img_t.setdefault(c_name, 0)
+                                img_t[c_name] += 1
+                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{c_name}/{name}'):
+                                shape_v.setdefault(c_name, 0)
+                                shape_v[c_name] += 1
+                                img_v.setdefault(c_name, 0)
+                                img_v[c_name] += 1
 
             elif self.WorkMode in ('多分类', 'Multi Cls'):
                 files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/{self.label_folder}/*.txt')
@@ -239,7 +247,7 @@ class ClassStatistics(QThread):
         if self.language == 'CN':
             add_info.append('\n-----------------------训练集-----------------------')
         elif self.language == 'EN':
-            add_info.append('\n-----------------------Train Set-----------------------')
+            add_info.append('\n----------------------Train Set----------------------')
         for k, v in img_t.items():
             shape_num = shape_t[k]
             ratio = 0. if v == 0 else round(float(shape_num / v), 1)
@@ -248,7 +256,7 @@ class ClassStatistics(QThread):
         if self.language == 'CN':
             add_info.append('\n-----------------------验证集-----------------------')
         elif self.language == 'EN':
-            add_info.append('\n------------------------Val Set------------------------')
+            add_info.append('\n-----------------------Val Set-----------------------')
         for k, v in img_v.items():
             shape_num = shape_v[k]
             ratio = 0. if v == 0 else round(float(shape_num / v), 1)

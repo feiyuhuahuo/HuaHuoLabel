@@ -148,20 +148,6 @@ import pdb
 
 
 
-
-kk = [['是否是发', '10', 'asd', 'asd'],
-['萨芬', 'as', '瑟夫sdf', '安抚'],
-['士大夫', '算法', '20', '20']]
-
-for i in range(3):
-    # print(f"{kk[i][0]:10}{kk[i][1]:10}\t{kk[i][2]:10}\t{kk[i][3]:10}")
-    print(f'{kk[i][0]:{chr(12288)}<7}{kk[i][1]:{chr(12288)}<7}\t{kk[i][2]:<10}')
-
-ss =['黑点', 4, 4]
-jj = ['脏污', 17, 31]
-print(f'{ss[0]:{chr(12288)}<7}{ss[1]:<8}\t{ss[2]}')
-print(f'{jj[0]:{chr(12288)}<7}{jj[1]:<8}\t{jj[2]}')
-
 # from PySide6.QtUiTools import QUiLoader
 # from PySide6.QtWidgets import QMainWindow
 # from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QLabel

@@ -17,7 +17,7 @@ class SelectWindow(QMainWindow):
         self.setCentralWidget(self.ui)
         self.resize(150, 320)
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon('images/icon.ico'))
+        self.setWindowIcon(QIcon('images/icon.png'))
         self.setWindowModality(Qt.ApplicationModal)
         self.button_signal = button_signal
         self.ui.listWidget.itemClicked.connect(self.select_seg_label)

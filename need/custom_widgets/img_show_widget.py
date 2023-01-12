@@ -16,7 +16,7 @@ signal_del_shape = IntSignal()
 signal_move2new_folder = BoolSignal()
 signal_open_label_window = BoolSignal()
 signal_one_collection_done = StrSignal()
-signal_seg_collection_select_ok = StrSignal()
+signal_collection_select_ok = StrSignal()
 signal_selected_label_item = IntSignal()
 signal_selected_shape = IntSignal()
 signal_shape_info_update = IntSignal()
@@ -228,7 +228,7 @@ class ImgShow(BaseImgFrame):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
         self.scaled_img_painted = None
-        self.collection_ui = SelectWindow(title=self.tr('收藏的标注'), button_signal=signal_seg_collection_select_ok)
+        self.collection_ui = SelectWindow(title=self.tr('收藏的标注'), button_signal=signal_collection_select_ok)
         self.collected_shapes = {}
 
         self.ann_point_last = QPoint(0, 0)
@@ -290,7 +290,7 @@ class ImgShow(BaseImgFrame):
         self.FlagDrawCollection = False
         signal_selected_label_item.signal.connect(self.draw_selected_shape)
         signal_shape_type.signal.connect(self.change_shape_type)
-        signal_seg_collection_select_ok.signal.connect(self.collection_ui_ok)
+        signal_collection_select_ok.signal.connect(self.collection_ui_ok)
         signal_select_window_close.signal.connect(self.clear_widget_img_points)
 
         self.add_poly_to_collection = QAction(self.tr('收藏标注'), self)
@@ -306,16 +306,18 @@ class ImgShow(BaseImgFrame):
         self.menu.addAction(self.tr('移动至新文件夹')).triggered.connect(self.move_to_new_folder)
 
     def keyPressEvent(self, event):
+        if self.corner_index is None and self.polygon_editing_i is not None:
+            if event.key() == Qt.Key_A:
+                self.move_polygons(key_left=True)
+            elif event.key() == Qt.Key_D:
+                self.move_polygons(key_right=True)
+            elif event.key() == Qt.Key_W:
+                self.move_polygons(key_up=True)
+            elif event.key() == Qt.Key_S:
+                self.move_polygons(key_down=True)
+
         if event.key() == Qt.Key_Delete:
             self.del_polygons()
-        elif event.key() == Qt.Key_A:
-            self.move_polygons(key_left=True)
-        elif event.key() == Qt.Key_D:
-            self.move_polygons(key_right=True)
-        elif event.key() == Qt.Key_W:
-            self.move_polygons(key_up=True)
-        elif event.key() == Qt.Key_S:
-            self.move_polygons(key_down=True)
         elif event.key() == Qt.Key_Shift:
             self.fill_editing_i = self.corner_index
 
@@ -357,12 +359,13 @@ class ImgShow(BaseImgFrame):
             else:
                 self.move_pix_img()
         else:
-            if (self.DetMode or self.SegMode) and QApplication.keyboardModifiers() == Qt.ControlModifier:
-                self.update()
-                if self.shape_type == self.tr('填充') and len(self.img_points):
-                    self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+            if QApplication.keyboardModifiers() == Qt.ControlModifier:
+                if self.DetMode or self.SegMode:
+                    self.update()
 
-            elif (self.DetMode or self.SegMode) and self.ShapeEditMode:
+                    if self.shape_type == self.tr('填充') and len(self.img_points):
+                        self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+            elif self.ShapeEditMode and (self.DetMode or self.SegMode):
                 self.polygon_editing_i = self.get_editing_polygon()
 
                 if self.LeftClick:
@@ -376,11 +379,10 @@ class ImgShow(BaseImgFrame):
                             self.move_pix_img()
                 else:
                     self.update()
-
-            elif self.DetMode:
-                self.update()
             else:
                 self.move_pix_img()
+
+        self.set_focus()
 
     def mousePressEvent(self, e):
         if self.AnnMode or self.ClsMode or self.MClsMode:
@@ -444,6 +446,7 @@ class ImgShow(BaseImgFrame):
                 signal_open_label_window.send(True)
         elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
             self.erase_paint_pixel(self.fill_editing_i)
+            signal_shape_info_update.send(self.fill_editing_i)
 
     def paintEvent(self, e):  # 程序调用show()和update()之后就会调用此函数
         self.painter.begin(self)
@@ -577,6 +580,77 @@ class ImgShow(BaseImgFrame):
         self.ann_point_last = self.ann_point_cur
         self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本
 
+    def change_pen(self, det_cross_color=None, seg_pen_size=None, seg_pen_color=None,
+                   ann_pen_size=None, ann_pen_color=None):
+        if det_cross_color is not None:
+            self.det_cross_color = det_cross_color
+        if seg_pen_size is not None:
+            self.seg_pen_size = seg_pen_size
+        if seg_pen_color is not None:
+            self.seg_pen_color = seg_pen_color
+        if ann_pen_size is not None:
+            self.ann_pen_size = ann_pen_size
+        if ann_pen_color is not None:
+            self.ann_pen_color = ann_pen_color
+
+    def change_font(self, ann_font_size=None, ann_font_color=None):
+        if ann_font_size is not None:
+            self.ann_font_size = ann_font_size
+        if ann_font_color is not None:
+            self.ann_font_color = ann_font_color
+
+    def change_shape_type(self, shape_type):
+        self.shape_type = shape_type
+        self.clear_widget_img_points()
+
+    def clear_scaled_img(self, to_undo=True):
+        if to_undo:
+            command = AnnUndo(self, self.scaled_img.copy())
+            self.undo_stack.push(command)
+
+        self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
+        self.update()
+        self.scaled_img_painted = self.scaled_img.copy()
+
+    def clear_all_polygons(self):
+        self.all_polygons = []
+        self.clear_widget_img_points()
+        self.clear_widget_img_points_huan()
+        self.update()
+
+    def clear_widget_img_points(self):
+        self.widget_points = []
+        self.img_points = []
+
+    def clear_widget_img_points_huan(self):
+        self.widget_points_huan = []
+        self.img_points_huan = []
+
+    def close_to_corner(self, points, radius=3, is_ellipse=False):
+        self.painter.setPen(Qt.NoPen)
+        self.painter.setBrush(QColor('lightgreen'))
+
+        if not is_ellipse:
+            x, y = points.toTuple()
+            if (x - 3 < self.cursor_in_widget.x() < x + 3) and (y - 3 < self.cursor_in_widget.y() < y + 3):
+                self.painter.drawEllipse(x - 2 * radius, y - 2 * radius, 12, 12)
+                return True
+        else:
+            x1, y1 = points[0].toTuple()
+            x2, y2 = points[1].toTuple()
+            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+
+            cursor = self.cursor_in_widget.toTuple()
+            if not point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type=self.tr('椭圆形')):
+                if x1 <= cursor[0] <= cx and y1 <= cursor[1] <= cy:
+                    self.painter.drawEllipse(x1 - 0 * radius, y1 - 0 * radius, 12, 12)
+                    return 0
+                elif cx <= cursor[0] <= x2 and cy <= cursor[1] <= y2:
+                    self.painter.drawEllipse(x2 - 3 * radius, y2 - 3 * radius, 12, 12)
+                    return 1
+
+        return False
+
     def collection_ui_ok(self, text):
         def compute_new_points(points, add_offset=QPointF(0, 0)):
             offset = self.cursor_in_widget - points[0]
@@ -597,9 +671,9 @@ class ImgShow(BaseImgFrame):
                 return
 
             polygon = self.collected_shapes[text].copy()
-            self.shape_type = polygon['shape_type']
-
-            if self.shape_type == self.tr('环形'):
+            shape_type = polygon['shape_type']
+            self.FlagDrawCollection = shape_type
+            if shape_type == self.tr('环形'):
                 self.widget_points_huan, self.img_points_huan = [], []
                 widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
                 self.widget_points_huan.append(widget_points_out)
@@ -608,12 +682,10 @@ class ImgShow(BaseImgFrame):
                 add_offset = polygon['widget_points'][1][0] - polygon['widget_points'][0][0]
                 widget_points_in, img_points_in = compute_new_points(polygon['widget_points'][1], add_offset=add_offset)
                 self.widget_points_huan.append(widget_points_in)
-                self.img_points_huan.append(widget_points_in)
+                self.img_points_huan.append(img_points_in)
             else:
                 self.widget_points, self.img_points = compute_new_points(polygon['widget_points'])
-
             signal_one_collection_done.send(polygon['category'])
-            self.FlagDrawCollection = False
         else:  # 收藏标注
             if text in self.collected_shapes.keys():
                 QMessageBox.warning(self, self.tr('名称重复'), self.tr('{}已存在。').format(text))
@@ -730,77 +802,6 @@ class ImgShow(BaseImgFrame):
                             return corner_index
         return corner_index
 
-    def change_pen(self, det_cross_color=None, seg_pen_size=None, seg_pen_color=None,
-                   ann_pen_size=None, ann_pen_color=None):
-        if det_cross_color is not None:
-            self.det_cross_color = det_cross_color
-        if seg_pen_size is not None:
-            self.seg_pen_size = seg_pen_size
-        if seg_pen_color is not None:
-            self.seg_pen_color = seg_pen_color
-        if ann_pen_size is not None:
-            self.ann_pen_size = ann_pen_size
-        if ann_pen_color is not None:
-            self.ann_pen_color = ann_pen_color
-
-    def change_font(self, ann_font_size=None, ann_font_color=None):
-        if ann_font_size is not None:
-            self.ann_font_size = ann_font_size
-        if ann_font_color is not None:
-            self.ann_font_color = ann_font_color
-
-    def change_shape_type(self, shape_type):
-        self.shape_type = shape_type
-        self.clear_widget_img_points()
-
-    def clear_scaled_img(self, to_undo=True):
-        if to_undo:
-            command = AnnUndo(self, self.scaled_img.copy())
-            self.undo_stack.push(command)
-
-        self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
-        self.update()
-        self.scaled_img_painted = self.scaled_img.copy()
-
-    def clear_all_polygons(self):
-        self.all_polygons = []
-        self.clear_widget_img_points()
-        self.clear_widget_img_points_huan()
-        self.update()
-
-    def clear_widget_img_points(self):
-        self.widget_points = []
-        self.img_points = []
-
-    def clear_widget_img_points_huan(self):
-        self.widget_points_huan = []
-        self.img_points_huan = []
-
-    def close_to_corner(self, points, radius=3, is_ellipse=False):
-        self.painter.setPen(Qt.NoPen)
-        self.painter.setBrush(QColor('lightgreen'))
-
-        if not is_ellipse:
-            x, y = points.toTuple()
-            if (x - 3 < self.cursor_in_widget.x() < x + 3) and (y - 3 < self.cursor_in_widget.y() < y + 3):
-                self.painter.drawEllipse(x - 2 * radius, y - 2 * radius, 12, 12)
-                return True
-        else:
-            x1, y1 = points[0].toTuple()
-            x2, y2 = points[1].toTuple()
-            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
-
-            cursor = self.cursor_in_widget.toTuple()
-            if not point_in_shape(cursor, [(x1, y1), (x2, y2)], shape_type=self.tr('椭圆形')):
-                if x1 <= cursor[0] <= cx and y1 <= cursor[1] <= cy:
-                    self.painter.drawEllipse(x1 - 0 * radius, y1 - 0 * radius, 12, 12)
-                    return 0
-                elif cx <= cursor[0] <= x2 and cy <= cursor[1] <= y2:
-                    self.painter.drawEllipse(x2 - 3 * radius, y2 - 3 * radius, 12, 12)
-                    return 1
-
-        return False
-
     def del_polygons(self):
         if (self.DetMode or self.SegMode) and self.ShapeEditMode and self.polygon_editing_i is not None:
             self.all_polygons.pop(self.polygon_editing_i)
@@ -901,6 +902,7 @@ class ImgShow(BaseImgFrame):
 
     def get_editing_polygon(self):
         editing_i = None
+
         for i, one in enumerate(self.all_polygons):
             point = self.cursor_in_widget.toTuple()
             shape_type = one['shape_type']
@@ -917,13 +919,16 @@ class ImgShow(BaseImgFrame):
                 shape_points = [aa.toTuple() for aa in one['widget_points']]
 
             if point_in_shape(point, shape_points, shape_type):
-                self.setFocus(Qt.OtherFocusReason)
                 editing_i = i
                 break
-            else:
-                self.clearFocus()
 
         return editing_i
+
+    def set_focus(self):
+        if self.polygon_editing_i is not None or self.corner_index is not None:
+            self.setFocus(Qt.OtherFocusReason)
+        else:
+            self.clearFocus()
 
     def get_in_border_wp(self, w_p: QPointF) -> QPointF:  # 防止widget_points坐标越界
         b_left, b_up, b_right, b_down = self.get_border_coor()
@@ -949,7 +954,8 @@ class ImgShow(BaseImgFrame):
     def prepare_polygons(self, polygons, ori_h, ori_w):
         img_h, img_w = self.img.size().height(), self.img.size().width()
         if ori_h != img_h or ori_w != img_w:
-            QMessageBox.critical(self, self.tr('图片尺寸错误'), self.tr('记录的图片尺寸({}, {}) != 当前的图片尺寸({}, {})。')
+            QMessageBox.critical(self, self.tr('图片尺寸错误'),
+                                 self.tr('记录的图片尺寸({}, {}) != 当前的图片尺寸({}, {})。')
                                  .format(ori_w, ori_h, img_w, img_h))
             return
 
@@ -989,9 +995,6 @@ class ImgShow(BaseImgFrame):
             self.update()
 
     def move_polygons(self, key_left=False, key_right=False, key_up=False, key_down=False):  # 标注整体移动功能
-        if self.polygon_editing_i is None:
-            return
-
         editing_polygon = self.all_polygons[self.polygon_editing_i]
         widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
         shape_type = editing_polygon['shape_type']
@@ -1067,12 +1070,18 @@ class ImgShow(BaseImgFrame):
         signal_move2new_folder.send(True)
 
     def one_polygon_done(self, qcolor, category):
-        if self.shape_type == self.tr('环形'):
-            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': self.shape_type,
+        if self.FlagDrawCollection:
+            shape_type = self.FlagDrawCollection
+            self.FlagDrawCollection = False
+        else:
+            shape_type = self.shape_type
+
+        if shape_type == self.tr('环形'):
+            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': shape_type,
                                       'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
             self.clear_widget_img_points_huan()
         else:
-            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': self.shape_type,
+            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': shape_type,
                                       'widget_points': self.widget_points, 'img_points': self.img_points})
             self.clear_widget_img_points()
 
