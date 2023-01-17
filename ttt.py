@@ -175,3 +175,5 @@ import pdb
 #     app = QApplication()
 #     ui = PP()
 #     app.exec()
+
+print(6//4)

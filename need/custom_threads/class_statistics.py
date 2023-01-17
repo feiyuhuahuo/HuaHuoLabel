@@ -40,8 +40,8 @@ class ClassStatistics(QThread):
             add_info.append('类别           图片数量        目标数量        目标/图片')
             add_info.append('-----------------------总图库-----------------------')
         elif self.language == 'EN':
-            add_info.append('Class     Image Num  Object Num  Object/Image')
-            add_info.append('----------------------Total Set----------------------')
+            add_info.append('Class     Image Num       Obj Num       Obj/Image')
+            add_info.append('-----------------------Total Set-----------------------')
 
         img_all, img_t, img_v, shape_all, shape_t, shape_v = {}, {}, {}, {}, {}, {}
         total_num = 0
@@ -90,21 +90,25 @@ class ClassStatistics(QThread):
                     elif self.WorkMode in ('语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
                         polygons = one['polygons']
                         if polygons == ['bg']:
-                            polygons = []
+                            if self.language == 'CN':
+                                c_name = '背景'
+                            elif self.language == 'EN':
+                                c_name = 'BG'
 
-                        if polygons:
-                            for one_p in polygons:
-                                c_name = one_p['category']
-                                class_set.add(c_name)
-                                shape_all.setdefault(c_name, 0)
-                                shape_all[c_name] += 1
+                            polygons = [{'category': c_name}]
 
-                                if tv == 'train':
-                                    shape_t.setdefault(c_name, 0)
-                                    shape_t[c_name] += 1
-                                elif tv == 'val':
-                                    shape_v.setdefault(c_name, 0)
-                                    shape_v[c_name] += 1
+                        for one_p in polygons:
+                            c_name = one_p['category']
+                            class_set.add(c_name)
+                            shape_all.setdefault(c_name, 0)
+                            shape_all[c_name] += 1
+
+                            if tv == 'train':
+                                shape_t.setdefault(c_name, 0)
+                                shape_t[c_name] += 1
+                            elif tv == 'val':
+                                shape_v.setdefault(c_name, 0)
+                                shape_v[c_name] += 1
 
                     for one_c in class_set:
                         img_all.setdefault(one_c, 0)
@@ -195,33 +199,24 @@ class ClassStatistics(QThread):
                         polygons = content['polygons']
                         if polygons == ['bg']:
                             if self.language == 'CN':
-                                bg_key = '背景'
+                                c_name = '背景'
                             elif self.language == 'EN':
-                                bg_key = 'background'
+                                c_name = 'BG'
 
-                            class_set.add(bg_key)
-                            shape_all.setdefault(bg_key, 0)
-                            shape_all[bg_key] += 1
+                            polygons = [{'category': c_name}]
+
+                        for one_shape in polygons:
+                            c_name = one_shape['category']
+                            class_set.add(c_name)
+                            shape_all.setdefault(c_name, 0)
+                            shape_all[c_name] += 1
 
                             if has_t:
-                                shape_t.setdefault(bg_key, 0)
-                                shape_t[bg_key] += 1
+                                shape_t.setdefault(c_name, 0)
+                                shape_t[c_name] += 1
                             if has_v:
-                                shape_v.setdefault(bg_key, 0)
-                                shape_v[bg_key] += 1
-                        else:
-                            for one_shape in polygons:
-                                c_name = one_shape['category']
-                                class_set.add(c_name)
-                                shape_all.setdefault(c_name, 0)
-                                shape_all[c_name] += 1
-
-                                if has_t:
-                                    shape_t.setdefault(c_name, 0)
-                                    shape_t[c_name] += 1
-                                if has_v:
-                                    shape_v.setdefault(c_name, 0)
-                                    shape_v[c_name] += 1
+                                shape_v.setdefault(c_name, 0)
+                                shape_v[c_name] += 1
 
                     for one_c in class_set:
                         img_all.setdefault(one_c, 0)
@@ -237,7 +232,10 @@ class ClassStatistics(QThread):
         for k, v in img_all.items():
             shape_num = shape_all[k]
             ratio = 0. if v == 0 else round(float(shape_num / v), 1)
-            add_info.append(f'{k:{chr(12288)}<7}{v}\t           {shape_num:<12}\t{ratio}')
+            if self.language == 'CN':
+                add_info.append(f'{k}\t        {v}\t            {shape_num}\t                {ratio}')
+            elif self.language == 'EN':
+                add_info.append(f'{k}\t      {v}\t            {shape_num}\t                 {ratio}')
 
         if self.language == 'CN':
             add_info += [f'\n已标注图片数量：{total_num}', f'总图片数量：{self.img_num}']
@@ -247,19 +245,25 @@ class ClassStatistics(QThread):
         if self.language == 'CN':
             add_info.append('\n-----------------------训练集-----------------------')
         elif self.language == 'EN':
-            add_info.append('\n----------------------Train Set----------------------')
+            add_info.append('\n-----------------------Train Set-----------------------')
         for k, v in img_t.items():
             shape_num = shape_t[k]
             ratio = 0. if v == 0 else round(float(shape_num / v), 1)
-            add_info.append(f'{k:{chr(12288)}<7}{v}\t           {shape_num:<12}\t{ratio}')
+            if self.language == 'CN':
+                add_info.append(f'{k}\t        {v}\t            {shape_num}\t                {ratio}')
+            elif self.language == 'EN':
+                add_info.append(f'{k}\t      {v}\t            {shape_num}\t                 {ratio}')
 
         if self.language == 'CN':
             add_info.append('\n-----------------------验证集-----------------------')
         elif self.language == 'EN':
-            add_info.append('\n-----------------------Val Set-----------------------')
+            add_info.append('\n------------------------Val Set------------------------')
         for k, v in img_v.items():
             shape_num = shape_v[k]
             ratio = 0. if v == 0 else round(float(shape_num / v), 1)
-            add_info.append(f'{k:{chr(12288)}<7}{v}\t           {shape_num:<12}\t{ratio}')
+            if self.language == 'CN':
+                add_info.append(f'{k}\t        {v}\t            {shape_num}\t                {ratio}')
+            elif self.language == 'EN':
+                add_info.append(f'{k}\t      {v}\t            {shape_num}\t                 {ratio}')
 
         signal_stat_info.send(add_info)

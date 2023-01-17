@@ -252,7 +252,7 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
             mask2 = np.asfortranarray(mask2, dtype='uint8')
             mask2 = ~(mask2.astype('bool'))
             mask = mask1 * mask2
-        elif shape['shape_type'] in ('填充', 'Fill'):
+        elif shape['shape_type'] in ('像素', 'Pixel'):
             for point in shape['img_points']:
                 mask[point[1], point[0]] = 1
 
@@ -268,7 +268,7 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
         seg_mask *= (mask == 0)
         seg_mask += mask
 
-    if not (0 <= seg_mask.max() <= len(classes)):
+    if not ins_seg and not (0 <= seg_mask.max() <= len(classes)):
         QMessageBox.critical(None, '标注错误', f'当前有{len(classes)}类，但mask最大值为{seg_mask.max()}。')
         return None
 
@@ -305,7 +305,7 @@ def hhl_info(language):
                     '\n'
                     '花火标注采用GNU GPL许可证，您可以随意使用该工具。但在未取得作者许可的情况下，请勿使用该软件进行商业行为。\n')
     elif language == 'EN':
-        ui = CustomMessageBox('about', 'About HuaHuoLabel')
+        ui = CustomMessageBox('about', 'About HuaHuoLabel', 'EN')
         ui.hide_dont_show_again()
         ui.add_text('Version 1.0.0.\n'
                     '\n'
@@ -390,7 +390,7 @@ def point_in_shape(p: tuple, poly: list, shape_type='多边形') -> bool:  # 判
     elif shape_type in ('环形', 'Ring'):
         if point_in_polygon(px, py, poly[0]) and (not point_in_polygon(px, py, poly[1])):
             return True
-    elif shape_type in ('填充', 'Fill'):
+    elif shape_type in ('像素', 'Pixel'):
         if list(p) in poly:
             return True
 

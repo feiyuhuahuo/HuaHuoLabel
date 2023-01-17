@@ -163,7 +163,7 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>填充</string>
+                   <string>像素</string>
                   </property>
                  </item>
                 </widget>
@@ -2661,7 +2661,7 @@ QCheckBox::indicator:unchecked {
 }</string>
            </property>
            <property name="text">
-            <string>统一标注文件</string>
+            <string>统一标注模式</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -3985,8 +3985,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup_2"/>
-  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

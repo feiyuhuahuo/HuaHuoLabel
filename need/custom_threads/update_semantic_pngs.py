@@ -63,11 +63,7 @@ class UpdateSemanticPngs(QThread):
                         if osp.exists(tv_png):
                             cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
                 else:
-                    file_remove(tv_img)
-                    file_remove(json_path)
-                    file_remove(tv_json)
-                    file_remove(png_path)
-                    file_remove(tv_png)
+                    file_remove([tv_img, json_path, tv_json, png_path, tv_png])
 
                 num += 1
                 signal_usp_progress_text.send([self.__class__, f'{num}'])

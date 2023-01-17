@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt
 
 
 class CustomMessageBox(QMainWindow):
-    def __init__(self, type, title):
+    def __init__(self, type, title, language='CN'):
         super().__init__()
         self.ui = QUiLoader().load('ui_files/message.ui')  # 主界面
         self.setCentralWidget(self.ui)
@@ -20,6 +20,10 @@ class CustomMessageBox(QMainWindow):
         self.ui.checkBox.toggled.connect(self.set_dont_show_again)
         self.ui.textBrowser.append('  ')
         self.DontShowAgain = False
+
+        if language == 'EN':
+            self.ui.pushButton.setText('Yes')
+            self.ui.checkBox.setText("Don't show again")
 
     def add_text(self, text):
         self.ui.textBrowser.append(text)

@@ -34,9 +34,8 @@
         <translation>Ring</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="166"/>
         <source>填充</source>
-        <translation>Fill</translation>
+        <translation type="vanished">Fill</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="182"/>
@@ -378,9 +377,8 @@
         <translation>All labels are saved in a uniform file</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="2664"/>
         <source>统一标注文件</source>
-        <translation>One File</translation>
+        <translation type="vanished">One File</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="2699"/>
@@ -431,6 +429,11 @@
         <location filename="../main_window.ui" line="1289"/>
         <source>下一张图片, 快捷键D</source>
         <translation>Next image, shortcut D</translation>
+    </message>
+    <message>
+        <location filename="../main_window.ui" line="2664"/>
+        <source>统一标注模式</source>
+        <translation>One File</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="2924"/>
@@ -636,6 +639,11 @@
         <location filename="../main_window.ui" line="3920"/>
         <source>选择语言</source>
         <translation>Language</translation>
+    </message>
+    <message>
+        <location filename="../main_window.ui" line="166"/>
+        <source>像素</source>
+        <translation>Pixel</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="3930"/>
