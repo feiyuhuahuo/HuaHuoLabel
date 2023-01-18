@@ -1,9 +1,23 @@
 打包：
-nuitka --mingw64 --standalone --plugin-enable=pyside6,numpy --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png Run_App.py
-(~10 minutes)
+WIN10
+python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out  [--windows-disable-console] --windows-icon-from-ico=images/icon.png HHL.py
+Ubuntu
+sudo apt install patchelf
+python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out  [--windows-disable-console] --windows-icon-from-ico=images/icon.png HHL.py
+
+需要的包：
+opencv-python
+pyside6
+numpy
+ordered-set
+onnxruntime-gpu
 
 翻译：
 cd C:\Users\feiyuhuahuo\AppData\Local\Programs\Python\Python39\Lib\site-packages\PySide6
 lupdate -no-obsolete E:\HuaHuoLabel_new\need\main.py -ts E:\HuaHuoLabel_new\ts_files\main.ts
 lupdate -no-obsolete E:\HuaHuoLabel_new\main_window.ui -ts E:\HuaHuoLabel_new\ts_files\main_window.ts
 lupdate E:\HuaHuoLabel_new\need\custom_widgets\img_show_widget.py  -ts E:\HuaHuoLabel_new\ts_files\img_show_widget.ts
+
+版本记录：
+1.0.0
+主功能完成，自动标注、伪标签功能待做，Ubuntu测试有瑕疵

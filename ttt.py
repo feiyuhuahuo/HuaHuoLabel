@@ -147,7 +147,6 @@ import pdb
 # (self.tr('多分类'), self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割'))
 
 
-
 # from PySide6.QtUiTools import QUiLoader
 # from PySide6.QtWidgets import QMainWindow
 # from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QLabel
@@ -176,4 +175,8 @@ import pdb
 #     ui = PP()
 #     app.exec()
 
-print(6//4)
+import cv2
+
+aa = cv2.imread('images/icon.png')
+cv2.imshow('aa', aa)
+cv2.waitKey()

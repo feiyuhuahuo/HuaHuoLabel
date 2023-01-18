@@ -72,7 +72,7 @@ class ImgCls(QMainWindow):
         loader = QUiLoader()
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
-        self.main_ui = loader.load('main_window.ui')  # 主界面
+        self.main_ui = loader.load('ui_files/main_window.ui')  # 主界面
         self.setCentralWidget(self.main_ui)
         self.label_ui = SelectWindow(title=self.tr('类别'), button_signal=signal_select_ui_ok_button)
         self.setFocusPolicy(Qt.StrongFocus)
@@ -2341,6 +2341,8 @@ class ImgCls(QMainWindow):
                     ori_dict = json.load(f)
 
             if ori_dict != self.label_file_dict:
+                self.label_file_dict['classes'] = self.classes_list()
+                print(self.classes_list())
                 with open(json_path, 'w') as f:
                     json.dump(self.label_file_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
@@ -2681,7 +2683,7 @@ class ImgCls(QMainWindow):
         self.main_ui.img_widget.clear_scaled_img(to_undo=False)
         self.main_ui.img_widget.clear_all_polygons()
         draw = self.main_ui.toolBox.currentIndex() == 0
-        ann = self.main_ui.toolBox.currentIndex() == 1
+        ann = self.main_ui.toolBox.currentIndex() == 1 and self.img_root
         shape_edit = self.main_ui.toolBox.currentIndex() == 0 and self.main_ui.checkBox_shape_edit.isChecked()
         self.main_ui.img_widget.set_tool_mode(draw, shape_edit, ann)
 
@@ -2982,12 +2984,15 @@ class ImgCls(QMainWindow):
 
 # todo: 伪标注合成全功能
 # todo: auto inference 全功能
+# todo: 像素标注支持粗细调节
 # todo: 完善log
 # todo: marquee 进度条同步有问题？  搁置  测 python 3.7.13
+# todo: 类别统计，长类别名 对不齐
+# todo: ubuntu 部分弹出窗口不在屏幕中心位置
+# todo: ubuntu 按钮右键时同时弹出上层容器的右键菜单
 
 # before open to github
-# todo: win11 测试 Ubuntu20.04， ubuntu22.04 打包 测试
-# todo: json 转换的scripts
+# todo: win11测试
 
 
 # 未解决的问题
