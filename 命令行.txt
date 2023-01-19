@@ -1,9 +1,9 @@
 打包：
 WIN10
-python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out  [--windows-disable-console] --windows-icon-from-ico=images/icon.png HHL.py
+python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
 Ubuntu
 sudo apt install patchelf
-python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out  [--windows-disable-console] --windows-icon-from-ico=images/icon.png HHL.py
+python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
 
 需要的包：
 opencv-python
