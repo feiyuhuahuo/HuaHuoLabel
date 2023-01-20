@@ -280,11 +280,11 @@ class ImgShow(BaseImgFrame):
 
         self.LeftClick = False  # 用于实现图片拖曳和标注拖曳功能
         self.PolygonLastPointDone = False  # 用于SegMode标识画完一个多边形
+        self.PolygonLocked = False
         # 如果触发了一次 '内环越界'，就置为True，在下次mouseReleaseEvent再置为False，确保不会不停的触发'内环越界'
         self.OutInConflict = False
         self.HideCross = False
-
-        self.MovingPolygon = False
+        self.MovingPolygon = False  # 仅在拖动标注移动时为True
         self.MovingCorner = False
 
         self.FlagDrawCollection = False
@@ -370,11 +370,12 @@ class ImgShow(BaseImgFrame):
                 if self.ShapeEditMode:
                     if QApplication.keyboardModifiers() != Qt.ShiftModifier:
                         # 有了self.polygon_editing_i后，在paintEvent()里触发draw_editing_polygon()才有效
-                        self.polygon_editing_i = self.get_editing_polygon()
+                        if not self.MovingPolygon and not self.PolygonLocked:
+                            self.polygon_editing_i = self.get_editing_polygon()
 
                         if self.LeftClick:
-                            if self.corner_index is not None:  # 角点移动功能优先
-                                self.corner_point_move(self.corner_index)
+                            if not self.MovingPolygon and self.corner_index is not None:
+                                self.corner_point_move(self.corner_index)  # 角点移动功能先于标注移动功能
                             elif self.polygon_editing_i is not None:
                                 self.move_polygons()
                             else:
@@ -465,7 +466,9 @@ class ImgShow(BaseImgFrame):
             self.draw_completed_polygons()
 
             if self.ShapeEditMode:
-                self.corner_index = self.cursor_close_to_corner()
+                if not self.MovingPolygon:
+                    self.corner_index = self.cursor_close_to_corner()
+
                 self.draw_editing_polygon()
 
             if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -711,6 +714,10 @@ class ImgShow(BaseImgFrame):
             i, j = corner_index
         elif len(corner_index) == 3:
             i, j, k = corner_index
+
+        if self.PolygonLocked:
+            if i != self.polygon_editing_i:
+                return
 
         b_left, b_up, b_right, b_down = self.get_border_coor()
         polygon = self.all_polygons[i]
@@ -1104,6 +1111,9 @@ class ImgShow(BaseImgFrame):
         self.HideCross = hide
         self.reset_cursor()
         self.update()
+
+    def set_shape_locked(self, lock):
+        self.PolygonLocked = lock
 
     def set_task_mode(self, cls=False, m_cls=False, det=False, seg=False):
         self.ClsMode, self.MClsMode, self.DetMode, self.SegMode = cls, m_cls, det, seg

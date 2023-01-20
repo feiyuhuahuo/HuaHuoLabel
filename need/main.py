@@ -51,20 +51,22 @@ class ImgCls(QMainWindow):
         self.WorkMode = self.tr('单分类')
         self.OneFileLabel = True
         self.SeparateLabel = False
-        self.img_rotate_count = 0
-        self.img_h_flip = False
-        self.img_v_flip = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
         self.EditImgMode = False
 
         self.marquee_num = 30  # 小图的最大数量, 越大占用内存越多
         self.marquee_size = 150
         self.scan_delay = 0
+        self.img_rotate_count = 0
+        self.img_h_flip = False
+        self.img_v_flip = False
+        self.looking_list = []
+
         self.icon_look = QIcon('images/图片100.png')
         self.icon_look_key = self.icon_look.cacheKey()
         self.icon_not_look = QIcon('images/图片101.png')
         self.icon_not_look_key = self.icon_not_look.cacheKey()
-        self.looking_list = []
+        self.icon_shape_locked = QIcon('images/locked.png')
 
         self.file_select_dlg = QFileDialog(self)
         self.input_dlg = QInputDialog(self)
@@ -137,16 +139,20 @@ class ImgCls(QMainWindow):
         self.main_ui.listWidget.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_class))
 
         self.menu_seg_annotation = QMenu(self)
+        self.menu_seg_annotation.setObjectName('label_list')
         self.main_ui.listWidget_2.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_annotation))
         self.action_modify_one_shape_class = QAction(self.tr('修改类别'), self)
         self.action_modify_one_shape_class.triggered.connect(self.modify_shape_list_start)
-        self.action_delete_all = QAction(self.tr('全部删除'), self)
-        self.action_delete_all.triggered.connect(lambda: self.del_all_shapes(True))
         self.action_delete_one_shape = QAction(self.tr('删除标注'), self)
         self.action_delete_one_shape.triggered.connect(lambda: self.del_all_shapes(False))
+        self.action_delete_all = QAction(self.tr('全部删除'), self)
+        self.action_delete_all.triggered.connect(lambda: self.del_all_shapes(True))
+        self.action_lock_shape = QAction(self.tr('锁定标注'), self)
+        self.action_lock_shape.triggered.connect(self.lock_shape)
         self.menu_seg_annotation.addAction(self.action_modify_one_shape_class)
         self.menu_seg_annotation.addAction(self.action_delete_one_shape)
         self.menu_seg_annotation.addAction(self.action_delete_all)
+        self.menu_seg_annotation.addAction(self.action_lock_shape)
 
         self.menu_img_enhance = QMenu(self)
         self.main_ui.groupBox_img_enhance.customContextMenuRequested.connect(
@@ -186,7 +192,7 @@ class ImgCls(QMainWindow):
 
         self.main_ui.listWidget.itemClicked.connect(lambda: self.look_or_not_look(double=False))
         self.main_ui.listWidget.itemDoubleClicked.connect(lambda: self.look_or_not_look(double=True))
-        self.main_ui.listWidget_2.itemClicked.connect(self.select_shape)
+        self.main_ui.listWidget_2.itemClicked.connect(lambda: self.select_shape(i=-1))
         self.main_ui.listWidget_2.itemSelectionChanged.connect(self.set_info_widget_selected)
 
         self.main_ui.radioButton_read.toggled.connect(self.set_read_mode)
@@ -1379,6 +1385,13 @@ class ImgCls(QMainWindow):
             return False
         return True
 
+    def has_locked_shape(self):
+        for i in range(self.main_ui.listWidget_2.count()):
+            item = self.main_ui.listWidget_2.item(i)
+            if item.icon().cacheKey() != 0:
+                return item
+        return False
+
     def has_looking_classes(self, img_path):
         if self.OneFileLabel:
             img_name = img_path.split('/')[-1]
@@ -1609,6 +1622,22 @@ class ImgCls(QMainWindow):
         self.image_folder = self.tr('原图')
         self.label_folder = self.tr('标注')
         self.ann_folder = self.tr('注释图片')
+
+    def lock_shape(self):
+        cur_item = self.main_ui.listWidget_2.currentItem()
+        if self.action_lock_shape.text() == '锁定标注':
+            item = self.has_locked_shape()
+            if item:
+                item.setIcon(QIcon())
+
+            cur_item.setIcon(self.icon_shape_locked)
+            self.main_ui.img_widget.set_shape_locked(True)
+            self.select_shape(self.main_ui.listWidget_2.row(cur_item))
+        else:
+            cur_item.setIcon(QIcon())
+            self.main_ui.img_widget.set_shape_locked(False)
+
+        self.main_ui.setFocus()
 
     def log_info(self, text, mark_line=False):
         os.makedirs('log', exist_ok=True)
@@ -2342,7 +2371,6 @@ class ImgCls(QMainWindow):
 
             if ori_dict != self.label_file_dict:
                 self.label_file_dict['classes'] = self.classes_list()
-                print(self.classes_list())
                 with open(json_path, 'w') as f:
                     json.dump(self.label_file_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
@@ -2535,8 +2563,12 @@ class ImgCls(QMainWindow):
         count = abs(i - self.cur_i)
         return count
 
-    def select_shape(self):
-        signal_selected_label_item.send(self.main_ui.listWidget_2.currentRow())
+    def select_shape(self, i):
+        if i == -1:
+            if not self.has_locked_shape():
+                signal_selected_label_item.send(self.main_ui.listWidget_2.currentRow())
+        else:
+            signal_selected_label_item.send(i)
 
     def sem_class_modified_tip(self):
         if self.WorkMode == self.tr('语义分割') and self.SeparateLabel \
@@ -2552,8 +2584,9 @@ class ImgCls(QMainWindow):
         self.action_modify_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
         self.action_del_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
         self.action_modify_one_shape_class.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_delete_all.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
         self.action_delete_one_shape.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_delete_all.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+        self.action_lock_shape.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
 
     def set_buttons_checked(self):  # open_dir和set_work_mode共同的按钮的setChecked操作在这设置
         self.main_ui.radioButton_read.setChecked(True)
@@ -2901,9 +2934,15 @@ class ImgCls(QMainWindow):
                 self.clear_shape_info()
                 self.polygons_to_img()
 
-    @staticmethod
-    def show_menu(ob):  # 在鼠标位置显示菜单
-        ob.exec(QCursor.pos())
+    def show_menu(self, menu):  # 在鼠标位置显示菜单
+        if menu.objectName() == 'label_list':
+            item = self.main_ui.listWidget_2.currentItem()
+            if item.icon().cacheKey() == 0:
+                self.action_lock_shape.setText('锁定标注')
+            else:
+                self.action_lock_shape.setText('取消锁定')
+
+        menu.exec(QCursor.pos())
 
     def show_shape_info(self, polygon):
         if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
