@@ -84,7 +84,7 @@ Annotating image will directly modify the pixel value. Hold down Ctrl and drag t
 ## Collect Image  
 <img src="images/readme_imgs/pin.png" width="40px">
 
-Use this button to collect an image. The collected images are recorded through "pined_images.json".  
+Use this button to collect an image. The collected images are recorded through "pinned_images.json".  
 
 ## Edit Image  
 <img src="images/readme_imgs/img_edit_en.png" width="300px">   

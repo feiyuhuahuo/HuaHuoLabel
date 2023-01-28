@@ -70,7 +70,10 @@ After compilation is done, copy "images" folder, "ts_files" folder, "ui_files" f
 
 ## Something Need Help  
 1. If you are familiar with PySide6, these problems need help.   
-https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side
+https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side  
 https://forum.qt.io/topic/141742/how-to-translate-text-with-quiloader
 
 2. Due to the author's limited English, any suggestion of the translation of the English version release and [USAGE_EN.md](USAGE_EN.md) is welcome.
+
+## License  
+HuaHuoLabel uses GNU GPL license. You can use this tool at will. However, do not use it for commercial activities without the permission of the author.  

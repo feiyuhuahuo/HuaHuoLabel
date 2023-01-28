@@ -71,4 +71,7 @@ python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out  --window
 https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side
 https://forum.qt.io/topic/141742/how-to-translate-text-with-quiloader
 
-2. 作者英文水平有限，软件英文版的翻译以及[USAGE_EN.md](USAGE_EN.md)的翻译需要您的宝贵意见。
+2. 作者英文水平有限，软件英文版的翻译以及[USAGE_EN.md](USAGE_EN.md)的翻译需要您的宝贵意见。  
+
+## License  
+花火标注采用GNU GPL许可证，您可以随意使用该工具，但在未取得作者许可的情况下，请勿使用该软件进行商业行为。  
