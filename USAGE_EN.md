@@ -18,13 +18,13 @@ Then create an "Original Images" folder under the directory, copy the images to 
 
 ## Label Mode
 * One File mode (recommended)   
-<img src="images/readme_imgs/one_file.png" width="500px">  
+![one_file.png](images/readme_imgs/one_file.png)   
 In One File Mode, all label information is recorded by a unified "labels.json". When the image is not labeled, the image name will not appear in the json file. Any modification to the label will modify the file. You can use [scripts/parse_json.py](scripts/parse_json.py) to parse the file.
 In "edit" mode, "labels.json" will be automatically saved when you "open directory", "switch task type" and "close software". It will also be saved every 5 minutes.
 
 
 * Separate File mode  
-<img src="images/readme_imgs/separate_mode.png" width="500px">   
+![separate_mode.png](images/readme_imgs/separate_mode.png)  
 In Separate File Mode, each image has one or more corresponding files to record the label information. If the image is not labeled, there is no corresponding label file. When dividing dataset, two additional folders: "imgs" and "labels" folders will be generated to save train set and validation set respectively.
 Any modification to the label will modify the file in the "Label Files" folder and the "labels" folder at the same time. In "edit mode", the label file will be saved automatically when switch image.
 

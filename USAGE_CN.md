@@ -17,14 +17,14 @@
 之后在该目录下新建"原图"文件夹，将待标注的图片拷贝到该文件夹下，之后在软件中点击"打开目录"按钮，并选择**根目录文件夹**。
 
 ## 标注模式
-* 统一标注模式（推荐）    
-<img src="images/readme_imgs/one_file.png" width="500px">  
+* 统一标注模式（推荐）  
+![one_file.png](images/readme_imgs/one_file.png)   
 统一标注模式由一个统一的"labels.json"来记录所有标注信息，图片未标注时，该图片名称不会出现在该json文件中，任何对标注的修改都会修改该文件，可以使用[scripts/parse_json.py](scripts/parse_json.py)来解析该文件。
 在"编辑"模式下，"labels.json"会在"打开目录"、"切换任务类型"、"关闭软件"时自动保存，每隔5min也会自动保存一次。  
 
 
 * 独立标注模式  
-<img src="images/readme_imgs/separate_mode.png" width="500px">   
+![separate_mode.png](images/readme_imgs/separate_mode.png)  
 独立标注模式下，每张图片都有对应的一个或多个文件来记录标注信息，图片未标注时，该图片不会有对应的标注文件。划分数据集时，会产生额外的imgs和labels文件夹来分别保存训练集和验证集。
 任何对标注的修改都会同时修改"标注"文件夹和"labels"文件夹里的标注文件。在"编辑"模式下，切图时标注文件会自动保存。
 
@@ -49,7 +49,7 @@
 在独立标注模式下，单独的类别文件夹会被创建，图片会被剪切（复制）到对应类别文件夹下，可以使用"回退"按钮来撤销图片移动操作。  
 
 * 多类别分类  
-<img src="images/readme_imgs/mcls_default.png" width="500px">  
+![mcls_default.png](images/readme_imgs/mcls_default.png)  
 在按钮上右键输入类别，输入"-"使其失效，左键单击将图片分类到对应类别，一张图片可以存在多个类别。可以使用"设置默认类别"按钮来设置若干个默认类别，此时若图片不由类别按钮指定类别，则标注类别为默认类别。  
 
 
