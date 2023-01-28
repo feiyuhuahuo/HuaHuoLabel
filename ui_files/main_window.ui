@@ -3436,14 +3436,17 @@ background-color: rgb(200, 200, 200);</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_10">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="6,4,0,0,4,4">
+          <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="0,0,0,0,0,0">
            <property name="spacing">
-            <number>4</number>
+            <number>6</number>
            </property>
            <property name="leftMargin">
-            <number>17</number>
+            <number>15</number>
            </property>
-           <item alignment="Qt::AlignHCenter">
+           <property name="rightMargin">
+            <number>15</number>
+           </property>
+           <item alignment="Qt::AlignLeft">
             <widget class="QLabel" name="label_48">
              <property name="text">
               <string>顺时针转</string>
@@ -3514,6 +3517,17 @@ background-color: rgb(200, 200, 200);</string>
              <property name="toolTip">
               <string>水平翻转</string>
              </property>
+             <property name="styleSheet">
+              <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+             </property>
              <property name="text">
               <string/>
              </property>
@@ -3542,6 +3556,17 @@ background-color: rgb(200, 200, 200);</string>
              <property name="toolTip">
               <string>垂直翻转</string>
              </property>
+             <property name="styleSheet">
+              <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+             </property>
              <property name="text">
               <string/>
              </property>
@@ -3560,12 +3585,129 @@ background-color: rgb(200, 200, 200);</string>
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_80" stretch="0,0,0">
-           <property name="leftMargin">
-            <number>2</number>
+          <layout class="QHBoxLayout" name="horizontalLayout_91" stretch="0,0,0,0,0">
+           <property name="spacing">
+            <number>6</number>
            </property>
+           <property name="leftMargin">
+            <number>15</number>
+           </property>
+           <property name="rightMargin">
+            <number>15</number>
+           </property>
+           <item alignment="Qt::AlignLeft">
+            <widget class="QCheckBox" name="checkBox_scale">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:      white;
+    border:                 2px solid white;  
+}</string>
+             </property>
+             <property name="text">
+              <string>启用缩放</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
            <item alignment="Qt::AlignHCenter">
+            <widget class="QSpinBox" name="spinBox_13">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
+             <property name="prefix">
+              <string>宽：</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>9999</number>
+             </property>
+             <property name="value">
+              <number>512</number>
+             </property>
+            </widget>
+           </item>
+           <item alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_46">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>×</string>
+             </property>
+            </widget>
+           </item>
+           <item alignment="Qt::AlignHCenter">
+            <widget class="QSpinBox" name="spinBox_14">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::NoContextMenu</enum>
+             </property>
+             <property name="prefix">
+              <string>高：</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>9999</number>
+             </property>
+             <property name="value">
+              <number>512</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_80" stretch="0,0,0">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>15</number>
+           </property>
+           <property name="rightMargin">
+            <number>15</number>
+           </property>
+           <item alignment="Qt::AlignLeft">
             <widget class="QLabel" name="label_44">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="text">
               <string>缩放算法</string>
              </property>
@@ -3573,6 +3715,9 @@ background-color: rgb(200, 200, 200);</string>
            </item>
            <item alignment="Qt::AlignHCenter">
             <widget class="QRadioButton" name="radioButton_12">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="font">
               <font>
                <pointsize>10</pointsize>
@@ -3601,6 +3746,9 @@ QRadioButton::indicator:unchecked {
            </item>
            <item alignment="Qt::AlignHCenter">
             <widget class="QRadioButton" name="radioButton_13">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="font">
               <font>
                <pointsize>10</pointsize>
@@ -3636,81 +3784,17 @@ QRadioButton::indicator:unchecked {
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_91" stretch="6,4,4,4">
+          <layout class="QHBoxLayout" name="horizontalLayout_81" stretch="0,0,0,0">
            <property name="spacing">
-            <number>4</number>
+            <number>6</number>
            </property>
            <property name="leftMargin">
-            <number>8</number>
+            <number>15</number>
            </property>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="label_45">
-             <property name="text">
-              <string>缩放大小</string>
-             </property>
-            </widget>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QSpinBox" name="spinBox_13">
-             <property name="contextMenuPolicy">
-              <enum>Qt::NoContextMenu</enum>
-             </property>
-             <property name="prefix">
-              <string>宽：</string>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>9999</number>
-             </property>
-             <property name="value">
-              <number>512</number>
-             </property>
-            </widget>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="label_46">
-             <property name="font">
-              <font>
-               <pointsize>12</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>×</string>
-             </property>
-            </widget>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QSpinBox" name="spinBox_14">
-             <property name="contextMenuPolicy">
-              <enum>Qt::NoContextMenu</enum>
-             </property>
-             <property name="prefix">
-              <string>高：</string>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>9999</number>
-             </property>
-             <property name="value">
-              <number>512</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_81" stretch="6,4,4,4">
-           <property name="spacing">
-            <number>4</number>
+           <property name="rightMargin">
+            <number>15</number>
            </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <item alignment="Qt::AlignHCenter">
+           <item alignment="Qt::AlignLeft">
             <widget class="QLabel" name="label_49">
              <property name="text">
               <string>保存格式</string>
@@ -3985,8 +4069,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup_3"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

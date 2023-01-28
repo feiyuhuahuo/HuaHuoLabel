@@ -13,7 +13,7 @@ Directory structure:
         ├─Original Images
         └─Label Files
 ```
-Select a root directory and manually create a "Obj Det" (or "Single Cls", "Multi Cls", "Sem Seg", "Ins Seg") folder under it.
+Select a root directory and manually create an "Obj Det" (or "Single Cls", "Multi Cls", "Sem Seg", "Ins Seg") folder under it.
 Then create an "Original Images" folder under the directory, copy the images to be labeled into the folder, click the "Open Dir" button in the software, and then select the **root directory**.
 
 ## Label Mode
@@ -46,11 +46,11 @@ For Single Cls and Multi Cls, you can load and export classes in the right-click
 * Single Cls  
 Right-click the button to input a category, input "-" to disable it. Left-click to classify the image into the corresponding category.
 In One File mode, additional category folders will not be created.
-In Separate File mode, additional category folders will be created. Images will be cut (copied) to the corresponding category folder. You can use the "Undo" button to undo the image movement operation.
+In Separate File mode, additional category folders will be created. Images will be cut (copied) to the corresponding category folder. You can use the "Undo" button to undo the image movement operation.  
 
 
-* Multi Cls   
-<img src="images/readme_imgs/mcls_default.png" width="500px">  
+* Multi Cls  
+![mcls_default.png](images/readme_imgs/mcls_default.png)  
 Right-click the button to input a category, input "-" to disable it. Left-click to classify the image into the corresponding category. Multiple categories can be assigned to the same image. You can use the "Set Default Category" button to set several default categories. If so, if no category is assigned to a certain image, the image category is set as these default categories. 
 
 

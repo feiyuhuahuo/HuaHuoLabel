@@ -12,11 +12,11 @@ It is a multifunctional AI data label tool, which supports data label of five co
 HuaHuoLabel can also do image editing, dataset management, auto-labeling, and pseudo label generation, which can help train AI models more conveniently.
 
 ## Support OS
-Windows10（tested），Windows11（untested）  
-Ubuntu20.04（tested），Ubuntu22.04（tested）
+Windows10 (tested), Windows11 (untested)   
+Ubuntu20.04 (tested), Ubuntu22.04 (tested)  
 
 ## Support Language
-中文简体，English
+中文简体, English
 
 ## Highlights
 * Good user interface and operation method
@@ -32,15 +32,15 @@ Ubuntu20.04（tested），Ubuntu22.04（tested）
 | ![ring.gif](images/readme_imgs/ring.gif) | ![pixel.gif](images/readme_imgs/pixel.gif) |
 
 * Real-time image enhancement   
-<img src="images/readme_imgs/enhance.gif" width="400px">  
+<img src="images/readme_imgs/enhance.gif" width="500px">  
 
 
 * Label statistics and management  
-<img src="images/readme_imgs/stat.gif" width="400px"> 
+<img src="images/readme_imgs/stat.gif" width="500px"> 
 
 
 * Divide train set and validation set  
-<img src="images/readme_imgs/train_val.gif" width="400px"> 
+<img src="images/readme_imgs/train_val.gif" width="500px"> 
 
 
 * Auto-labeling  

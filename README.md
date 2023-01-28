@@ -35,13 +35,13 @@ Ubuntu20.04（已测试），Ubuntu22.04（已测试）
 | ![ring.gif](images/readme_imgs/ring.gif) | ![pixel.gif](images/readme_imgs/pixel.gif) |
 
 * 实时图像增强  
-<img src="images/readme_imgs/enhance.gif" width="400px">  
+<img src="images/readme_imgs/enhance.gif" width="500px">  
 
 * 标注统计与管理  
-<img src="images/readme_imgs/stat.gif" width="400px"> 
+<img src="images/readme_imgs/stat.gif" width="500px"> 
 
 * 划分训练集和验证集  
-<img src="images/readme_imgs/train_val.gif" width="400px"> 
+<img src="images/readme_imgs/train_val.gif" width="500px"> 
 
 * 自动标注  
 （待完成）

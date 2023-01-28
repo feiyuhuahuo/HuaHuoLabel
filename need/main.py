@@ -74,7 +74,7 @@ class ImgCls(QMainWindow):
         loader = QUiLoader()
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
-        self.main_ui = loader.load('main_window.ui')  # 主界面
+        self.main_ui = loader.load('ui_files/main_window.ui')  # 主界面
         self.setCentralWidget(self.main_ui)
         self.label_ui = SelectWindow(title=self.tr('类别'), button_signal=signal_select_ui_ok_button)
         self.setFocusPolicy(Qt.StrongFocus)
