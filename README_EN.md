@@ -54,7 +54,7 @@ Ubuntu20.04 (tested), Ubuntu22.04 (tested)
 [HuaHuoLabel usage introduction](USAGE_EN.md)
 
 ## Compile Project
-This project is compiled with Nuitka. Nuitka supports Windows、Linux and MacOS. Theoretically, the source code can be compiled to the execution program of the adaptive system. The Nuitka version of this project is 1.3.8.  
+This project is compiled with Nuitka. Nuitka supports Windows、Linux and MacOS. Theoretically, the source code can be compiled to the execution program for all the adaptive systems.
 
 ```Shell
 # install nuitka
@@ -62,6 +62,7 @@ pip install nuitka
 # For Windows
 python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
 # For Ubuntu
+# Because of (https://nuitka.net/info/debian-dist-packages.html), please use pip to manage python packages.
 # install patchelf
 sudo apt install patchelf
 python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
