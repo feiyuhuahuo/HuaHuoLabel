@@ -106,7 +106,7 @@
     </message>
     <message>
         <location filename="../main_window.ui" line="589"/>
-        <location filename="../main_window.ui" line="3843"/>
+        <location filename="../main_window.ui" line="3912"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
@@ -526,7 +526,7 @@
     </message>
     <message>
         <location filename="../main_window.ui" line="3394"/>
-        <location filename="../main_window.ui" line="3543"/>
+        <location filename="../main_window.ui" line="3554"/>
         <source>垂直翻转</source>
         <translation>Flip Vertically</translation>
     </message>
@@ -551,92 +551,96 @@
         <translation>Flip</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3570"/>
+        <location filename="../main_window.ui" line="3611"/>
+        <source>启用缩放</source>
+        <translation>Enable Scale</translation>
+    </message>
+    <message>
+        <location filename="../main_window.ui" line="3700"/>
         <source>缩放算法</source>
         <translation>    Scale Algorithm</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3595"/>
+        <location filename="../main_window.ui" line="3728"/>
         <source>最近邻</source>
         <translation>Nearest</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3623"/>
+        <location filename="../main_window.ui" line="3759"/>
         <source>双线性插值</source>
         <translation>Bilinear</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3649"/>
         <source>缩放大小</source>
-        <translation> Scale Size</translation>
+        <translation type="vanished"> Scale Size</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3659"/>
+        <location filename="../main_window.ui" line="3637"/>
         <source>宽：</source>
         <translation>Width: </translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3680"/>
+        <location filename="../main_window.ui" line="3661"/>
         <source>×</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3690"/>
+        <location filename="../main_window.ui" line="3674"/>
         <source>高：</source>
         <translation>Height: </translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3716"/>
+        <location filename="../main_window.ui" line="3785"/>
         <source>保存格式</source>
         <translation>Save Format</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3741"/>
+        <location filename="../main_window.ui" line="3810"/>
         <source>jpg</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3769"/>
+        <location filename="../main_window.ui" line="3838"/>
         <source>png</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3800"/>
+        <location filename="../main_window.ui" line="3869"/>
         <source>bmp</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3840"/>
+        <location filename="../main_window.ui" line="3909"/>
         <source>根据当前的设定保存当前图片</source>
         <translation>Save the current image with the current setting</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3877"/>
+        <location filename="../main_window.ui" line="3946"/>
         <source>根据当前的设定遍历保存目录下的所有图片</source>
         <translation>Save all the images under the current folder with the current setting</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3880"/>
+        <location filename="../main_window.ui" line="3949"/>
         <source>遍历保存</source>
         <translation>Save All</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3914"/>
+        <location filename="../main_window.ui" line="3983"/>
         <source>其它功能</source>
         <translation>Other Functions</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3963"/>
+        <location filename="../main_window.ui" line="4032"/>
         <source>f </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3968"/>
+        <location filename="../main_window.ui" line="4037"/>
         <source>关于花火标注</source>
         <translation>About HHL</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3920"/>
+        <location filename="../main_window.ui" line="3989"/>
         <source>选择语言</source>
         <translation>Language</translation>
     </message>
@@ -646,32 +650,32 @@
         <translation>Pixel</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3930"/>
+        <location filename="../main_window.ui" line="3999"/>
         <source>查看训练/验证集标注</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3938"/>
+        <location filename="../main_window.ui" line="4007"/>
         <source>生成指定类别分割标注</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3943"/>
+        <location filename="../main_window.ui" line="4012"/>
         <source>去除MCMR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3948"/>
+        <location filename="../main_window.ui" line="4017"/>
         <source>版本：1.0.0</source>
         <translation>Version 1.0.0</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3953"/>
+        <location filename="../main_window.ui" line="4022"/>
         <source>中文</source>
         <translation>中文</translation>
     </message>
     <message>
-        <location filename="../main_window.ui" line="3958"/>
+        <location filename="../main_window.ui" line="4027"/>
         <source>English</source>
         <translation></translation>
     </message>

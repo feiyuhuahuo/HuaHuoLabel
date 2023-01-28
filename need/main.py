@@ -74,7 +74,7 @@ class ImgCls(QMainWindow):
         loader = QUiLoader()
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
-        self.main_ui = loader.load('ui_files/main_window.ui')  # 主界面
+        self.main_ui = loader.load('main_window.ui')  # 主界面
         self.setCentralWidget(self.main_ui)
         self.label_ui = SelectWindow(title=self.tr('类别'), button_signal=signal_select_ui_ok_button)
         self.setFocusPolicy(Qt.StrongFocus)
@@ -183,6 +183,7 @@ class ImgCls(QMainWindow):
         self.main_ui.checkBox_separate_label.pressed.connect(self.raise_label_mode_conflict)
         self.main_ui.checkBox_separate_label.toggled.connect(self.set_separate_label)
         self.main_ui.checkBox_shape_edit.toggled.connect(self.set_shape_edit_mode)
+        self.main_ui.checkBox_scale.toggled.connect(self.set_img_edit_scale)
 
         self.main_ui.comboBox_2.currentIndexChanged.connect(self.change_shape_type)
 
@@ -1181,6 +1182,7 @@ class ImgCls(QMainWindow):
     def edit_img(self):
         folder = self.file_select_dlg.getExistingDirectory(self.main_ui, self.tr('选择文件夹'))
         if folder:
+            self.set_work_mode()
             self.EditImgMode = True
             self.disable_some_widgets()
             self.img_root = folder
@@ -1625,7 +1627,7 @@ class ImgCls(QMainWindow):
 
     def lock_shape(self):
         cur_item = self.main_ui.listWidget_2.currentItem()
-        if self.action_lock_shape.text() == '锁定标注':
+        if self.action_lock_shape.text() == self.tr('锁定标注'):
             item = self.has_locked_shape()
             if item:
                 item.setIcon(QIcon())
@@ -2148,6 +2150,7 @@ class ImgCls(QMainWindow):
         self.update_shape_list_num()
         self.label_ui.ui.listWidget.clear()
         self.main_ui.img_widget.collection_ui.ui.listWidget.clear()
+        self.main_ui.img_widget.set_shape_locked(False)
 
     def save_ann_img(self):
         folder = f'{self.img_root}/{self.WorkMode}/{self.ann_folder}'
@@ -2289,13 +2292,14 @@ class ImgCls(QMainWindow):
             if self.main_ui.checkBox_132.isChecked():
                 cv2_img = cv2.flip(cv2_img, 0)
 
-            resize_w, resize_h = self.main_ui.spinBox_13.value(), self.main_ui.spinBox_14.value()
-            if ori_w != resize_w or ori_h != resize_h:
-                if self.main_ui.radioButton_12.isChecked():
-                    scale_alg = cv2.INTER_NEAREST
-                elif self.main_ui.radioButton_13.isChecked():
-                    scale_alg = cv2.INTER_LINEAR
-                cv2_img = cv2.resize(cv2_img, (resize_w, resize_h), scale_alg)
+            if self.main_ui.checkBox_scale.isChecked():
+                resize_w, resize_h = self.main_ui.spinBox_13.value(), self.main_ui.spinBox_14.value()
+                if ori_w != resize_w or ori_h != resize_h:
+                    if self.main_ui.radioButton_12.isChecked():
+                        scale_alg = cv2.INTER_NEAREST
+                    elif self.main_ui.radioButton_13.isChecked():
+                        scale_alg = cv2.INTER_LINEAR
+                    cv2_img = cv2.resize(cv2_img, (resize_w, resize_h), scale_alg)
 
             cv2.imencode(suffix, cv2_img.astype('uint8'))[1].tofile(one[:-4] + suffix)
 
@@ -2456,6 +2460,7 @@ class ImgCls(QMainWindow):
                 self.cur_i += 1
 
         if 0 <= self.cur_i < self.img_num:
+            self.main_ui.img_widget.set_shape_locked(False)
             self.show_img_status_info()
             self.show_label_to_ui()
             self.set_tv_label()
@@ -2595,6 +2600,15 @@ class ImgCls(QMainWindow):
 
     def set_hide_cross(self):
         self.main_ui.img_widget.set_hide_cross(self.main_ui.checkBox_hide_cross.isChecked())
+
+    def set_img_edit_scale(self):
+        enabled = self.main_ui.checkBox_scale.isChecked()
+        self.main_ui.spinBox_13.setDisabled(not enabled)
+        self.main_ui.spinBox_14.setDisabled(not enabled)
+        self.main_ui.label_46.setDisabled(not enabled)
+        self.main_ui.label_44.setDisabled(not enabled)
+        self.main_ui.radioButton_12.setDisabled(not enabled)
+        self.main_ui.radioButton_13.setDisabled(not enabled)
 
     def set_info_widget_selected(self):
         lw = self.current_shape_info_widget()
@@ -2937,10 +2951,11 @@ class ImgCls(QMainWindow):
     def show_menu(self, menu):  # 在鼠标位置显示菜单
         if menu.objectName() == 'label_list':
             item = self.main_ui.listWidget_2.currentItem()
-            if item.icon().cacheKey() == 0:
-                self.action_lock_shape.setText('锁定标注')
-            else:
-                self.action_lock_shape.setText('取消锁定')
+            if item is not None:
+                if item.icon().cacheKey() == 0:
+                    self.action_lock_shape.setText(self.tr('锁定标注'))
+                else:
+                    self.action_lock_shape.setText(self.tr('取消锁定'))
 
         menu.exec(QCursor.pos())
 
@@ -3024,13 +3039,12 @@ class ImgCls(QMainWindow):
 # todo: 伪标注合成全功能
 # todo: auto inference 全功能
 # todo: 像素标注支持粗细调节
+# todo： 环形支持多形状组合以及多孔洞环形 （难）
 # todo: 完善log
 # todo: marquee 进度条同步有问题？  搁置  测 python 3.7.13
 # todo: 类别统计，长类别名 对不齐
 # todo: ubuntu 部分弹出窗口不在屏幕中心位置
 # todo: ubuntu 按钮右键时同时弹出上层容器的右键菜单
-
-# before open to github
 # todo: win11测试
 
 

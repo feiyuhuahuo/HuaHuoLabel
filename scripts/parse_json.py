@@ -1,5 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
+import pdb
+
 import cv2
 import json
 import numpy as np
@@ -65,14 +67,16 @@ def load_json(path):
         label_file_dict = json.load(f)
 
     work_mode = label_file_dict['work_mode']
-    train_list, val_list = [], []
+    all_list, train_list, val_list = [], [], []
     if work_mode in ('单分类', 'Single Cls', '多分类', 'Multi Cls'):
         for k, v in label_file_dict['labels'].items():
+            info = (k, v['class'])
+            all_list.append(info)
             if v['tv'] == 'train':
-                train_list.append((k, v['class']))
+                train_list.append(info)
             elif v['tv'] == 'val':
-                val_list.append((k, v['class']))
-        return train_list, val_list, label_file_dict['classes']
+                val_list.append(info)
+        return all_list, train_list, val_list, label_file_dict['classes']
 
     if work_mode in ('语义分割', 'Sem Seg'):
         classes = label_file_dict['classes']
@@ -83,12 +87,13 @@ def load_json(path):
                 polygons = []
 
             mask = get_seg_mask(classes, polygons, img_h, img_w)
-
+            info = (k, mask)
+            all_list.append(info)
             if v['tv'] == 'train':
-                train_list.append((k, mask))
+                train_list.append(info)
             elif v['tv'] == 'val':
-                val_list.append((k, mask))
-        return train_list, val_list, classes
+                val_list.append(info)
+        return all_list, train_list, val_list, classes
 
     if work_mode in ('目标检测', 'Obj Det'):
         for k, v in label_file_dict['labels'].items():
@@ -105,11 +110,13 @@ def load_json(path):
                 y2 /= img_h
                 targets.append([c_name, x1, y1, x2, y2])
 
+            info = (k, targets)
+            all_list.append(info)
             if v['tv'] == 'train':
-                train_list.append((k, targets))
+                train_list.append(info)
             elif v['tv'] == 'val':
-                val_list.append((k, targets))
-        return train_list, val_list, label_file_dict['classes']
+                val_list.append(info)
+        return all_list, train_list, val_list, label_file_dict['classes']
 
     if work_mode in ('实例分割', 'Ins Seg'):
         classes = label_file_dict['classes']
@@ -132,13 +139,15 @@ def load_json(path):
                 all_boxes.append([c_name, x1, y1, x2, y2])
                 all_masks.append(mask)
 
+            info = (k, all_boxes, all_masks)
+            all_list.append(info)
             if v['tv'] == 'train':
-                train_list.append((k, all_boxes, all_masks))
+                train_list.append(info)
             elif v['tv'] == 'val':
-                val_list.append((k, all_boxes, all_masks))
-        return train_list, val_list, classes
+                val_list.append(info)
+        return all_list, train_list, val_list, classes
 
 
 if __name__ == '__main__':
-    train_list, val_list, classes = load_json('E:\HuaHuoLabel_new\待分类图片\实例分割\标注/labels.json')
-    print(train_list, val_list, classes)
+    all_list, train_list, val_list, classes = load_json('E:\HuaHuoLabel_new\待分类图片\实例分割\标注/labels.json')
+    print(all_list, train_list, val_list, classes)
