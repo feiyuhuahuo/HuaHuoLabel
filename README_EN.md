@@ -53,21 +53,33 @@ Ubuntu20.04 (tested), Ubuntu22.04 (tested)
 ## Usage
 [HuaHuoLabel usage introduction](USAGE_EN.md)
 
-## Compile Project
-This project is compiled with Nuitka. Nuitka supports Windows、Linux and MacOS. Theoretically, the source code can be compiled to the execution program for all the adaptive systems.
+## Run Project
+1. Download the [release](https://github.com/feiyuhuahuo/HuaHuoLabel/releases/tag/V1.0.0)  
+Unzip the file, for Windows version, directly run the HHL.exe.  
+For Ubuntu version:
+    ```
+    cd HHL.dist
+    ./HHL
+    ```
 
-```Shell
-# install nuitka
-pip install nuitka
-# For Windows
-python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
-# For Ubuntu
-# Because of (https://nuitka.net/info/debian-dist-packages.html), please use pip to manage python packages.
-# install patchelf
-sudo apt install patchelf
-python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
-```
-After compilation is done, copy "images" folder, "ts_files" folder, "ui_files" folder and "project.json" to the project root directory.
+2. Clone the source code and then compile it  
+This project is compiled with Nuitka. Nuitka supports Windows、Linux and macOS. Theoretically, the source code can be compiled to the execution program for all the adaptive systems.
+
+    ```Shell
+    # install nuitka
+    pip install nuitka
+    # For Windows
+    python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
+    # For Ubuntu
+    # Because of (https://nuitka.net/info/debian-dist-packages.html), please use pip to manage python packages.
+    # install patchelf
+    sudo apt install patchelf
+    python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
+    ```
+    After compilation is done, copy "images" folder, "ts_files" folder, "ui_files" folder and "project.json" to the project root directory.
+
+3. Clone the source code and run [HHL.py](HHL.py) in your IDE.
+
 
 ## Something Need Help  
 1. If you are familiar with PySide6, these problems need help.   
