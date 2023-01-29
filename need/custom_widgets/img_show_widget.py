@@ -607,6 +607,16 @@ class ImgShow(BaseImgFrame):
         self.shape_type = shape_type
         self.clear_widget_img_points()
 
+    def clear_all_polygons(self):
+        self.all_polygons = []
+        self.clear_widget_img_points()
+        self.clear_widget_img_points_huan()
+        self.update()
+
+    def clear_editing_i_corner(self):
+        self.polygon_editing_i = None
+        self.corner_index = None
+
     def clear_scaled_img(self, to_undo=True):
         if to_undo:
             command = AnnUndo(self, self.scaled_img.copy())
@@ -615,12 +625,6 @@ class ImgShow(BaseImgFrame):
         self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
         self.update()
         self.scaled_img_painted = self.scaled_img.copy()
-
-    def clear_all_polygons(self):
-        self.all_polygons = []
-        self.clear_widget_img_points()
-        self.clear_widget_img_points_huan()
-        self.update()
 
     def clear_widget_img_points(self):
         self.widget_points = []
@@ -1135,6 +1139,7 @@ class ImgShow(BaseImgFrame):
             self.unsetCursor()
         else:
             self.setCursor(Qt.CrossCursor)
+            self.clear_editing_i_corner()
 
         if ann:
             self.setMouseTracking(False)

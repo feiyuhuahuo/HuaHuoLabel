@@ -320,6 +320,9 @@ class ImgCls(QMainWindow):
     def add_to_train_val(self, dst_part, img_path=None, pass_one_file=False, pass_separate_file=False):
         if not self.has_img_root():
             return
+        if not self.in_edit_mode():
+            QMB.warning(self.main_ui, self.tr('模式错误'), self.tr('请先切换至编辑模式!'))
+            return
 
         if img_path is None:  # 直接由按钮触发
             cur_path = self.imgs[self.cur_i]
@@ -1234,6 +1237,9 @@ class ImgCls(QMainWindow):
     def generate_train(self):
         if not self.has_img_root():
             return
+        if not self.in_edit_mode():
+            QMB.warning(self.main_ui, self.tr('模式错误'), self.tr('请先切换至编辑模式!'))
+            return
 
         if self.OneFileLabel:
             for k, v in self.label_file_dict['labels'].items():
@@ -1653,6 +1659,8 @@ class ImgCls(QMainWindow):
             f.writelines(f'{text}\n')
 
     def log_sys_error(self, text):
+        self.save_one_file_json()
+
         text = text.strip()
         if text:
             if len(self.sys_error_text) == 0:
@@ -2034,6 +2042,9 @@ class ImgCls(QMainWindow):
 
     def random_train_val(self):
         if not self.has_img_root():
+            return
+        if not self.in_edit_mode():
+            QMB.warning(self.main_ui, self.tr('模式错误'), self.tr('请先切换至编辑模式!'))
             return
 
         content, is_ok = self.input_dlg.getText(self.main_ui, self.tr('划分比例'),
@@ -2485,12 +2496,14 @@ class ImgCls(QMainWindow):
             if i == -1 or i == self.img_num:
                 break
 
+            if '图片已删除' in self.imgs[i]:
+                continue
+
             if self.WorkMode in (self.tr('单分类'), self.tr('多分类')):
                 result = self.cls_has_classified(self.imgs[i])
             elif self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
                 if self.OneFileLabel:
-                    img_name = self.imgs[i].split('/')[-1]
-                    result = self.label_file_dict['labels'].get(img_name)
+                    result = self.label_file_dict['labels'].get(self.imgs[i].split('/')[-1])
                 elif self.SeparateLabel:
                     json_path = path_to(self.imgs[i], img2json=True)
                     result = osp.exists(json_path)

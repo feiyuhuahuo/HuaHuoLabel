@@ -329,7 +329,7 @@
     <message>
         <location filename="../main_window.ui" line="2410"/>
         <source>更新所有PNG</source>
-        <translation>Update All Pngs</translation>
+        <translation type="unfinished">Update All PNGs</translation>
     </message>
     <message>
         <location filename="../main_window.ui" line="2420"/>

@@ -20,13 +20,13 @@ Then create an "Original Images" folder under the directory, copy the images to 
 * One File mode (recommended)   
 ![one_file.png](images/readme_imgs/one_file.png)   
 In One File Mode, all label information is recorded by a unified "labels.json". When the image is not labeled, the image name will not appear in the json file. Any modification to the label will modify the file. You can use [scripts/parse_json.py](scripts/parse_json.py) to parse the file.
-In "edit" mode, "labels.json" will be automatically saved when you "open directory", "switch task type" and "close software". It will also be saved every 5 minutes.
+In "Write" mode, "labels.json" will be automatically saved when you "open directory", "switch task type" and "close software". It will also be saved every 5 minutes.
 
 
 * Separate File mode  
 ![separate_mode.png](images/readme_imgs/separate_mode.png)  
 In Separate File Mode, each image has one or more corresponding files to record the label information. If the image is not labeled, there is no corresponding label file. When dividing dataset, two additional folders: "imgs" and "labels" folders will be generated to save train set and validation set respectively.
-Any modification to the label will modify the file in the "Label Files" folder and the "labels" folder at the same time. In "edit mode", the label file will be saved automatically when switch image.
+Any modification to the label will modify the file in the "Label Files" folder and the "labels" folder at the same time. In "Write mode", the label file will be saved automatically when switch image.
 
 
 * One File mode + Separate File mode (not recommended)   
@@ -59,13 +59,13 @@ Right-click the button to input a category, input "-" to disable it. Left-click 
 1. Draw a shape  
 Hold down Ctrl and click the left mouse button to draw polygons, rectangles, ellipses and rings. To draw rings, you need to draw the outer contour and inner contour of the object in turn. Press Ctrl+Z to undo a point. Hold down Ctrl and drag the left mouse button to draw pixel-level label.   
 2. Modify a shape   
-Enable the "Edit Shapes" button, hover the cursor over a shape to select it. Sometimes the small shape will be covered by a large shape and thus cannot be selected. For this case, you can right-click in the "Shape List" and use the "Lock Shape" function to lock a shape. Drag the left mouse button (or use the shortcut keys W, S, A, D) to move the shape. When the cursor is close to a shape corner, you can drag to modify the corner coordinates. When modifying pixel label, hold down Shift and click left mouse button to add or remove a pixel.  
+Enable the "Edit Shapes" button, hover the cursor over a shape to select it. Sometimes the small shape will be covered by a large shape and thus cannot be selected. For this case, you can right-click in the "Shape List" and use the "Lock Shape" function to lock a shape. Drag the left mouse button (or use the shortcut keys W, S, A, D) to move the shape. Use "Delete" to delete a shape. When the cursor is close to a shape corner, you can drag to modify the corner coordinates. When modifying pixel label, hold down Shift and click left mouse button to add or remove a pixel.  
 3. Duplicate a shape  
 In the right-click menu, you can quickly duplicate a completed shape through the "Collect" and "Draw Collected Shapes" options.   
 4. Show label image   
 In the lower thumbnail area, left click to display the original image and right click to display the label image.  
 5. Sem Seg  
-When doing semantic segmentation tasks, you can mark an unlabelled image as a pure background label by clicking the "As Background" button. In addition, in Separate File mode, since the generated PNG labels are strongly related to the order and quantity of the class list, when the class list changes, you may need to update the previous PNG labels through the "Update All Pngs" button.  
+When doing semantic segmentation tasks, you can mark an unlabelled image as a pure background label by clicking the "As Background" button. In addition, in Separate File mode, since the generated PNG labels are strongly related to the order and quantity of the class list, when the class list changes, you may need to update the previous PNG labels through the "Update All PNGs" button.  
 6. Obj Det  
 When doing object detection tasks, the shape is limited to "rectangle". The recorded coordinates are the coordinates of the upper left corner and the lower right corner of the rectangle.
 7. Ins Seg  
@@ -75,7 +75,7 @@ When doing instance segmentation tasks, to parse json files, you can consult [sc
 ## Divide Dataset  
 <img src="images/readme_imgs/divide_set_en.png" width="350px">  
 
-Use these buttons to divide the dataset into train set and validation set. In Separate File mode, additional "imgs" and "labels" folders will be generated.
+In "Write" mode, use these buttons to divide the dataset into train set and validation set. In Separate File mode, additional "imgs" and "labels" folders will be generated.
 
 ## Annotate Image  
 ![annotation.gif](images/readme_imgs/annotation.gif)  

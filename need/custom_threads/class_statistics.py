@@ -240,7 +240,7 @@ class ClassStatistics(QThread):
         if self.language == 'CN':
             add_info += [f'\n已标注图片数量：{total_num}', f'总图片数量：{self.img_num}']
         elif self.language == 'EN':
-            add_info += [f'\nLabeled Count: {total_num}', f'Total Count: {self.img_num}']
+            add_info += [f'\nLabelled Count: {total_num}', f'Total Count: {self.img_num}']
 
         if self.language == 'CN':
             add_info.append('\n-----------------------训练集-----------------------')
