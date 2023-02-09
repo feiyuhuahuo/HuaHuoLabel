@@ -23,7 +23,6 @@ class WaitingLabel(QLabel):
         self.setText(self.text + '...')
         self.setStyleSheet("background-color: rgb(220, 220, 220); border-color: rgb(80, 80, 80); "
                            "border-width: 2px; border-style: solid;")
-
         self.setMinimumHeight(40)
         policy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setSizePolicy(policy)
@@ -43,6 +42,6 @@ class WaitingLabel(QLabel):
 
 if __name__ == '__main__':
     app = QApplication()
-    wl = WaitingLabel('保中')
+    wl = WaitingLabel('保存中')
     wl.show()
     app.exec()

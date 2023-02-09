@@ -2,18 +2,19 @@
 # -*- coding:utf-8 -*-
 import pdb
 import os
-from os import path as osp
 import glob
 import copy
 import datetime
 import cv2
 import numpy as np
+import random
 
+from os import path as osp
 from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from PySide6.QtWidgets import QMessageBox
 from math import sqrt, pow
-from need.custom_widgets.message_box import CustomMessageBox
+from need.custom_widgets import CustomMessageBox
 
 
 class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
@@ -59,23 +60,39 @@ class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
 
 class ClassStatistic:
     def __init__(self):
-        self.__class_list = []
+        self.__classes = []
 
-    def add(self, c):
-        if c not in self.__class_list:
-            self.__class_list.append(c)
+    def add(self, category, color='none'):
+        for one in self.__classes:
+            if one[0] == category:
+                return
+
+        self.__classes.append([category, color])
+
+    def change_c(self, old_c, new_c):
+        for one in self.__classes:
+            if one[0] == old_c:
+                one[0] = new_c
 
     def delete(self, c):
-        self.__class_list.remove(c)
+        if type(c) == int:
+            self.__classes.pop(c)
+        elif type(c) == str:
+            for i, one in enumerate(self.__classes):
+                if one[0] == c:
+                    self.__classes.pop(i)
 
     def classes(self):
-        return self.__class_list
+        return [aa[0] for aa in self.__classes]
+
+    def colors(self):
+        return [aa[1] for aa in self.__classes]
 
     def clear(self):
-        self.__class_list = []
+        self.__classes = []
 
 
-ClsClasses = ClassStatistic()
+AllClasses = ClassStatistic()
 
 # CSS 通用color
 ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
@@ -100,10 +117,6 @@ ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
               'violet',
               'wheat',
               'yellowgreen']
-
-ColorCode = {}
-for one in ColorNames:
-    ColorCode[QColor(one).name()] = one
 
 
 class AnnUndo(QUndoCommand):
@@ -294,6 +307,13 @@ def glob_labels(path):
     return labels
 
 
+def has_ch(text):
+    for one in text:
+        if u'\u4e00' <= one <= u'\u9fff':
+            return True
+    return False
+
+
 def hhl_info(language):
     if language == 'CN':
         ui = CustomMessageBox('about', '关于花火标注')
@@ -327,6 +347,27 @@ def img_pure_name(path):
         return path.split('/')[-1][:-4]
     elif path.endswith('json'):
         return path.split('/')[-1][:-5]
+
+
+class Palette:
+    def __init__(self):
+        self.color_names = ColorNames.copy()
+        self.color_codes = {}
+        for one in ColorNames:
+            self.color_codes[QColor(one).name()] = one
+
+    def get_color(self):
+        random.shuffle(self.color_names)
+        existed_colors = AllClasses.colors()
+        color = self.color_names.pop()
+        while color in existed_colors:
+            if len(self.color_names) == 0:
+                self.color_names = ColorNames.copy()
+            color = self.color_names.pop()
+        return color
+
+
+palette = Palette()
 
 
 def path_to(path, img2json=False, img2png=False, img2txt=False):

@@ -11,7 +11,6 @@ import time
 import glob
 
 from copy import deepcopy
-from random import shuffle
 from os import path as osp
 from os.path import sep as os_sep
 from PIL import Image, ImageEnhance
@@ -19,26 +18,15 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMainWindow, QMenu, QFileDialog, QInputDialog, QLineEdit, QWidget, \
     QHBoxLayout, QColorDialog, QListWidgetItem, QApplication, QGroupBox
 from PySide6.QtWidgets import QMessageBox as QMB
-from PySide6.QtCore import Qt, QTranslator
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QPixmap, QImage, QColor, QFontMetrics, QIcon, QAction
 from need.custom_widgets import *
-from need.custom_widgets.marquee_label import signal_show_plain_img, signal_show_label_img
-from need.custom_widgets.img_show_widget import signal_shape_type, signal_xy_color2ui, signal_selected_shape, \
-    signal_del_shape, signal_selected_label_item, signal_open_label_window, signal_one_collection_done, \
-    BaseImgFrame, signal_move2new_folder, signal_shape_info_update
-from need.custom_threads.auto_inference import signal_ai_progress_text, signal_ai_progress_value, \
-    signal_auto_infer_done, RunInference
+from need.custom_threads import *
 from need.custom_signals import StrSignal, ErrorSignal
-from need.custom_threads.change_one_class_json import ChangeOneClassCategory, signal_cocc_done
-from need.custom_threads.delete_one_class_json import DeleteOneClassLabels, signal_docl_done
-from need.custom_threads.class_statistics import ClassStatistics, signal_stat_info
-from need.custom_threads.update_semantic_pngs import UpdateSemanticPngs, signal_usp_done, signal_usp_progress_value, \
-    signal_usp_progress_text
-from need.custom_threads.auto_save import AutoSave, signal_auto_save
-from need.utils import ColorNames, ColorCode, get_seg_mask, path_to, uniform_path, ClsClasses, \
-    qimage_to_array, get_datetime, file_remove, glob_imgs, glob_labels, two_way_check, hhl_info
+from need.utils import get_seg_mask, path_to, uniform_path, AllClasses, qimage_to_array, get_datetime, \
+    file_remove, glob_imgs, glob_labels, two_way_check, hhl_info
 
-signal_select_ui_ok_button = StrSignal()
+signal_select_class_ok = StrSignal()
 error2app = ErrorSignal()
 
 
@@ -46,41 +34,48 @@ error2app = ErrorSignal()
 class ImgCls(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.load_trans_qm()
+        with open('project.json', 'r') as f:
+            self.language = json.load(f)['language']
 
+        self.image_folder = self.tr('原图')
+        self.label_folder = self.tr('标注')
+        self.ann_folder = self.tr('注释图片')
         self.WorkMode = self.tr('单分类')
         self.OneFileLabel = True
         self.SeparateLabel = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
         self.EditImgMode = False
-
+        self.ImgHFlip = False
+        self.ImgVFlip = False
         self.marquee_num = 30  # 小图的最大数量, 越大占用内存越多
         self.marquee_size = 150
         self.scan_delay = 0
         self.img_rotate_count = 0
-        self.img_h_flip = False
-        self.img_v_flip = False
-        self.looking_list = []
-
-        self.icon_look = QIcon('images/图片100.png')
-        self.icon_look_key = self.icon_look.cacheKey()
-        self.icon_not_look = QIcon('images/图片101.png')
-        self.icon_not_look_key = self.icon_not_look.cacheKey()
-        self.icon_shape_locked = QIcon('images/locked.png')
-
-        self.file_select_dlg = QFileDialog(self)
-        self.input_dlg = QInputDialog(self)
 
         loader = QUiLoader()
         loader.registerCustomWidget(ImgShow)
         loader.registerCustomWidget(ClassButton)
-        self.main_ui = loader.load('ui_files/main_window.ui')  # 主界面
+        loader.registerCustomWidget(ClassListWidget)
+        loader.registerCustomWidget(ShapeListWidget)
+        loader.registerCustomWidget(ButtonWithHoverWindow)
+
+        self.main_ui = loader.load('main_window.ui')  # 主界面
         self.setCentralWidget(self.main_ui)
-        self.label_ui = SelectWindow(title=self.tr('类别'), button_signal=signal_select_ui_ok_button)
-        self.setFocusPolicy(Qt.StrongFocus)
         self.setWindowTitle(self.tr('花火标注'))
         self.setWindowIcon(QIcon('images/icon.png'))
-        self.resize(1280, 900)
+        self.resize(1200, 900)
+        self.setFocusPolicy(Qt.StrongFocus)
+
+        self.task_ui = loader.load('build_task.ui')
+        self.select_class_window = SelectWindow(title=self.tr('类别'), button_signal=signal_select_class_ok)
+
+        self.main_ui.class_list.set_name('class')
+        self.main_ui.shape_list.set_name('shape')
+        self.main_ui.shape_list.setVisible(False)
+        self.main_ui.tag_list.setVisible(False)
+
+        self.file_select_dlg = QFileDialog(self)
+        self.input_dlg = QInputDialog(self)
 
         self.marquees = QWidget(self)
         self.marquees_layout = QHBoxLayout()
@@ -99,6 +94,9 @@ class ImgCls(QMainWindow):
 
         self.main_ui.img_widget.paint_img('images/bg.png')
         self.log_info('Application opened.', mark_line=True)
+
+        # 获取字符串宽度
+        # self.main_ui.toolBox.currentWidget().fontMetrics().boundingRect('hello'))
         # 工具栏和状态栏
         # self.main_ui.toolbar = self.main_ui.addToolBar('toolbar')
         # tool_show_png = QAction('查看实例分割标注', self)
@@ -136,11 +134,10 @@ class ImgCls(QMainWindow):
         self.action_del_one_class_jsons = QAction(self.tr('删除类别'), self)
         self.action_del_one_class_jsons.triggered.connect(self.delete_one_class_jsons)
         self.menu_seg_class.addAction(self.action_del_one_class_jsons)
-        self.main_ui.listWidget.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_class))
+        self.main_ui.class_list.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_class))
 
-        self.menu_seg_annotation = QMenu(self)
-        self.menu_seg_annotation.setObjectName('label_list')
-        self.main_ui.listWidget_2.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_annotation))
+        self.menu_seg_annotation = QMenu(title='label_list_menu', parent=self)
+        self.main_ui.shape_list.customContextMenuRequested.connect(lambda: self.show_menu(self.menu_seg_annotation))
         self.action_modify_one_shape_class = QAction(self.tr('修改类别'), self)
         self.action_modify_one_shape_class.triggered.connect(self.modify_shape_list_start)
         self.action_delete_one_shape = QAction(self.tr('删除标注'), self)
@@ -177,58 +174,60 @@ class ImgCls(QMainWindow):
         self.main_ui.checkBox_hide_cross.clicked.connect(self.set_hide_cross)
         self.main_ui.checkBox_one_label.pressed.connect(self.raise_label_mode_conflict)
         self.main_ui.checkBox_one_label.toggled.connect(self.set_one_file_label)
-        self.main_ui.checkBox_scan_pinned.toggled.connect(self.set_scan_pinned)
-        self.main_ui.checkBox_scan_unlabeled.toggled.connect(self.set_scan_unlabeled)
-        self.main_ui.checkBox_scan_val.toggled.connect(self.set_scan_val)
         self.main_ui.checkBox_separate_label.pressed.connect(self.raise_label_mode_conflict)
         self.main_ui.checkBox_separate_label.toggled.connect(self.set_separate_label)
-        self.main_ui.checkBox_shape_edit.toggled.connect(self.set_shape_edit_mode)
         self.main_ui.checkBox_scale.toggled.connect(self.set_img_edit_scale)
 
+        self.main_ui.comboBox.currentIndexChanged.connect(self.set_scan_mode)
         self.main_ui.comboBox_2.currentIndexChanged.connect(self.change_shape_type)
 
         self.main_ui.horizontalSlider.valueChanged.connect(self.img_enhance)
         self.main_ui.horizontalSlider_2.valueChanged.connect(self.img_enhance)
         self.main_ui.horizontalSlider_3.valueChanged.connect(self.img_pil_contrast)
 
-        self.main_ui.listWidget.itemClicked.connect(lambda: self.look_or_not_look(double=False))
-        self.main_ui.listWidget.itemDoubleClicked.connect(lambda: self.look_or_not_look(double=True))
-        self.main_ui.listWidget_2.itemClicked.connect(lambda: self.select_shape(i=-1))
-        self.main_ui.listWidget_2.itemSelectionChanged.connect(self.set_info_widget_selected)
+        self.main_ui.class_list.itemClicked.connect(lambda: self.look_or_not_look(double=False))
+        self.main_ui.class_list.itemDoubleClicked.connect(lambda: self.look_or_not_look(double=True))
+        self.main_ui.shape_list.itemSelectionChanged.connect(self.set_info_widget_selected)
 
-        self.main_ui.radioButton_read.toggled.connect(self.set_read_mode)
-
-        self.main_ui.pushButton_open_dir.clicked.connect(self.open_dir)
-        self.main_ui.pushButton_stat.clicked.connect(self.show_class_statistic)
-        self.main_ui.pushButton_pen_color.clicked.connect(self.change_pen_color)
-        self.main_ui.pushButton_cross_color.clicked.connect(self.change_cross_color)
         self.main_ui.pushButton_35.clicked.connect(self.undo_painting)
         self.main_ui.pushButton_36.clicked.connect(self.save_ann_img)
-        self.main_ui.pushButton_37.clicked.connect(self.change_font_color)
-        self.main_ui.pushButton_39.clicked.connect(self.change_pen_color)
         self.main_ui.pushButton_40.clicked.connect(self.clear_painted_img)
         self.main_ui.pushButton_50.clicked.connect(self.set_m_cls_default_c)
         self.main_ui.pushButton_81.clicked.connect(lambda: self.img_rotate(do_paint=True))
         self.main_ui.pushButton_82.clicked.connect(lambda: self.img_flip(h_flip=True, do_paint=True))
         self.main_ui.pushButton_83.clicked.connect(lambda: self.img_flip(v_flip=True, do_paint=True))
-        self.main_ui.pushButton_last.clicked.connect(lambda: self.scan_img(last=True))
-        self.main_ui.pushButton_next.clicked.connect(lambda: self.scan_img(next=True))
-        self.main_ui.pushButton_delete.clicked.connect(lambda: self.del_img(None))
         self.main_ui.pushButton_100.clicked.connect(self.show_compare_img)
-        self.main_ui.pushButton_cls_back.clicked.connect(self.cls_back)
         self.main_ui.pushButton_136.clicked.connect(self.save_edited_img)
         self.main_ui.pushButton_137.clicked.connect(lambda: self.save_edited_img(save_all=True))
         self.main_ui.pushButton_auto_infer.clicked.connect(self.auto_inference)
+        self.main_ui.pushButton_bg.pressed.connect(self.set_semantic_bg_when_press)
+        self.main_ui.pushButton_build_task.pressed.connect(self.show_task_window)
         self.main_ui.pushButton_check_label.clicked.connect(self.check_dataset)
+        self.main_ui.pushButton_class_list.clicked.connect(self.fold_list)
+        self.main_ui.pushButton_cls_back.clicked.connect(self.cls_back)
+        self.main_ui.pushButton_cross_color.clicked.connect(self.change_cross_color)
         self.main_ui.pushButton_delay.clicked.connect(self.set_scan_delay)
-        self.main_ui.pushButton_goto_val.clicked.connect(lambda: self.add_to_train_val(dst_part='val'))
-        self.main_ui.pushButton_goto_train.clicked.connect(lambda: self.add_to_train_val(dst_part='train'))
+        self.main_ui.pushButton_delete.clicked.connect(lambda: self.del_img(None))
+        self.main_ui.pushButton_font_color.clicked.connect(self.change_font_color)
         self.main_ui.pushButton_generate_train.clicked.connect(self.generate_train)
-        self.main_ui.pushButton_random_split.clicked.connect(self.random_train_val)
-        self.main_ui.pushButton_pin.clicked.connect(self.pin_unpin_image)
+        self.main_ui.pushButton_goto_train.clicked.connect(lambda: self.add_to_train_val(dst_part='train'))
+        self.main_ui.pushButton_goto_val.clicked.connect(lambda: self.add_to_train_val(dst_part='val'))
         self.main_ui.pushButton_jump.clicked.connect(self.img_jump)
+        self.main_ui.pushButton_last.clicked.connect(lambda: self.scan_img(last=True))
+        self.main_ui.pushButton_next.clicked.connect(lambda: self.scan_img(next=True))
+        self.main_ui.pushButton_random_split.clicked.connect(self.random_train_val)
+        self.main_ui.pushButton_open_dir.clicked.connect(self.open_dir)
+        self.main_ui.pushButton_pen_color.clicked.connect(self.change_pen_color)
+        self.main_ui.pushButton_pen_color_2.clicked.connect(self.change_pen_color)
+        self.main_ui.pushButton_pin.clicked.connect(self.pin_unpin_image)
         self.main_ui.pushButton_search.clicked.connect(self.img_search)
+        self.main_ui.pushButton_shape_edit.toggled.connect(self.set_shape_edit_mode)
+        self.main_ui.pushButton_shape_list.clicked.connect(self.fold_list)
+        self.main_ui.pushButton_stat.clicked.connect(self.show_class_statistic)
+        self.main_ui.pushButton_tag_list.clicked.connect(self.fold_list)
         self.main_ui.pushButton_update_png.clicked.connect(self.update_sem_pngs)
+
+        self.main_ui.radioButton_read.toggled.connect(self.set_read_mode)
 
         self.main_ui.spinBox.valueChanged.connect(self.change_pen_size)
         self.main_ui.spinBox_5.valueChanged.connect(self.change_font_size)
@@ -239,23 +238,24 @@ class ImgCls(QMainWindow):
         self.main_ui.toolBox.currentChanged.connect(self.set_tool_mode)
 
         signal_auto_save.signal.connect(self.save_one_file_json)
+        signal_check_draw_enable.signal.connect(self.check_draw_enable)
         signal_cocc_done.signal.connect(self.change_one_class_category_done)
         signal_docl_done.signal.connect(self.delete_one_class_jsons_done)
         signal_del_shape.signal.connect(self.del_shape)
         signal_move2new_folder.signal.connect(self.move_to_new_folder)
         signal_one_collection_done.signal.connect(self.save_one_shape)
-        signal_open_label_window.signal.connect(self.show_label_list)
+        signal_open_label_window.signal.connect(self.show_class_selection_list)
         signal_auto_infer_done.signal.connect(self.auto_inference_done)
         signal_ai_progress_value.signal.connect(self.update_progress_value)
         signal_ai_progress_text.signal.connect(self.update_progress_text)
         signal_usp_progress_value.signal.connect(self.update_progress_value)
         signal_usp_progress_text.signal.connect(self.update_progress_text)
-        signal_selected_shape.signal.connect(self.set_shape_selected)
-        signal_select_ui_ok_button.signal.connect(self.save_one_shape)
+        signal_select_class_ok.signal.connect(self.save_one_shape)
         signal_shape_info_update.signal.connect(self.update_shape_info_text)
         signal_show_label_img.signal.connect(self.marquee_show)
         signal_show_plain_img.signal.connect(self.marquee_show)
         signal_stat_info.signal.connect(self.show_class_statistic_done)
+        signal_update_num.signal.connect(self.update_class_list_num)
         signal_usp_done.signal.connect(self.update_sem_pngs_done)
         signal_xy_color2ui.signal.connect(self.show_xy_color)
         sys.stderr = error2app
@@ -445,7 +445,7 @@ class ImgCls(QMainWindow):
         return
 
         os.makedirs(f'{self.img_root}/实例分割/自动标注', exist_ok=True)
-        classes = self.classes_list()
+        classes = AllClasses.classes()
         if len(classes) == 0:
             QMB.critical(self.main_ui, '未找到类别名称', '请先加载类别。')
             return
@@ -508,7 +508,7 @@ class ImgCls(QMainWindow):
 
         self.window_auto_infer_progress.show()
 
-        self.inference_thread = RunInference(sess, self.imgs, self.classes_list(), dp_para, filter_area)
+        self.inference_thread = RunInference(sess, self.imgs, AllClasses.classes(), dp_para, filter_area)
         self.inference_thread.start()
 
     def auto_inference_done(self):
@@ -628,7 +628,7 @@ class ImgCls(QMainWindow):
     def change_font_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
-            self.main_ui.pushButton_37.setStyleSheet('QPushButton { background-color: %s }' % color.name())
+            self.main_ui.pushButton_font_color.setStyleSheet('QPushButton { color: %s }' % color.name())
             self.main_ui.img_widget.change_font(ann_font_color=QColor(color.name()))
 
     def change_font_size(self):
@@ -639,16 +639,15 @@ class ImgCls(QMainWindow):
                                            QLineEdit.Normal)
         if ok:
             new_c = new_c.strip()
-            current_item = self.main_ui.listWidget.currentItem()
-            c_name = current_item.text()
+            cur_c = self.main_ui.class_list.currentItem().text()
             re = QMB.question(self.main_ui, self.tr('修改类别'),
                               self.tr('确定将所有<font color=red>{}</font>修改为'
-                                      '<font color=red>{}</font>吗？').format(c_name, new_c))
+                                      '<font color=red>{}</font>吗？').format(cur_c, new_c))
             if re == QMB.Yes:
                 img_dir = f'{self.img_root}/{self.WorkMode}'
                 self.thread_cocc = ChangeOneClassCategory(self.imgs, img_dir, self.WorkMode, self.OneFileLabel,
                                                           self.SeparateLabel, deepcopy(self.label_file_dict),
-                                                          self.classes_list(), c_name, new_c)
+                                                          AllClasses.classes(), cur_c, new_c)
                 self.thread_cocc.start()
                 self.show_waiting_label()
 
@@ -658,12 +657,10 @@ class ImgCls(QMainWindow):
             if self.OneFileLabel:
                 self.label_file_dict = self.thread_cocc.label_file_dict
 
-            classes = self.classes_list()
-            if new_c in classes:
-                row = self.main_ui.listWidget.currentRow()
-                self.main_ui.listWidget.takeItem(row)
+            if new_c in AllClasses.classes():
+                self.main_ui.class_list.del_row(self.main_ui.class_list.currentRow())
             else:
-                self.main_ui.listWidget.currentItem().setText(new_c)
+                self.main_ui.class_list.modify_cur_c(new_c)
 
             self.save_classes_txt()
             QMB.information(self.main_ui, self.tr('修改完成'), self.tr('已完成, 类别列表已备份，请重新打开目录。'))
@@ -676,10 +673,8 @@ class ImgCls(QMainWindow):
         color = QColorDialog.getColor()
         if color.isValid():
             if self.main_ui.toolBox.currentIndex() == 0:
-                self.main_ui.pushButton_pen_color.setStyleSheet('QPushButton { background-color: %s }' % color.name())
                 self.main_ui.img_widget.change_pen(seg_pen_color=QColor(color.name()))
             elif self.main_ui.toolBox.currentIndex() == 1:
-                self.main_ui.pushButton_39.setStyleSheet('QPushButton { background-color: %s }' % color.name())
                 self.main_ui.img_widget.change_pen(ann_pen_color=QColor(color.name()))
                 self.main_ui.img_widget.ann_pen_color = QColor(color.name())
 
@@ -699,6 +694,12 @@ class ImgCls(QMainWindow):
         if self.has_img_root():
             if self.check_labels():
                 self.check_train_val_set()
+
+    def check_draw_enable(self):
+        if not self.in_edit_mode():
+            QMB.warning(self.main_ui, self.tr('模式错误'), self.tr('请先切换至编辑模式再标注！'))
+        elif self.main_ui.pushButton_bg.objectName() == 'bg':
+            QMB.warning(self.main_ui, self.tr('已标注为背景'), self.tr('当前图片已作为纯背景标注！'))
 
     def check_labels(self):
         if self.OneFileLabel:
@@ -821,7 +822,8 @@ class ImgCls(QMainWindow):
                             if one.split('/')[-1] in dupli_names:
                                 file_remove(one)
 
-                        QMB.information(self.main_ui, self.tr('独立标注模式'), self.tr('共清理{}个文件。').format(dupli_num))
+                        QMB.information(self.main_ui, self.tr('独立标注模式'),
+                                        self.tr('共清理{}个文件。').format(dupli_num))
                         v_imgs = glob_imgs(f'{self.img_root}/{self.WorkMode}/imgs/val', self.WorkMode)
                         self.val_num = len(v_imgs)
                         self.set_tv_bar()
@@ -858,33 +860,7 @@ class ImgCls(QMainWindow):
 
             self.remove_empty_cls_folder()
 
-    def choose_new_color(self):
-        existed_color = []
-        for i in range(self.main_ui.listWidget.count()):
-            item = self.main_ui.listWidget.item(i)
-            existed_color.append(ColorCode[item.foreground().color().name()])
-
-        if len(self.colors) == 0:
-            self.colors = ColorNames.copy()
-
-        shuffle(self.colors)
-        color = QColor(self.colors.pop())
-        while color in existed_color:
-            if len(self.colors) == 0:
-                self.colors = ColorNames.copy()
-            color = QColor(self.colors.pop())
-        return color
-
-    def classes_list(self):
-        classes = []
-        if self.WorkMode in (self.tr('单分类'), self.tr('多分类')):
-            classes = ClsClasses.classes()
-        elif self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
-            for i in range(self.main_ui.listWidget.count()):
-                classes.append(self.main_ui.listWidget.item(i).text())
-        return classes
-
-    def clear_marquee_layout(self):  # 清空self.marquee_layout
+    def clear_marquee_layout(self):
         while self.marquees_layout.count() > 1:
             widget = self.marquees_layout.takeAt(0).widget()
             widget.setParent(None)
@@ -1029,8 +1005,7 @@ class ImgCls(QMainWindow):
     def del_all_shapes(self, del_all=True):
         if del_all:
             self.main_ui.img_widget.clear_all_polygons()
-            self.main_ui.listWidget_2.clear()
-            self.update_shape_list_num()
+            self.main_ui.shape_list.clear()
         else:
             self.main_ui.img_widget.del_polygons()
 
@@ -1137,16 +1112,14 @@ class ImgCls(QMainWindow):
         self.go_next_img()
 
     def del_shape(self, i):
-        item = self.main_ui.listWidget_2.takeItem(i)
-        del item
-        self.update_shape_list_num()
+        self.main_ui.shape_list.del_row(i)
 
         lw = self.current_shape_info_widget()
         if lw and lw.count():
             lw.takeItem(i)
 
     def delete_one_class_jsons(self):
-        c_name = self.main_ui.listWidget.currentItem().text()
+        c_name = self.main_ui.class_list.currentItem().text()
         re = QMB.question(self.main_ui, self.tr('删除类别'), self.tr('确定删除所有<font color=red>{}</font>标注吗？')
                           .format(c_name))
 
@@ -1155,7 +1128,7 @@ class ImgCls(QMainWindow):
             # 删除某一类后，若图片无标注，则对应的标注文件会删除，原图不会，train和val里的对应图片和标注都会删除
             self.thread_docl = DeleteOneClassLabels(self.imgs, img_dir, self.WorkMode, self.OneFileLabel,
                                                     self.SeparateLabel, deepcopy(self.label_file_dict),
-                                                    self.classes_list(), c_name)
+                                                    AllClasses.classes(), c_name)
             self.thread_docl.start()
             self.show_waiting_label()
 
@@ -1164,7 +1137,7 @@ class ImgCls(QMainWindow):
             if self.OneFileLabel:
                 self.label_file_dict = self.thread_docl.label_file_dict
 
-            self.main_ui.listWidget.takeItem(self.main_ui.listWidget.currentRow())
+            self.main_ui.class_list.del_row(self.main_ui.class_list.currentRow())
             self.save_classes_txt()
             QMB.information(self.main_ui, self.tr('删除完成'), self.tr('已完成, 类别列表已备份，请重新打开目录。'))
             self.set_work_mode()
@@ -1198,7 +1171,7 @@ class ImgCls(QMainWindow):
         if is_ok:
             lines = ''
             txt_path = f'{self.img_root}/{self.WorkMode}/{txt}.txt'
-            for one_c in self.classes_list():
+            for one_c in AllClasses.classes():
                 lines += f'{one_c},\n'
 
             with open(txt_path, 'w', encoding='utf-8') as f:
@@ -1217,6 +1190,15 @@ class ImgCls(QMainWindow):
         new_file_path = osp.join(dst_dir, src_path.split('/')[-1])
         if self.del_existed_file(src_path, new_file_path):
             shutil.move(src_path, dst_dir)
+
+    def fold_list(self):
+        button = self.sender().objectName()
+        if button == 'pushButton_class_list':
+            self.main_ui.class_list.setVisible(not self.main_ui.class_list.isVisible())
+        elif button == 'pushButton_shape_list':
+            self.main_ui.shape_list.setVisible(not self.main_ui.shape_list.isVisible())
+        elif button == 'pushButton_tag_list':
+            self.main_ui.tag_list.setVisible(not self.main_ui.tag_list.isVisible())
 
     def has_labeled(self, img_path):
         img_name = img_path.split('/')[-1]
@@ -1276,6 +1258,8 @@ class ImgCls(QMainWindow):
         if self.OneFileLabel:
             if self.label_file_dict['labels'].get(img_name):
                 return self.label_file_dict['labels'][img_name]['tv']
+            else:
+                return 'none'
         elif self.SeparateLabel:
             if self.WorkMode == self.tr('单分类'):
                 c_name = self.cls_has_classified(img_path)
@@ -1314,7 +1298,7 @@ class ImgCls(QMainWindow):
 
     def get_qimg_png(self, img_path):
         seg_mask = None
-        classes = self.classes_list()
+        classes = AllClasses.classes()
         if self.OneFileLabel:
             img_name = img_path.split('/')[-1]
             img_dict = self.label_file_dict['labels'].get(img_name)
@@ -1393,13 +1377,6 @@ class ImgCls(QMainWindow):
             return False
         return True
 
-    def has_locked_shape(self):
-        for i in range(self.main_ui.listWidget_2.count()):
-            item = self.main_ui.listWidget_2.item(i)
-            if item.icon().cacheKey() != 0:
-                return item
-        return False
-
     def has_looking_classes(self, img_path):
         if self.OneFileLabel:
             img_name = img_path.split('/')[-1]
@@ -1421,7 +1398,7 @@ class ImgCls(QMainWindow):
             polygons = []
 
         for one in polygons:
-            if one['category'] in self.looking_list:
+            if one['category'] in self.looking_classes:
                 return True
         return False
 
@@ -1439,7 +1416,7 @@ class ImgCls(QMainWindow):
             self.paint_changed_cv2_img()
 
     def img_enhance_reset(self):
-        self.img_h_flip, self.img_v_flip = False, False
+        self.ImgHFlip, self.ImgVFlip = False, False
         self.img_rotate_count = 0
         self.main_ui.horizontalSlider.setValue(0)  # setValue 自动触发valueChanged信号
         self.main_ui.horizontalSlider_2.setValue(100)
@@ -1450,11 +1427,11 @@ class ImgCls(QMainWindow):
             if h_flip:
                 self.cv2_img_changed = cv2.flip(self.cv2_img_changed, 1)
                 if do_paint:
-                    self.img_h_flip = not self.img_h_flip
+                    self.ImgHFlip = not self.ImgHFlip
             if v_flip:
                 self.cv2_img_changed = cv2.flip(self.cv2_img_changed, 0)
                 if do_paint:
-                    self.img_v_flip = not self.img_v_flip
+                    self.ImgVFlip = not self.ImgVFlip
 
             if do_paint:
                 self.paint_changed_cv2_img()
@@ -1542,27 +1519,19 @@ class ImgCls(QMainWindow):
                 self.reset_seg_widgets()
                 self.init_button_group(self.main_ui.groupBox_2, txt)
             elif self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
-                self.main_ui.listWidget.clear()
-                self.label_ui.ui.listWidget.clear()
+                self.main_ui.class_list.clear()
+                self.select_class_window.ui.listWidget.clear()
 
-                shuffle(self.colors)
                 with open(txt, 'r', encoding='utf-8') as f:
                     classes = f.readlines()
                     classes = [aa.replace('，', ',').split(',')[0].strip() for aa in classes]
 
                 for one in classes:
                     if one != '':
-                        item = QListWidgetItem(one)
-                        if len(self.colors) == 0:
-                            self.colors = ColorNames.copy()
-                        color = self.colors.pop()
-                        item.setForeground(QColor(color))
-                        print(one, color)
-                        self.label_ui.ui.listWidget.addItem(item.clone())
-                        item.setIcon(self.icon_look)
-                        self.main_ui.listWidget.addItem(item.clone())
-
-                self.update_class_list_num()
+                        item, _ = self.main_ui.class_list.new_class_item(one)
+                        self.select_class_window.ui.listWidget.addItem(item.clone())
+                        self.main_ui.class_list.set_look(item)
+                        self.main_ui.class_list.add_item(item)
 
         self.main_ui.setFocus()
 
@@ -1606,43 +1575,17 @@ class ImgCls(QMainWindow):
                 if content:
                     self.pinned_imgs = content
 
-    def load_trans_qm(self):
-        self.app = QApplication.instance()
-        with open('project.json', 'r') as f:
-            self.language = json.load(f)['language']
-
-        if self.language == 'EN':
-            self.trans_main_window = QTranslator()  # QTranslator需要作为自己的属性，不然容易出bug，容易出现不翻译的情况
-            self.trans_main = QTranslator()
-            self.trans_img_show = QTranslator()
-            self.trans_class_button = QTranslator()
-
-            self.trans_main_window.load('ts_files/main_window.qm')
-            self.trans_main.load('ts_files/main.qm')
-            self.trans_img_show.load('ts_files/img_show_widget.qm')
-            self.trans_class_button.load('ts_files/class_button.qm')
-
-            self.app.installTranslator(self.trans_main_window)
-            self.app.installTranslator(self.trans_main)
-            self.app.installTranslator(self.trans_img_show)
-            self.app.installTranslator(self.trans_class_button)
-
-        self.image_folder = self.tr('原图')
-        self.label_folder = self.tr('标注')
-        self.ann_folder = self.tr('注释图片')
-
     def lock_shape(self):
-        cur_item = self.main_ui.listWidget_2.currentItem()
+        cur_item = self.main_ui.shape_list.currentItem()
         if self.action_lock_shape.text() == self.tr('锁定标注'):
-            item = self.has_locked_shape()
+            item = self.main_ui.shape_list.has_locked_shape()
             if item:
-                item.setIcon(QIcon())
+                self.main_ui.shape_list.set_shape_unlocked(item)
 
-            cur_item.setIcon(self.icon_shape_locked)
+            self.main_ui.shape_list.set_shape_locked(cur_item)
             self.main_ui.img_widget.set_shape_locked(True)
-            self.select_shape(self.main_ui.listWidget_2.row(cur_item))
         else:
-            cur_item.setIcon(QIcon())
+            self.main_ui.shape_list.set_shape_unlocked(cur_item)
             self.main_ui.img_widget.set_shape_locked(False)
 
         self.main_ui.setFocus()
@@ -1678,31 +1621,8 @@ class ImgCls(QMainWindow):
                 self.sys_error_text = []
 
     def look_or_not_look(self, double=False):
-        item = self.main_ui.listWidget.currentItem()
-
-        if double:
-            item.setIcon(self.icon_look)
-            row = self.main_ui.listWidget.currentRow()
-            count = self.main_ui.listWidget.count()
-            for i in range(count):
-                if i != row:
-                    self.main_ui.listWidget.item(i).setIcon(self.icon_not_look)
-        else:
-            if item.icon().cacheKey() == self.icon_look_key:
-                item.setIcon(self.icon_not_look)
-            elif item.icon().cacheKey() == self.icon_not_look_key:
-                item.setIcon(self.icon_look)
-
+        self.main_ui.class_list.set_looking(double)
         self.main_ui.setFocus()
-
-    def looking_classes(self):
-        classes = []
-        for i in range(self.main_ui.listWidget.count()):
-            item = self.main_ui.listWidget.item(i)
-            if item.icon().cacheKey() == self.icon_look_key:
-                classes.append(item.text())
-
-        return classes, len(classes) == self.main_ui.listWidget.count()
 
     def marquee_add(self, the_first_one=False):
         if the_first_one:
@@ -1778,7 +1698,7 @@ class ImgCls(QMainWindow):
         if self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
             if show_png:
                 if self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
-                    classes = self.classes_list()
+                    classes = AllClasses.classes()
                     if len(classes) == 0:
                         QMB.warning(self.main_ui, self.tr('类别数量为0'), self.tr('当前类别数量为0，请先加载类别。'))
                         return
@@ -1859,34 +1779,32 @@ class ImgCls(QMainWindow):
                             Going = False
 
     def modify_shape_list_start(self):
-        if self.main_ui.checkBox_shape_edit.isChecked():
+        if self.main_ui.pushButton_shape_edit.isChecked():
             self.LabelUiCallByMo = True
-            self.show_label_list()
+            self.show_class_selection_list()
 
     def modify_shape_list_end(self, text):
-        i = self.main_ui.listWidget_2.currentRow()
-        item = self.main_ui.listWidget.findItems(text, Qt.MatchExactly)
+        i = self.main_ui.shape_list.currentRow()
+        item = self.main_ui.class_list.findItems(text, Qt.MatchExactly)
         if len(item):
             name = item[0].text()
             color = item[0].foreground().color()
         else:
             name = text
-            color = self.choose_new_color()
-            item = QListWidgetItem(name)
-            item.setForeground(color)
-            self.label_ui.ui.listWidget.addItem(item.clone())
-            item.setIcon(self.icon_look)
-            self.main_ui.listWidget.addItem(item.clone())
-            self.update_class_list_num()
+            item, color = self.main_ui.class_list.new_class_item(name)
+            color = QColor(color)
+            self.select_class_window.ui.listWidget.addItem(item.clone())
+            self.main_ui.class_list.set_look(item)
+            self.main_ui.class_list.add_item(item)
             self.sem_class_modified_tip()
 
         self.main_ui.img_widget.modify_polygon_class(i, name, color.name())
-        old_item = self.main_ui.listWidget_2.currentItem()
+        old_item = self.main_ui.shape_list.currentItem()
         old_class = old_item.text()
         old_item.setText(name)
         old_item.setForeground(color)
 
-        row = self.main_ui.listWidget_2.currentRow()
+        row = self.main_ui.shape_list.currentRow()
         lw = self.current_shape_info_widget()
         if lw is not None and lw.count():
             info_item = lw.item(row)
@@ -1894,7 +1812,7 @@ class ImgCls(QMainWindow):
             info_item.setText(new_text)
             info_item.setForeground(color)
 
-        self.label_ui.close()
+        self.select_class_window.close()
         self.main_ui.setFocus()
 
     def oc_shape_info(self):
@@ -1964,8 +1882,7 @@ class ImgCls(QMainWindow):
 
     def polygons_to_img(self):
         self.main_ui.img_widget.clear_all_polygons()
-        self.main_ui.listWidget_2.clear()
-        self.update_shape_list_num()
+        self.main_ui.shape_list.clear()
 
         img_path = self.imgs[self.cur_i]
         if '图片已删除' in img_path:
@@ -1993,24 +1910,20 @@ class ImgCls(QMainWindow):
 
         for one in polygons:
             cate = one['category']
-            if cate in self.classes_list():
-                item = self.main_ui.listWidget.findItems(cate, Qt.MatchExactly)[0]
+            if cate in AllClasses.classes():
+                item = self.main_ui.class_list.findItems(cate, Qt.MatchExactly)[0]
                 one['qcolor'] = item.foreground().color().name()
 
-            color = QColor(one['qcolor'])
-            item = QListWidgetItem(cate)
-            item.setForeground(color)
-            self.main_ui.listWidget_2.addItem(item.clone())
+            item, _ = self.main_ui.class_list.new_class_item(cate, color=one['qcolor'])
+            self.main_ui.shape_list.add_item(item.clone())
             self.show_shape_info(one)
 
-            if cate not in self.classes_list():
-                self.label_ui.ui.listWidget.addItem(item.clone())
-                item.setIcon(self.icon_look)
-                self.main_ui.listWidget.addItem(item.clone())
+            if cate not in AllClasses.classes():
+                self.select_class_window.ui.listWidget.addItem(item.clone())
+                self.main_ui.class_list.set_look(item)
+                self.main_ui.class_list.add_item(item)
                 self.sem_class_modified_tip()
 
-        self.update_class_list_num()
-        self.update_shape_list_num()
         # polygons的嵌套的数据结构导致数据容易发生原位修改，哪怕使用了.get()方法和函数传参也一样，具体原理未知
         self.main_ui.img_widget.prepare_polygons(deepcopy(polygons), img_h, img_w)
 
@@ -2138,12 +2051,10 @@ class ImgCls(QMainWindow):
         self.cv2_img_changed = None
         self.cls_op_track = []
         self.bottom_img_text = ''
-        self.looking_list = []
         self.LookingAll = True
+        self.looking_classes = []
         self.sys_error_text = []
         self.log_created_time = get_datetime().split(' ')[0]
-        self.colors = ColorNames.copy()
-
         self.window_auto_infer_progress = None
         self.window_class_stat = None
         self.window_compare = None
@@ -2151,16 +2062,12 @@ class ImgCls(QMainWindow):
         self.window_marquee_label = None
         self.window_usp_progress = None
 
-        ClsClasses.clear()
-
     def reset_seg_widgets(self):  # 清除控件上的所有标注图形，清空标注列表、类别字典
         self.main_ui.img_widget.clear_all_polygons()
-        self.main_ui.listWidget.clear()
-        self.main_ui.listWidget_2.clear()
-        self.update_class_list_num()
-        self.update_shape_list_num()
-        self.label_ui.ui.listWidget.clear()
-        self.main_ui.img_widget.collection_ui.ui.listWidget.clear()
+        self.main_ui.class_list.clear()
+        self.main_ui.shape_list.clear()
+        self.select_class_window.ui.listWidget.clear()
+        self.main_ui.img_widget.collection_window.ui.listWidget.clear()
         self.main_ui.img_widget.set_shape_locked(False)
 
     def save_ann_img(self):
@@ -2177,7 +2084,7 @@ class ImgCls(QMainWindow):
         lines = ''
         txt_path = f'{self.img_root}/{self.WorkMode}/classes_backup.txt'
 
-        classes = self.classes_list()
+        classes = AllClasses.classes()
         if self.main_ui.lineEdit.text() and len(classes):
             for one_c in classes:
                 lines += f'{one_c},\n'
@@ -2199,7 +2106,8 @@ class ImgCls(QMainWindow):
 
         json_polygons = self.main_ui.img_widget.get_json_polygons()
 
-        if self.WorkMode == self.tr('语义分割') and self.main_ui.checkBox_sem_bg.isChecked() and (not json_polygons):
+        if self.WorkMode == self.tr('语义分割') and self.main_ui.pushButton_bg.objectName() == 'bg':
+            assert not json_polygons, 'json_polygons should be empty when label is bg!'
             json_polygons = ['bg']
 
         one_label = {'img_height': img_h, 'img_width': img_w, 'tv': tv, 'polygons': json_polygons}
@@ -2234,7 +2142,7 @@ class ImgCls(QMainWindow):
                     if json_polygons == ['bg']:
                         json_polygons = []
 
-                    seg_class_names = self.classes_list()
+                    seg_class_names = AllClasses.classes()
                     seg_mask = get_seg_mask(seg_class_names, json_polygons, img_h, img_w)
                     if seg_mask is not None:
                         cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(png_path)
@@ -2385,7 +2293,7 @@ class ImgCls(QMainWindow):
                     ori_dict = json.load(f)
 
             if ori_dict != self.label_file_dict:
-                self.label_file_dict['classes'] = self.classes_list()
+                self.label_file_dict['classes'] = AllClasses.classes()
                 with open(json_path, 'w') as f:
                     json.dump(self.label_file_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
@@ -2398,28 +2306,25 @@ class ImgCls(QMainWindow):
             self.LabelUiCallByMo = False
         else:
             if self.in_edit_mode() and text:
-                if text not in self.classes_list() and text != '':
-                    color = self.choose_new_color()
-                    item = QListWidgetItem(text)
-                    item.setForeground(color)
-                    self.label_ui.ui.listWidget.addItem(item.clone())
-                    self.main_ui.listWidget_2.addItem(item.clone())
-                    item.setIcon(self.icon_look)
-                    self.main_ui.listWidget.addItem(item.clone())
+                if text not in AllClasses.classes() and text != '':
+                    item, color = self.main_ui.class_list.new_class_item(text)
+                    self.select_class_window.ui.listWidget.addItem(item.clone())
+                    self.main_ui.shape_list.add_item(item.clone())
+
+                    self.main_ui.class_list.set_look(item)
+                    self.main_ui.class_list.add_item(item)
                     self.sem_class_modified_tip()
                 else:
-                    item = self.main_ui.listWidget.findItems(f'{text}', Qt.MatchExactly)[0].clone()
+                    item = self.main_ui.class_list.findItems(f'{text}', Qt.MatchExactly)[0].clone()
                     item_2 = item.clone()
                     item_2.setIcon(QIcon())
-                    self.main_ui.listWidget_2.addItem(item_2)
-                    color = item.foreground().color()
+                    self.main_ui.shape_list.add_item(item_2)
+                    color = item.foreground().color().name()
 
-                self.update_class_list_num()
-                self.update_shape_list_num()
-                self.main_ui.img_widget.one_polygon_done(color.name(), text)
+                self.main_ui.img_widget.one_polygon_done(color, text)
                 self.show_shape_info(self.main_ui.img_widget.all_polygons[-1])
 
-            self.label_ui.close()
+            self.select_class_window.close()
 
     def scan_img(self, last=False, next=False, count=1, from_jump=False):
         scan_start = time.time()
@@ -2432,27 +2337,34 @@ class ImgCls(QMainWindow):
 
         if not self.EditImgMode:
             if not from_jump:
+                part_scan = self.main_ui.comboBox.currentText()
                 # 只看部分类别功能
                 if self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
-                    _, self.LookingAll = self.looking_classes()
+                    self.LookingAll = self.main_ui.class_list.looking_all()
+                    self.looking_classes = self.main_ui.class_list.looking_classes()
                     if not self.LookingAll:
-                        if self.main_ui.checkBox_scan_unlabeled.isChecked():
+                        if part_scan == self.tr('浏览未标注'):
                             QMB.critical(self.main_ui, self.tr('功能冲突'),
-                                         self.tr('浏览部分类别的功能和只看收藏图片的功能'
-                                                 '以及只看未标注图片的功能冲突，请先关闭其中一项。'))
+                                         self.tr('浏览部分类别的功能和浏览未标注的功能冲突，请先关闭其中一项。'))
                             return
 
                         count = self.scan_part_classes(last=last, next=next)
 
-                # 只看收藏图片功能
-                if self.main_ui.checkBox_scan_pinned.isChecked():
+                # 只看带标签图片功能  todo-------------------------
+                if part_scan == self.tr('按标签浏览'):
                     count = self.scan_pinned_imgs(last=last, next=next)
-                # 只看验证集功能
-                if self.main_ui.checkBox_scan_val.isChecked():
-                    count = self.scan_val_imgs(last=last, next=next)
-                # 只看未标注图片功能
-                if self.main_ui.checkBox_scan_unlabeled.isChecked():
+
+                if part_scan == self.tr('浏览未标注'):
                     count = self.scan_unlabeled_imgs(last=last, next=next)
+
+                if part_scan == self.tr('浏览未划分'):
+                    count = self.scan_train_val_imgs(split='none', last=last, next=next)
+
+                if part_scan == self.tr('浏览训练集'):
+                    count = self.scan_train_val_imgs(split='train', last=last, next=next)
+
+                if part_scan == self.tr('浏览验证集'):
+                    count = self.scan_train_val_imgs(split='val', last=last, next=next)
 
             if self.in_edit_mode():
                 if self.WorkMode == self.tr('多分类'):
@@ -2478,7 +2390,7 @@ class ImgCls(QMainWindow):
             if self.WorkMode in (self.tr('语义分割'), self.tr('实例分割')):
                 self.go_next_marquee_window()
             if self.WorkMode == self.tr('语义分割'):
-                self.set_semantic_bg()
+                self.set_semantic_bg_when_scan()
 
             scan_time = (time.time() - scan_start) * 1000
             if scan_time < self.scan_delay:
@@ -2516,7 +2428,6 @@ class ImgCls(QMainWindow):
         return count
 
     def scan_part_classes(self, last=False, next=False):  # 只浏览部分类别的标注的功能
-        self.looking_list, _ = self.looking_classes()
         i = self.cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
@@ -2555,7 +2466,7 @@ class ImgCls(QMainWindow):
         count = abs(i - self.cur_i)
         return count
 
-    def scan_val_imgs(self, last=False, next=False):
+    def scan_train_val_imgs(self, split, last=False, next=False):
         i = self.cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
@@ -2568,7 +2479,7 @@ class ImgCls(QMainWindow):
 
             tv = self.get_img_tv(self.imgs[i])
 
-            if tv == 'val':
+            if tv == split:
                 if not self.LookingAll:
                     if self.has_looking_classes(self.imgs[i]):
                         count = abs(i - self.cur_i)
@@ -2581,13 +2492,6 @@ class ImgCls(QMainWindow):
         count = abs(i - self.cur_i)
         return count
 
-    def select_shape(self, i):
-        if i == -1:
-            if not self.has_locked_shape():
-                signal_selected_label_item.send(self.main_ui.listWidget_2.currentRow())
-        else:
-            signal_selected_label_item.send(i)
-
     def sem_class_modified_tip(self):
         if self.WorkMode == self.tr('语义分割') and self.SeparateLabel \
                 and self.main_ui.radioButton_write.isChecked():
@@ -2599,17 +2503,17 @@ class ImgCls(QMainWindow):
         self.action_export_cls_classes.setDisabled(self.img_root == '')
         self.action_load_seg_class.setDisabled(self.img_root == '')
         self.action_export_seg_class.setDisabled(self.img_root == '')
-        self.action_modify_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_del_one_class_jsons.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_modify_one_shape_class.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_delete_one_shape.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_delete_all.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
-        self.action_lock_shape.setDisabled(not self.main_ui.checkBox_shape_edit.isChecked())
+
+        stat = not self.main_ui.pushButton_shape_edit.isChecked()
+        self.action_modify_one_class_jsons.setDisabled(stat)
+        self.action_del_one_class_jsons.setDisabled(stat)
+        self.action_modify_one_shape_class.setDisabled(stat)
+        self.action_delete_one_shape.setDisabled(stat)
+        self.action_delete_all.setDisabled(stat)
+        self.action_lock_shape.setDisabled(stat)
 
     def set_buttons_checked(self):  # open_dir和set_work_mode共同的按钮的setChecked操作在这设置
         self.main_ui.radioButton_read.setChecked(True)
-        self.main_ui.checkBox_scan_unlabeled.setChecked(False)
-        self.main_ui.checkBox_scan_val.setChecked(False)
 
     def set_hide_cross(self):
         self.main_ui.img_widget.set_hide_cross(self.main_ui.checkBox_hide_cross.isChecked())
@@ -2626,24 +2530,26 @@ class ImgCls(QMainWindow):
     def set_info_widget_selected(self):
         lw = self.current_shape_info_widget()
         if lw is not None and lw.count():
-            row = self.main_ui.listWidget_2.currentRow()
+            row = self.main_ui.shape_list.currentRow()
             if lw.item(row):
                 lw.item(row).setSelected(True)
 
     def set_language(self, language):
         # 不重启也可以实时翻译，但是这个问题无法解决，QAction需要在changeEvent里逐个添加翻译代码
         # https://forum.qt.io/topic/141742/how-to-translate-text-with-quiloader
+
+        app = QApplication.instance()
         if language == 'CN' and self.language == 'EN':
             choice = QMB.question(self.main_ui, 'Switch to Chinese',
                                   'The app is going to restart, please ensure all work is saved, continue?')
             if choice == QMB.Yes:
                 self.language = 'CN'
-                self.app.exit(99)
+                app.exit(99)
         elif language == 'EN' and self.language == 'CN':
             choice = QMB.question(self.main_ui, '切换为英文', '软件将重新打开，请确保所有工作已保存，继续吗？')
             if choice == QMB.Yes:
                 self.language = 'EN'
-                self.app.exit(99)
+                app.exit(99)
 
     def set_m_cls_default_c(self):
         text, is_ok = QInputDialog().getText(self, self.tr('默认类别'), self.tr('请输入类别名称'),
@@ -2672,42 +2578,41 @@ class ImgCls(QMainWindow):
 
         if self.WorkMode in (self.tr('语义分割'), self.tr('目标检测'), self.tr('实例分割')):
             if self.main_ui.radioButton_read.isChecked():
-                self.main_ui.checkBox_shape_edit.setChecked(False)
-                self.main_ui.checkBox_sem_bg.setDisabled(True)
+                self.main_ui.pushButton_shape_edit.setChecked(False)
+                self.main_ui.pushButton_bg.setDisabled(True)
 
-            self.main_ui.checkBox_shape_edit.setDisabled(self.main_ui.radioButton_read.isChecked())
+            self.main_ui.pushButton_shape_edit.setDisabled(self.main_ui.radioButton_read.isChecked())
 
     def set_scan_delay(self):
         delay, is_ok = self.input_dlg.getInt(self.main_ui, self.tr('切图延时'), self.tr('单位：ms'), 0, 0, 9999, 100)
         if is_ok:
             self.scan_delay = delay
 
-    def set_scan_pinned(self):
-        if self.main_ui.checkBox_scan_pinned.isChecked():
-            self.main_ui.checkBox_scan_val.setChecked(False)
-            self.main_ui.checkBox_scan_unlabeled.setChecked(False)
+    def set_scan_mode(self):
+        self.main_ui.setFocus()
 
-    def set_scan_unlabeled(self):
-        if self.main_ui.checkBox_scan_unlabeled.isChecked():
-            self.main_ui.checkBox_scan_val.setChecked(False)
-            self.main_ui.checkBox_scan_pinned.setChecked(False)
+    def set_semantic_bg_when_press(self):
+        if self.main_ui.pushButton_bg.objectName() == 'non_bg':
+            self.main_ui.pushButton_bg.setObjectName('bg')
+            self.main_ui.pushButton_bg.setIcon(QIcon('images/bg_label'))
+        elif self.main_ui.pushButton_bg.objectName() == 'bg':
+            self.main_ui.pushButton_bg.setObjectName('non_bg')
+            self.main_ui.pushButton_bg.setIcon(QIcon('images/non_bg_label'))
 
-    def set_scan_val(self):
-        if self.main_ui.checkBox_scan_val.isChecked():
-            self.main_ui.checkBox_scan_unlabeled.setChecked(False)
-            self.main_ui.checkBox_scan_pinned.setChecked(False)
-
-    def set_semantic_bg(self):
+    def set_semantic_bg_when_scan(self):
         img_path = self.imgs[self.cur_i]
         if self.EditImgMode or '图片已删除' in img_path:
             return
 
         img_name = img_path.split('/')[-1]
-        check_stat = False
+        check_stat = self.main_ui.pushButton_bg.objectName() == 'bg' if self.in_edit_mode() else False
         if self.OneFileLabel:
             img_dict = self.label_file_dict['labels'].get(img_name)
-            if img_dict and img_dict['polygons'] == ['bg']:
-                check_stat = True
+            if img_dict:  # 在编辑模式下如果未标注就继承上次的isChecked()
+                if img_dict['polygons'] == ['bg']:
+                    check_stat = True
+                else:
+                    check_stat = False
         elif self.SeparateLabel:
             json_path = path_to(img_path, img2json=True)
             if osp.exists(json_path):
@@ -2715,8 +2620,15 @@ class ImgCls(QMainWindow):
                     content = json.load(f)
                     if content['polygons'] == ['bg']:
                         check_stat = True
+                    else:
+                        check_stat = False
 
-        self.main_ui.checkBox_sem_bg.setChecked(check_stat)
+        if check_stat:
+            self.main_ui.pushButton_bg.setObjectName('bg')
+            self.main_ui.pushButton_bg.setIcon(QIcon('images/bg_label'))
+        else:
+            self.main_ui.pushButton_bg.setObjectName('non_bg')
+            self.main_ui.pushButton_bg.setIcon(QIcon('images/non_bg_label'))
 
     def set_separate_label(self):
         self.SeparateLabel = self.main_ui.checkBox_separate_label.isChecked()
@@ -2731,20 +2643,20 @@ class ImgCls(QMainWindow):
             self.main_ui.checkBox_one_label.setChecked(True)
 
     def set_shape_edit_mode(self):
-        self.main_ui.img_widget.set_tool_mode(shape_edit=self.main_ui.checkBox_shape_edit.isChecked())
+        stat = self.main_ui.pushButton_shape_edit.isChecked()
+        if stat:
+            self.main_ui.pushButton_shape_edit.setIcon(QIcon('images/edit_on.png'))
+        else:
+            self.main_ui.pushButton_shape_edit.setIcon(QIcon('images/edit_off.png'))
+        self.main_ui.img_widget.set_tool_mode(shape_edit=stat)
         self.set_action_disabled()
-
-    def set_shape_selected(self, i):
-        item = self.main_ui.listWidget_2.item(i)
-        self.main_ui.listWidget_2.setCurrentItem(item)
-        item.setSelected(True)
 
     def set_tool_mode(self):
         self.main_ui.img_widget.clear_scaled_img(to_undo=False)
         self.main_ui.img_widget.clear_all_polygons()
         draw = self.main_ui.toolBox.currentIndex() == 0
         ann = self.main_ui.toolBox.currentIndex() == 1 and self.img_root
-        shape_edit = self.main_ui.toolBox.currentIndex() == 0 and self.main_ui.checkBox_shape_edit.isChecked()
+        shape_edit = self.main_ui.toolBox.currentIndex() == 0 and self.main_ui.pushButton_shape_edit.isChecked()
         self.main_ui.img_widget.set_tool_mode(draw, shape_edit, ann)
 
         if self.main_ui.toolBox.currentIndex() == 1:
@@ -2757,14 +2669,19 @@ class ImgCls(QMainWindow):
             width = abs(0.5 - train_ratio) * 2
             self.main_ui.label_train.setText(f' train: {self.train_num}, {train_ratio * 100:.1f}%')
             self.main_ui.label_val.setText(f'val: {self.val_num}, {(1 - train_ratio) * 100:.1f}% ')
+            train_base_ss = "border-top-left-radius: 4px;border-bottom-left-radius: 4px;"
+            val_base_ss = "border-top-right-radius: 4px;border-bottom-right-radius: 4px;"
+
             if train_ratio > 0.5:
-                self.main_ui.label_train.setStyleSheet("background-color: rgb(243, 81, 122)")
+                self.main_ui.label_train.setStyleSheet(train_base_ss + "background-color: rgb(243, 81, 122)")
                 self.main_ui.label_val.setStyleSheet(
+                    val_base_ss +
                     f"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, "
                     f"stop:{width} rgb(243, 81, 122), stop:{width + 0.0001} rgb(85, 170, 255))")
             else:
-                self.main_ui.label_val.setStyleSheet("background-color: rgb(85, 170, 255)")
+                self.main_ui.label_val.setStyleSheet(val_base_ss + "background-color: rgb(85, 170, 255)")
                 self.main_ui.label_train.setStyleSheet(
+                    train_base_ss +
                     f"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, "
                     f"stop:{1 - width} rgb(243, 81, 122), stop:{1.0001 - width} rgb(85, 170, 255))")
 
@@ -2819,10 +2736,13 @@ class ImgCls(QMainWindow):
         self.main_ui.comboBox_2.setCurrentIndex(0)
         self.main_ui.comboBox_2.setDisabled(False)
         self.main_ui.label_train.setText(' train: 0')
-        self.main_ui.label_train.setStyleSheet('background-color: rgb(200, 200, 200);')
+        self.main_ui.label_train.setStyleSheet('border-top-left-radius: 4px;'
+                                               'border-bottom-left-radius: 4px;'
+                                               'background-color: rgb(200, 200, 200);')
         self.main_ui.label_val.setText('val: 0 ')
-        self.main_ui.label_val.setStyleSheet('background-color: rgb(200, 200, 200);')
-
+        self.main_ui.label_val.setStyleSheet('border-top-right-radius: 4px;'
+                                             'border-bottom-right-radius: 4px;'
+                                             'background-color: rgb(200, 200, 200);')
         self.reset_init_variables()
         self.set_buttons_checked()
         self.set_action_disabled()
@@ -2864,16 +2784,23 @@ class ImgCls(QMainWindow):
         self.main_ui.page_4.setDisabled(tab_index == 0 or tab_index == 1)
 
         stat = self.main_ui.radioButton_read.isChecked() or tab_index == 0 or tab_index == 1
-        self.main_ui.checkBox_shape_edit.setChecked(False)
-        self.main_ui.checkBox_shape_edit.setDisabled(stat)
-
+        self.main_ui.pushButton_shape_edit.setChecked(False)
+        self.main_ui.pushButton_shape_edit.setDisabled(stat)
         self.main_ui.pushButton_auto_infer.setDisabled(tab_index == 0 or tab_index == 1)
 
         self.main_ui.img_widget.paint_img('images/bg.png')
         self.main_ui.img_widget.clear_all_polygons()
 
+    def show_class_selection_list(self):
+        geo = self.frameGeometry()
+        x, y, w, h = geo.x(), geo.y(), geo.width(), geo.height()
+        new_x = x + int(w / 3)
+        new_y = y + int(h / 3)
+        self.select_class_window.move(new_x, new_y)
+        self.select_class_window.show()
+
     def show_class_statistic(self):
-        self.thread_cs = ClassStatistics(self.WorkMode, self.img_root, self.img_num, self.classes_list(),
+        self.thread_cs = ClassStatistics(self.WorkMode, self.img_root, self.img_num, AllClasses.classes(),
                                          self.OneFileLabel, deepcopy(self.label_file_dict), self.SeparateLabel,
                                          self.language)
 
@@ -2916,7 +2843,7 @@ class ImgCls(QMainWindow):
                 contrast_img = contrast_enhancer.enhance(pil_v)
                 self.cv2_img_changed = np.array(contrast_img)
 
-        self.img_flip(h_flip=self.img_h_flip, v_flip=self.img_v_flip, do_paint=False)
+        self.img_flip(h_flip=self.ImgHFlip, v_flip=self.ImgVFlip, do_paint=False)
         if self.img_rotate_count:
             for _ in range(self.img_rotate_count % 4):
                 self.img_rotate(do_paint=False)
@@ -2943,14 +2870,6 @@ class ImgCls(QMainWindow):
 
             self.paint_ann_img()
 
-    def show_label_list(self):
-        geo = self.frameGeometry()
-        x, y, w, h = geo.x(), geo.y(), geo.width(), geo.height()
-        new_x = x + int(w / 3)
-        new_y = y + int(h / 3)
-        self.label_ui.move(new_x, new_y)
-        self.label_ui.show()
-
     def show_label_to_ui(self):
         if not self.EditImgMode:
             if self.WorkMode == self.tr('单分类'):
@@ -2962,8 +2881,8 @@ class ImgCls(QMainWindow):
                 self.polygons_to_img()
 
     def show_menu(self, menu):  # 在鼠标位置显示菜单
-        if menu.objectName() == 'label_list':
-            item = self.main_ui.listWidget_2.currentItem()
+        if menu.title() == 'label_list_menu':
+            item = self.main_ui.shape_list.currentItem()
             if item is not None:
                 if item.icon().cacheKey() == 0:
                     self.action_lock_shape.setText(self.tr('锁定标注'))
@@ -2984,6 +2903,9 @@ class ImgCls(QMainWindow):
             item.setForeground(color)
             lw.addItem(item)
 
+    def show_task_window(self):
+        self.task_ui.show()
+
     def show_waiting_label(self):
         self.waiting_label = WaitingLabel(self, language=self.language)
         geo_self = self.frameGeometry()
@@ -3002,9 +2924,15 @@ class ImgCls(QMainWindow):
     def undo_painting(self):
         self.main_ui.img_widget.undo_stack.undo()
 
-    def update_class_list_num(self):
-        num = self.main_ui.listWidget.count()
-        self.main_ui.label_7.setText(self.tr('类别列表（{}）').format(num))
+    def update_class_list_num(self, num):
+        signal = self.sender()
+
+        if signal.name == 'class':
+            self.main_ui.pushButton_class_list.setText(self.tr('类别列表（{}）').format(num))
+        elif signal.name == 'shape':
+            self.main_ui.pushButton_shape_list.setText(self.tr('标注列表（{}）').format(num))
+            if self.WorkMode == self.tr('语义分割'):
+                self.main_ui.pushButton_bg.setDisabled(num > 0)
 
     def update_progress_value(self, info):
         class_name, value = info
@@ -3017,7 +2945,7 @@ class ImgCls(QMainWindow):
             self.window_usp_progress.set_text(text)
 
     def update_sem_pngs(self):
-        classes = self.classes_list()
+        classes = AllClasses.classes()
         if not classes:
             QMB.warning(None, self.tr('类别列表为空'), self.tr('请先加载类别。'))
             signal_usp_done.send(False)
@@ -3042,24 +2970,28 @@ class ImgCls(QMainWindow):
             text = self.get_info_text(self.main_ui.img_widget.all_polygons[i])
             lw.item(i).setText(text)
 
-    def update_shape_list_num(self):
-        num = self.main_ui.listWidget_2.count()
-        self.main_ui.label_10.setText(self.tr('标注列表（{}）').format(num))
+# todo: shape的交集，并集、差集  环形支持多形状组合以及多孔洞环形
+# todo: 像素标注支持粗细调节
+# todo: 合并labels.json
+# todo: auto inference 全功能  支持 ONNX、openvino、（opencv接口？ 自写接口？）
+# todo：按shape 的tag浏览
 
-        if self.WorkMode == self.tr('语义分割') and self.in_edit_mode():
-            self.main_ui.checkBox_sem_bg.setDisabled(num > 0)
+# todo: pin 功能 扩展为tag功能
+# todo: 建立任务
+# todo: 视频标注 全功能
+# todo: ubuntu 用 docker?
+# todo: 摄像头 实时检测与标注？
 
 # todo: 伪标注合成全功能
-# todo: auto inference 全功能
-# todo: 像素标注支持粗细调节
-# todo： 环形支持多形状组合以及多孔洞环形 （难）
-# todo: 完善log
-# todo: marquee 进度条同步有问题？  搁置  测 python 3.7.13
-# todo: 类别统计，长类别名 对不齐
+
+# todo: shape list drag
+
+# todo: marquee进度条同步(搁置) https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side
+# todo: 类别统计，长类别名 对不齐  用textbrowser？
 # todo: ubuntu 部分弹出窗口不在屏幕中心位置
 # todo: ubuntu 按钮右键时同时弹出上层容器的右键菜单
 # todo: win11测试
-
+# todo: 完善log
 
 # 未解决的问题
 # https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side

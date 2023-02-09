@@ -58,7 +58,7 @@ Ubuntu20.04（已测试），Ubuntu22.04（已测试）
 Ubuntu版本：
     ```
     cd HHL.dist
-    ./HHL
+    ./HHL.bin
     ```
 2. 克隆原代码后打包  
 该项目使用nuitka打包，nuitka支持Windows、Linux、macOS，理论上使用源代码均能打包成适配系统的执行程序。
@@ -66,11 +66,11 @@ Ubuntu版本：
     # 安装nuitka
     pip install nuitka
     # Windows系统
-    python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
+    python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --nofollow-import-to=tkinter --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
     # Ubuntu系统
     # 由于（https://nuitka.net/info/debian-dist-packages.html），请使用pip管理python包。
-    # 安装patchelf
-    sudo apt install patchelf
+    # 安装patchelf, ccache
+    sudo apt install patchelf ccache
     python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out  --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
     ```
     打包完成后，将images文件夹、ts_files文件夹、ui_files文件夹、project.json文件拷贝到软件根目录下。  

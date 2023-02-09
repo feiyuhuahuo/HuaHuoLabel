@@ -59,7 +59,7 @@ Unzip the file, for Windows version, directly run the HHL.exe.
 For Ubuntu version:
     ```
     cd HHL.dist
-    ./HHL
+    ./HHL.bin
     ```
 
 2. Clone the source code and then compile it  
@@ -69,11 +69,11 @@ This project is compiled with Nuitka. Nuitka supports Windows、Linux and macOS.
     # install nuitka
     pip install nuitka
     # For Windows
-    python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
+    python -m nuitka --mingw64 --standalone --plugin-enable=pyside6 --nofollow-import-to=tkinter --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
     # For Ubuntu
     # Because of (https://nuitka.net/info/debian-dist-packages.html), please use pip to manage python packages.
-    # install patchelf
-    sudo apt install patchelf
+    # install patchelf, ccache
+    sudo apt install patchelf ccache
     python -m nuitka --standalone --plugin-enable=pyside6 --output-dir=out --windows-disable-console --windows-icon-from-ico=images/icon.png HHL.py
     ```
     After compilation is done, copy "images" folder, "ts_files" folder, "ui_files" folder and "project.json" to the project root directory.

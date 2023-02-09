@@ -1,8 +1,9 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
+import pdb
+
 from typing import List, Union
 from copy import deepcopy
-import pdb
 from PySide6.QtWidgets import QInputDialog, QFrame, QMessageBox, QApplication, QMenu, QListWidgetItem
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
@@ -10,18 +11,20 @@ from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QC
 from PySide6 import QtCore
 from need.utils import point_in_shape, AnnUndo
 from need.custom_signals import *
-from need.custom_widgets.select_window import SelectWindow, signal_select_window_close
+from need.custom_widgets import SelectWindow, signal_select_window_close
 
+signal_check_draw_enable = BoolSignal()
 signal_del_shape = IntSignal()
 signal_move2new_folder = BoolSignal()
 signal_open_label_window = BoolSignal()
 signal_one_collection_done = StrSignal()
-signal_collection_select_ok = StrSignal()
-signal_selected_label_item = IntSignal()
-signal_selected_shape = IntSignal()
+signal_select_collection_ok = StrSignal()
+signal_draw_selected_shape = IntSignal()
+signal_set_shape_list_selected = IntSignal()
 signal_shape_info_update = IntSignal()
 signal_shape_type = StrSignal()
 signal_xy_color2ui = ListSignal()
+signal_select_tag_ok = StrSignal()
 
 
 class BaseImgFrame(QFrame):
@@ -36,15 +39,15 @@ class BaseImgFrame(QFrame):
         self.setMouseTracking(True)
         self.resize(512, 512)
         # todo: bug, 不知道为什么基类的menu右键的时候不显示
-        self.menu = QMenu(self)
+        self.img_menu = QMenu('img_menu', self)
         self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
         self.action_bilinear.triggered.connect(lambda: self.set_interpolation(Qt.SmoothTransformation))
         self.action_nearest = QAction(self.tr('最近邻插值缩放'), self)
         self.action_nearest.setIcon(QPixmap('images/icon_11.png'))
         self.action_nearest.triggered.connect(lambda: self.set_interpolation(Qt.FastTransformation))
-        self.menu.addAction(self.action_nearest)
-        self.menu.addAction(self.action_bilinear)
-        self.customContextMenuRequested.connect(lambda: self.show_menu(self.menu))
+        self.img_menu.addAction(self.action_nearest)
+        self.img_menu.addAction(self.action_bilinear)
+        self.customContextMenuRequested.connect(self.show_menu)
 
         self.img, self.scaled_img = None, None
         self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
@@ -187,8 +190,8 @@ class BaseImgFrame(QFrame):
 
         return new_points
 
-    def show_menu(self, ob):  # 在鼠标位置显示菜单
-        ob.exec(QCursor.pos())
+    def show_menu(self):  # 在鼠标位置显示菜单
+        self.img_menu.exec(QCursor.pos())
 
     def widget_coor_to_img_coor(self, rel_pos: QtCore.QPointF):
         # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
@@ -229,12 +232,8 @@ class ImgShow(BaseImgFrame):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
         self.scaled_img_painted = None
-        self.collection_ui = SelectWindow(title=self.tr('收藏的标注'), button_signal=signal_collection_select_ok)
-        self.collected_shapes = {}
-
-        self.ann_point_last = QPoint(0, 0)
-        self.ann_point_cur = QPoint(0, 0)
-        self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
+        self.collection_window = SelectWindow(title=self.tr('收藏标注'), button_signal=signal_select_collection_ok)
+        self.tag_window = SelectWindow(title=self.tr('标签'), button_signal=signal_select_tag_ok)
 
         self.det_cross_color = QColor(120, 120, 120)
         self.seg_pen_size = 2
@@ -244,6 +243,7 @@ class ImgShow(BaseImgFrame):
         self.ann_font_size = 20
         self.ann_font_color = QColor('white')
 
+        self.collected_shapes = {}
         self.all_polygons = []
         self.widget_points = []
         self.img_points = []
@@ -253,6 +253,9 @@ class ImgShow(BaseImgFrame):
         self.shape_type = self.tr('多边形')
         self.cursor_in_widget = QPointF(0., 0.)  # 鼠标在控件坐标系的实时坐标
         self.polygon_editing_i = None  # 正在编辑的标注的索引，即标注高亮时对应的索引
+        self.ann_point_last = QPoint(0, 0)
+        self.ann_point_cur = QPoint(0, 0)
+        self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
         self.scale_factor = (0., 0.)  # 图片伸缩因子
         self.offset = QPointF(0., 0.)  # 图片移动偏移量
         self.corner_index = None  # 标注角点的索引
@@ -273,11 +276,9 @@ class ImgShow(BaseImgFrame):
         self.MClsMode = False
         self.DetMode = False
         self.SegMode = False
-
         self.DrawMode = True
         self.ShapeEditMode = False
         self.AnnMode = False
-
         self.LeftClick = False  # 用于实现图片拖曳和标注拖曳功能
         self.PolygonLastPointDone = False  # 用于SegMode标识画完一个多边形
         self.PolygonLocked = False
@@ -286,24 +287,23 @@ class ImgShow(BaseImgFrame):
         self.HideCross = False
         self.MovingPolygon = False  # 仅在拖动标注移动时为True
         self.MovingCorner = False
-
         self.FlagDrawCollection = False
-        signal_selected_label_item.signal.connect(self.draw_selected_shape)
-        signal_shape_type.signal.connect(self.change_shape_type)
-        signal_collection_select_ok.signal.connect(self.collection_ui_ok)
-        signal_select_window_close.signal.connect(self.clear_widget_img_points)
-
-        self.add_poly_to_collection = QAction(self.tr('收藏标注'), self)
-        self.add_poly_to_collection.triggered.connect(lambda: self.collection_ui_show(False))
-        self.add_poly_to_collection.setDisabled(True)
-        self.menu.addAction(self.add_poly_to_collection)
 
         self.draw_collection_shape = QAction(self.tr('绘制收藏的标注'), self)
-        self.draw_collection_shape.triggered.connect(lambda: self.collection_ui_show(True))
+        self.draw_collection_shape.triggered.connect(lambda: self.show_collection_window(True))
         self.draw_collection_shape.setDisabled(True)
-        self.menu.addAction(self.draw_collection_shape)
+        self.img_menu.addAction(self.draw_collection_shape)
+        self.img_menu.addAction(self.tr('移动至新文件夹')).triggered.connect(self.move_to_new_folder)
 
-        self.menu.addAction(self.tr('移动至新文件夹')).triggered.connect(self.move_to_new_folder)
+        self.shape_menu = QMenu('shape_menu', self)
+        self.shape_menu.addAction(self.tr('收藏标注')).triggered.connect(lambda: self.show_collection_window(False))
+        self.shape_menu.addAction(self.tr('添加标签')).triggered.connect(self.show_tag_window)
+
+        signal_draw_selected_shape.signal.connect(self.draw_selected_shape)
+        signal_shape_type.signal.connect(self.change_shape_type)
+        signal_select_window_close.signal.connect(self.clear_widget_img_points)
+        signal_select_collection_ok.signal.connect(self.select_collection_ok)
+        # signal_select_tag_ok.signal.connect(self.select_tag_ok)  # todo--------------------------
 
     def keyPressEvent(self, event):
         if self.corner_index is None and self.polygon_editing_i is not None:
@@ -392,6 +392,8 @@ class ImgShow(BaseImgFrame):
             self.setCursor(Qt.ClosedHandCursor)
 
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            signal_check_draw_enable.send(True)
+
             if self.AnnMode:
                 self.setCursor(self.pencil_cursor)
                 self.ann_point_cur = e.position() - self.img_tl
@@ -659,57 +661,6 @@ class ImgShow(BaseImgFrame):
 
         return False
 
-    def collection_ui_ok(self, text):
-        def compute_new_points(points, add_offset=QPointF(0, 0)):
-            offset = self.cursor_in_widget - points[0]
-            widget_points = [one + offset + add_offset for one in points]
-
-            widget_points_2 = []
-            b_left, b_up, b_right, b_down = self.get_border_coor()
-            for one in widget_points:
-                in_border_x = min(max(b_left, one.x()), b_right)
-                in_border_y = min(max(b_up, one.y()), b_down)
-                widget_points_2.append(QPointF(in_border_x, in_border_y))
-
-            img_points = [list(self.widget_coor_to_img_coor(one)[:2]) for one in widget_points_2]
-            return widget_points_2, img_points
-
-        if self.FlagDrawCollection:  # 画收藏的标注
-            if text not in self.collected_shapes.keys():
-                return
-
-            polygon = self.collected_shapes[text].copy()
-            shape_type = polygon['shape_type']
-            self.FlagDrawCollection = shape_type
-            if shape_type in ('环形', self.tr('环形')):
-                self.widget_points_huan, self.img_points_huan = [], []
-                widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
-                self.widget_points_huan.append(widget_points_out)
-                self.img_points_huan.append(img_points_out)
-
-                add_offset = polygon['widget_points'][1][0] - polygon['widget_points'][0][0]
-                widget_points_in, img_points_in = compute_new_points(polygon['widget_points'][1], add_offset=add_offset)
-                self.widget_points_huan.append(widget_points_in)
-                self.img_points_huan.append(img_points_in)
-            else:
-                self.widget_points, self.img_points = compute_new_points(polygon['widget_points'])
-            signal_one_collection_done.send(polygon['category'])
-        else:  # 收藏标注
-            if text in self.collected_shapes.keys():
-                QMessageBox.warning(self, self.tr('名称重复'), self.tr('{}已存在。').format(text))
-            else:
-                self.collected_shapes[text] = self.all_polygons[self.polygon_editing_i]
-                self.collection_ui.ui.listWidget.addItem(QListWidgetItem(text))
-                self.collection_ui.ui.lineEdit.setText('')
-
-        self.collection_ui.close()
-
-    def collection_ui_show(self, draw):
-        if draw:
-            self.FlagDrawCollection = True
-
-        self.collection_ui.show()
-
     def corner_point_move(self, corner_index):  # 标注角点的拖动功能
         offset = self.cursor_in_widget - self.start_pos
         if type(corner_index) == int:
@@ -843,7 +794,7 @@ class ImgShow(BaseImgFrame):
             elif shape_type in ('像素', self.tr('像素')):
                 self.fill_img_pixel(editing_poly['img_points'], QColor(0, 255, 0, 150))
 
-            signal_selected_shape.send(self.polygon_editing_i)
+            signal_set_shape_list_selected.send(self.polygon_editing_i)
 
     def draw_completed_polygons(self):  # 在标注时画已完成的完整图形
         # note: 在ShapeEditMode时，鼠标移动时也在频繁触发，要关注绘制数量较大时，是否会造成系统负担
@@ -1099,6 +1050,51 @@ class ImgShow(BaseImgFrame):
     def reset_cursor(self):
         self.cursor_in_widget = QPointF(-10, -10)
 
+    def select_collection_ok(self, text):
+        def compute_new_points(points, add_offset=QPointF(0, 0)):
+            offset = self.cursor_in_widget - points[0]
+            widget_points = [one + offset + add_offset for one in points]
+
+            widget_points_2 = []
+            b_left, b_up, b_right, b_down = self.get_border_coor()
+            for one in widget_points:
+                in_border_x = min(max(b_left, one.x()), b_right)
+                in_border_y = min(max(b_up, one.y()), b_down)
+                widget_points_2.append(QPointF(in_border_x, in_border_y))
+
+            img_points = [list(self.widget_coor_to_img_coor(one)[:2]) for one in widget_points_2]
+            return widget_points_2, img_points
+
+        if self.FlagDrawCollection:  # 画收藏的标注
+            if text not in self.collected_shapes.keys():
+                return
+
+            polygon = self.collected_shapes[text].copy()
+            shape_type = polygon['shape_type']
+            self.FlagDrawCollection = shape_type
+            if shape_type in ('环形', self.tr('环形')):
+                self.widget_points_huan, self.img_points_huan = [], []
+                widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
+                self.widget_points_huan.append(widget_points_out)
+                self.img_points_huan.append(img_points_out)
+
+                add_offset = polygon['widget_points'][1][0] - polygon['widget_points'][0][0]
+                widget_points_in, img_points_in = compute_new_points(polygon['widget_points'][1], add_offset=add_offset)
+                self.widget_points_huan.append(widget_points_in)
+                self.img_points_huan.append(img_points_in)
+            else:
+                self.widget_points, self.img_points = compute_new_points(polygon['widget_points'])
+            signal_one_collection_done.send(polygon['category'])
+        else:  # 收藏标注
+            if text in self.collected_shapes.keys():
+                QMessageBox.warning(self, self.tr('名称重复'), self.tr('{}已存在。').format(text))
+            else:
+                self.collected_shapes[text] = self.all_polygons[self.polygon_editing_i]
+                self.collection_window.ui.listWidget.addItem(QListWidgetItem(text))
+                self.collection_window.ui.lineEdit.setText('')
+
+        self.collection_window.close()
+
     def set_ann_painted_img(self, path):
         if self.AnnMode:
             self.scaled_img_painted = QPixmap(path).scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -1181,7 +1177,18 @@ class ImgShow(BaseImgFrame):
             moved = self.shape_scale_convert(one, old_img_tl, scale_factor)
             self.widget_points_huan[i] = moved
 
-    def show_menu(self, ob):  # 在鼠标位置显示菜单
-        self.add_poly_to_collection.setDisabled(self.polygon_editing_i is None)
-        self.draw_collection_shape.setDisabled(not (self.DetMode or self.SegMode))
-        ob.exec(QCursor.pos())
+    def show_collection_window(self, draw):
+        if draw:
+            self.FlagDrawCollection = True
+
+        self.collection_window.show()
+
+    def show_menu(self):  # 在鼠标位置显示菜单
+        if self.polygon_editing_i is None:
+            self.draw_collection_shape.setDisabled(not (self.DetMode or self.SegMode))
+            self.img_menu.exec(QCursor.pos())
+        else:
+            self.shape_menu.exec(QCursor.pos())
+
+    def show_tag_window(self):
+        self.tag_window.show()

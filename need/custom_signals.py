@@ -24,12 +24,16 @@ class IntSignal(QObject):
     def send(self, info):
         self.signal.emit(info)
 
+    def set_name(self, name):
+        self.name = name
+
 
 class StrSignal(QObject):
     signal = Signal(str)
 
-    def __init__(self):
+    def __init__(self, name=None):
         super().__init__()
+        self.name = name
 
     def send(self, info):
         self.signal.emit(info)
@@ -38,8 +42,9 @@ class StrSignal(QObject):
 class ListSignal(QObject):
     signal = Signal(list)
 
-    def __init__(self):
+    def __init__(self, name=None):
         super().__init__()
+        self.name = name
 
     def send(self, info):
         self.signal.emit(info)

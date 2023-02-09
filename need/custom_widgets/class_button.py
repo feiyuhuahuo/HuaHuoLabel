@@ -4,7 +4,7 @@ import pdb
 
 from PySide6.QtWidgets import QInputDialog, QPushButton, QMessageBox, QLineEdit
 from PySide6.QtCore import Qt
-from need.utils import ClsClasses
+from need.utils import AllClasses
 from PySide6.QtGui import QIcon
 
 
@@ -25,7 +25,7 @@ class ClassButton(QPushButton):
                                                  QLineEdit.Normal)
 
             if is_ok and text:
-                if text in ClsClasses.classes():
+                if text in AllClasses.classes():
                     QMessageBox.warning(self, self.tr('类别重复'), self.tr('类别"{}"已存在。').format(text))
 
                 else:
@@ -33,10 +33,10 @@ class ClassButton(QPushButton):
                         if text != '-':
                             self.setText(text)
                     else:
-                        ClsClasses.delete(ori_text)
+                        AllClasses.delete(ori_text)
                         self.setText(text)
 
     def setText(self, text: str):
         super().setText(text)
         if text != '-':
-            ClsClasses.add(text)
+            AllClasses.add(text)
