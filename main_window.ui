@@ -1720,7 +1720,31 @@ border-radius: 5px;</string>
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="6,2,2">
+       <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,10,3,2">
+        <property name="spacing">
+         <number>20</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_index">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>0/0</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QLabel" name="label_path">
           <property name="sizePolicy">
@@ -1755,7 +1779,7 @@ border-radius: 5px;</string>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_hwi">
+         <widget class="QLabel" name="label_img_info">
           <property name="font">
            <font>
             <pointsize>10</pointsize>
@@ -1766,15 +1790,22 @@ border-radius: 5px;</string>
           </property>
          </widget>
         </item>
-        <item alignment="Qt::AlignRight">
+        <item alignment="Qt::AlignHCenter">
          <widget class="QLabel" name="label_xyrgb">
+          <property name="minimumSize">
+           <size>
+            <width>135</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>X: , Y:            R: , G: , B:</string>
+           <string>X: , Y:     
+R: 100, G: 100, B: 100</string>
           </property>
          </widget>
         </item>
@@ -2624,19 +2655,6 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_47">
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QPushButton" name="pushButton_bg">
               <property name="sizePolicy">
@@ -2690,6 +2708,19 @@ QTabWidget::pane { border: 1px solid rgb(100,180,230); top: 0px}</string>
                <bool>false</bool>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QPushButton" name="pushButton_update_png">
@@ -4485,8 +4516,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

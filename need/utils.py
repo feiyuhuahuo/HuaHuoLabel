@@ -10,6 +10,7 @@ import numpy as np
 import random
 
 from os import path as osp
+from datetime import datetime
 from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from PySide6.QtWidgets import QMessageBox
@@ -226,7 +227,16 @@ def file_remove(path):
 
 
 def get_datetime():
-    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
+def get_file_cmtime(path):
+    c_time = str(datetime.fromtimestamp(int(osp.getctime(path))))
+    m_time = str(datetime.fromtimestamp(int(osp.getmtime(path))))
+    c_time, m_time = c_time.split(' '), m_time.split(' ')
+    c_time = f'{c_time[0][2:]}-{c_time[1][:2]}'
+    m_time = f'{m_time[0][2:]}-{m_time[1][:2]}'
+    return c_time, m_time
 
 
 def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
@@ -500,6 +510,26 @@ def recursive_glob(path):  # 仅把path目录下的文件夹里的图片集合�
 
     all_imgs = [uniform_path(aa) for aa in all_imgs]
     return all_imgs
+
+
+class ShapeType:
+    def __init__(self):
+        self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '环形': 'Ring',
+                           '像素': 'Pixel'}
+
+    def __call__(self, name):
+        if type(name) == str:
+            name = [name]
+
+        result = []
+        for one in name:
+            result.append(one)
+            result.append(self.shape_type[one])
+
+        return result
+
+
+shape_type = ShapeType()
 
 
 def two_way_check(files_1: list, files_2: list, one_way=False):

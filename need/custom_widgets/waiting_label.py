@@ -6,7 +6,7 @@ from PySide6.QtGui import QFont
 
 
 class WaitingLabel(QLabel):
-    def __init__(self, parent=None, text=None, language='CN'):
+    def __init__(self, parent=None, text=None):
         super().__init__(parent)
         self.num = 0
         font = QFont()
@@ -14,11 +14,6 @@ class WaitingLabel(QLabel):
         self.setFont(font)
         if text:
             self.text = f' {text} '
-        else:
-            if language == 'CN':
-                self.text = ' 等待中 '
-            elif language == 'EN':
-                self.text = ' Waiting '
 
         self.setText(self.text + '...')
         self.setStyleSheet("background-color: rgb(220, 220, 220); border-color: rgb(80, 80, 80); "
@@ -39,9 +34,21 @@ class WaitingLabel(QLabel):
     def stop(self):
         self.timer.stop()
 
+    def show_at(self, geometry):
+        text_width = self.fontMetrics().boundingRect(self.text).width()
+        self.setMinimumWidth(text_width + 40)
+        x1 = int(geometry.width() / 2)
+        y1 = int(geometry.height() / 3)
+        self.move(x1, y1)
+        self.show()
+
+    # def pp(self):
+    #     print(self.fontMetrics().boundingRect('保存土拍中...').width())
+
 
 if __name__ == '__main__':
     app = QApplication()
-    wl = WaitingLabel('保存中')
+    wl = WaitingLabel(text='保存土拍中')
     wl.show()
+    wl.pp()
     app.exec()
