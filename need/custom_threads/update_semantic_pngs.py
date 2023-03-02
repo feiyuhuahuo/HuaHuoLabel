@@ -6,7 +6,7 @@ import cv2
 from os import path as osp
 from PySide6.QtCore import QThread
 from PySide6.QtGui import QPixmap
-from need.utils import get_seg_mask, file_remove, path_to
+from need.utils import get_seg_mask, file_remove
 from need.custom_signals import ListSignal
 
 signal_usp_done = ListSignal()
@@ -16,13 +16,12 @@ signal_usp_progress_text = ListSignal()
 
 # 经测试，线程里面不能有静态的QMessageBox，否则唤起后软件会崩溃
 class UpdateSemanticPngs(QThread):
-    def __init__(self, work_mode, imgs, img_root_path, classes):
+    def __init__(self, imgs, classes, main_window):
         super().__init__()
-        self.WorkMode = work_mode
         self.imgs = imgs
-        self.img_root_path = img_root_path
         self.classes = classes
         self.img_num = len(self.imgs)
+        self.main_window = main_window
 
     def run(self):
         num = 0
@@ -34,19 +33,19 @@ class UpdateSemanticPngs(QThread):
 
             img_name = one.split('/')[-1]
             img_w, img_h = QPixmap(one).size().toTuple()
-            json_path = path_to(one, img2json=True)
-            png_path = path_to(one, img2png=True)
+            json_path = self.main_window.get_separate_label(one, 'json')
+            png_path = self.main_window.get_separate_label(one, 'png')
             png_name = png_path.split('/')[-1]
 
             tv = 'none'
-            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{img_name}'):
+            if osp.exists(f'{self.main_window.get_toot("tv")}/imgs/train/{img_name}'):
                 tv = 'train'
-            elif osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{img_name}'):
+            elif osp.exists(f'{self.main_window.get_toot("tv")}/imgs/val/{img_name}'):
                 tv = 'val'
 
-            tv_img = f'{self.img_root_path}/{self.WorkMode}/imgs/{tv}/{img_name}'
-            tv_json = f'{self.img_root_path}/{self.WorkMode}/labels/{tv}/{img_name[:-4]}.json'
-            tv_png = f'{self.img_root_path}/{self.WorkMode}/labels/{tv}/{png_name}'
+            tv_img = f'{self.main_window.get_toot("tv")}/imgs/{tv}/{img_name}'
+            tv_json = f'{self.main_window.get_toot("tv")}/labels/{tv}/{img_name[:-4]}.json'
+            tv_png = f'{self.main_window.get_toot("tv")}/labels/{tv}/{png_name}'
 
             if osp.exists(json_path):
                 with open(json_path, 'r') as f:

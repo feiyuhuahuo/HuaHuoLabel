@@ -11,89 +11,10 @@ import random
 
 from os import path as osp
 from datetime import datetime
-from collections import OrderedDict
 from PySide6.QtGui import QUndoCommand, QColor, QImage
 from PySide6.QtWidgets import QMessageBox
 from math import sqrt, pow
 from need.custom_widgets import CustomMessageBox
-
-
-class ClassStatistic_2:  # 只有读、写两种接口，避免混乱
-    def __init__(self):
-        self.stat_dict = OrderedDict()
-        self.copy_dict = self.stat_dict.copy()
-
-    def read(self, k='', keys=False, kv_pair=False, length=False):
-        if k:
-            return self.stat_dict[k]
-        elif keys:
-            return self.stat_dict.keys()
-        elif kv_pair:
-            return self.stat_dict.items()
-        elif length:
-            return len(self.stat_dict)
-
-    def write(self, k_set='', k_plus='', k_minus='', k_del='', clear=False):
-        if self.copy_dict != self.stat_dict:
-            print(f'----------错误，ClassStat未通过write()接口进行修改----------')
-            return
-
-        if k_set:
-            self.stat_dict.setdefault(k_set, 0)
-        elif k_plus:
-            self.stat_dict.setdefault(k_plus, 0)
-            self.stat_dict[k_plus] += 1
-        elif k_minus:
-            if k_minus not in self.stat_dict.keys():
-                print(f'----------错误，ClassStat未找到键：{k_minus}----------')
-            else:
-                self.stat_dict[k_minus] -= 1
-        elif k_del:
-            if k_del not in self.stat_dict.keys():
-                print(f'----------错误，ClassStat未找到键：{k_del}----------')
-            else:
-                self.stat_dict.pop(k_del)
-        elif clear:
-            self.stat_dict.clear()
-
-        self.copy_dict = self.stat_dict.copy()
-
-
-class ClassStatistic:
-    def __init__(self):
-        self.__classes = []
-
-    def add(self, category, color='none'):
-        for one in self.__classes:
-            if one[0] == category:
-                return
-
-        self.__classes.append([category, color])
-
-    def change_c(self, old_c, new_c):
-        for one in self.__classes:
-            if one[0] == old_c:
-                one[0] = new_c
-
-    def delete(self, c):
-        if type(c) == int:
-            self.__classes.pop(c)
-        elif type(c) == str:
-            for i, one in enumerate(self.__classes):
-                if one[0] == c:
-                    self.__classes.pop(i)
-
-    def classes(self):
-        return [aa[0] for aa in self.__classes]
-
-    def colors(self):
-        return [aa[1] for aa in self.__classes]
-
-    def clear(self):
-        self.__classes = []
-
-
-AllClasses = ClassStatistic()
 
 # CSS 通用color
 ColorNames = ['black', 'blue', 'blueviolet', 'brown', 'burlywood',
@@ -134,6 +55,95 @@ class AnnUndo(QUndoCommand):
         self.board.scaled_img = self.undo_img
         self.board.scaled_img_painted = self.board.scaled_img.copy()
         self.board.update()
+
+
+class ClassStatistic:
+    def __init__(self):
+        self.__classes = []
+
+    def add(self, category, color='none'):
+        for one in self.__classes:
+            if one[0] == category:
+                return
+
+        self.__classes.append([category, color])
+
+    def change_c(self, old_c, new_c):
+        for one in self.__classes:
+            if one[0] == old_c:
+                one[0] = new_c
+
+    def delete(self, c):
+        if type(c) == int:
+            self.__classes.pop(c)
+        elif type(c) == str:
+            for i, one in enumerate(self.__classes):
+                if one[0] == c:
+                    self.__classes.pop(i)
+
+    def classes(self):
+        return [aa[0] for aa in self.__classes]
+
+    def colors(self):
+        return [aa[1] for aa in self.__classes]
+
+    def clear(self):
+        self.__classes = []
+
+
+class MultiIndex:
+    def __init__(self, data):
+        self.__data = data
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.__data[item]
+        elif isinstance(item, (list, tuple)):
+            return [self.__data[one] for one in item]
+        else:
+            raise TypeError('Wrong item type for "MultiIndex".')
+
+
+class Palette:
+    def __init__(self):
+        self.color_names = ColorNames.copy()
+        self.color_codes = {}
+        for one in ColorNames:
+            self.color_codes[QColor(one).name()] = one
+
+    def get_color(self):
+        random.shuffle(self.color_names)
+        existed_colors = AllClasses.colors()
+        color = self.color_names.pop()
+        while color in existed_colors:
+            if len(self.color_names) == 0:
+                self.color_names = ColorNames.copy()
+            color = self.color_names.pop()
+        return color
+
+
+AllClasses = ClassStatistic()
+palette = Palette()
+
+
+class ShapeType:
+    def __init__(self):
+        self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '环形': 'Ring',
+                           '像素': 'Pixel'}
+
+    def __call__(self, name):
+        if type(name) == str:
+            name = [name]
+
+        result = []
+        for one in name:
+            result.append(one)
+            result.append(self.shape_type[one])
+
+        return result
+
+
+shape_type = ShapeType()
 
 
 def douglas_peuker(point_list, threshold, lowerLimit=4, ceiling=40):
@@ -298,8 +308,8 @@ def get_seg_mask(classes, polygons, img_h, img_w, value=0, ins_seg=False):
     return seg_mask
 
 
-def glob_imgs(path, work_mode):
-    if work_mode in ('单分类', 'Single Cls'):
+def glob_imgs(path, recursive=False):
+    if recursive:
         imgs = recursive_glob(path)
     else:
         imgs = glob.glob(f'{path}/*')
@@ -326,8 +336,7 @@ def has_ch(text):
 
 def hhl_info(language):
     if language == 'CN':
-        ui = CustomMessageBox('about', '关于花火标注')
-        ui.hide_dont_show_again()
+        ui = CustomMessageBox('about', '关于花火标注', hide_dsa=True)
         ui.add_text('版本1.0.0。\n'
                     '\n'
                     '花火标注是一款使用PySide6开发的多功能标注工具，支持包括单类别分类、多类别分类、语义分割、目标检测和实例分割在内的5种计算'
@@ -335,8 +344,7 @@ def hhl_info(language):
                     '\n'
                     '花火标注采用GNU GPL许可证，您可以随意使用该工具。但在未取得作者许可的情况下，请勿使用该软件进行商业行为。\n')
     elif language == 'EN':
-        ui = CustomMessageBox('about', 'About HuaHuoLabel', 'EN')
-        ui.hide_dont_show_again()
+        ui = CustomMessageBox('about', 'About HuaHuoLabel', hide_dsa=True)
         ui.add_text('Version 1.0.0.\n'
                     '\n'
                     'HuaHuoLabel is a multifunctional label tool developed with PySide6. It can help label data for '
@@ -357,44 +365,6 @@ def img_pure_name(path):
         return path.split('/')[-1][:-4]
     elif path.endswith('json'):
         return path.split('/')[-1][:-5]
-
-
-class Palette:
-    def __init__(self):
-        self.color_names = ColorNames.copy()
-        self.color_codes = {}
-        for one in ColorNames:
-            self.color_codes[QColor(one).name()] = one
-
-    def get_color(self):
-        random.shuffle(self.color_names)
-        existed_colors = AllClasses.colors()
-        color = self.color_names.pop()
-        while color in existed_colors:
-            if len(self.color_names) == 0:
-                self.color_names = ColorNames.copy()
-            color = self.color_names.pop()
-        return color
-
-
-palette = Palette()
-
-
-def path_to(path, img2json=False, img2png=False, img2txt=False):
-    if '/原图' in path:
-        if img2json:
-            return path.replace('/原图', '/标注')[:-3] + 'json'
-        elif img2png:
-            return path.replace('/原图', '/标注')[:-3] + 'png'
-        elif img2txt:
-            return path.replace('/原图', '/标注')[:-3] + 'txt'
-    elif '/Original Images' in path:
-        if img2json:
-            return path.replace('/Original Images', '/Label Files')[:-3] + 'json'
-        elif img2png:
-            return path.replace('/Original Images', '/Label Files')[:-3] + 'png'
-        elif img2txt:
-            return path.replace('/Original Images', '/Label Files')[:-3] + 'txt'
 
 
 def point_in_polygon(px, py, poly):
@@ -510,26 +480,6 @@ def recursive_glob(path):  # 仅把path目录下的文件夹里的图片集合�
 
     all_imgs = [uniform_path(aa) for aa in all_imgs]
     return all_imgs
-
-
-class ShapeType:
-    def __init__(self):
-        self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '环形': 'Ring',
-                           '像素': 'Pixel'}
-
-    def __call__(self, name):
-        if type(name) == str:
-            name = [name]
-
-        result = []
-        for one in name:
-            result.append(one)
-            result.append(self.shape_type[one])
-
-        return result
-
-
-shape_type = ShapeType()
 
 
 def two_way_check(files_1: list, files_2: list, one_way=False):

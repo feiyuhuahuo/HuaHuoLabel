@@ -15,6 +15,7 @@ def connect_all_other_signals(main_window):
     main_window.main_ui.checkBox_separate_label.pressed.connect(main_window.raise_label_mode_conflict)
     main_window.main_ui.checkBox_separate_label.toggled.connect(main_window.set_separate_label)
     main_window.main_ui.checkBox_scale.toggled.connect(main_window.set_img_edit_scale)
+    main_window.main_ui.checkBox_shape_edit.toggled.connect(main_window.set_shape_edit_mode)
 
     main_window.main_ui.comboBox.currentIndexChanged.connect(main_window.set_scan_mode)
     main_window.main_ui.comboBox_2.currentIndexChanged.connect(main_window.change_shape_type)
@@ -22,6 +23,8 @@ def connect_all_other_signals(main_window):
     main_window.main_ui.horizontalSlider.valueChanged.connect(main_window.img_enhance)
     main_window.main_ui.horizontalSlider_2.valueChanged.connect(main_window.img_enhance)
     main_window.main_ui.horizontalSlider_3.valueChanged.connect(main_window.img_pil_contrast)
+
+    main_window.main_ui.lineEdit_search.search_btn.clicked.connect(main_window.img_search)
 
     main_window.main_ui.class_list.itemClicked.connect(lambda: main_window.look_or_not_look(double=False))
     main_window.main_ui.class_list.itemDoubleClicked.connect(lambda: main_window.look_or_not_look(double=True))
@@ -54,12 +57,10 @@ def connect_all_other_signals(main_window):
     main_window.main_ui.pushButton_last.clicked.connect(lambda: main_window.scan_img(last=True))
     main_window.main_ui.pushButton_next.clicked.connect(lambda: main_window.scan_img(next=True))
     main_window.main_ui.pushButton_random_split.clicked.connect(main_window.random_train_val)
-    main_window.main_ui.pushButton_open_dir.clicked.connect(main_window.open_dir)
+    main_window.main_ui.pushButton_open_task.clicked.connect(main_window.open_task)
     main_window.main_ui.pushButton_pen_color.clicked.connect(main_window.change_pen_color)
     main_window.main_ui.pushButton_pen_color_2.clicked.connect(main_window.change_pen_color)
     main_window.main_ui.pushButton_pin.clicked.connect(main_window.pin_unpin_image)
-    main_window.main_ui.pushButton_search.clicked.connect(main_window.img_search)
-    main_window.main_ui.pushButton_shape_edit.toggled.connect(main_window.set_shape_edit_mode)
     main_window.main_ui.pushButton_shape_list.clicked.connect(main_window.fold_list)
     main_window.main_ui.pushButton_stat.clicked.connect(main_window.show_class_statistic)
     main_window.main_ui.pushButton_tag_list.clicked.connect(main_window.fold_list)
@@ -95,7 +96,7 @@ def connect_all_other_signals(main_window):
     signal_update_num.signal.connect(main_window.update_class_list_num)
     signal_usp_done.signal.connect(main_window.update_sem_pngs_done)
     signal_xy_color2ui.signal.connect(main_window.show_xy_color)
-    signal_send_imgs.signal.connect(main_window.open_dir)
+    signal_send_imgs.signal.connect(main_window.open_task)
 
 
 def init_menu(main_window):

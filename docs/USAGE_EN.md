@@ -18,13 +18,13 @@ Then create an "Original Images" folder under the directory, copy the images to 
 
 ## Label Mode
 * One File mode (recommended)   
-![one_file.png](images/readme_imgs/one_file.png)   
-In One File Mode, all label information is recorded by a unified "labels.json". When the image is not labeled, the image name will not appear in the json file. Any modification to the label will modify the file. You can use [scripts/parse_json.py](scripts/parse_json.py) to parse the file.
+![one_file.png](../images/readme_imgs/one_file.png)   
+In One File Mode, all label information is recorded by a unified "labels.json". When the image is not labeled, the image name will not appear in the json file. Any modification to the label will modify the file. You can use [scripts/parse_json.py](../scripts/parse_json.py) to parse the file.
 In "Write" mode, "labels.json" will be automatically saved when you "open directory", "switch task type" and "close software". It will also be saved every 5 minutes.
 
 
 * Separate File mode  
-![separate_mode.png](images/readme_imgs/separate_mode.png)  
+![separate_mode.png](../images/readme_imgs/separate_mode.png)  
 In Separate File Mode, each image has one or more corresponding files to record the label information. If the image is not labeled, there is no corresponding label file. When dividing dataset, two additional folders: "imgs" and "labels" folders will be generated to save train set and validation set respectively.
 Any modification to the label will modify the file in the "Label Files" folder and the "labels" folder at the same time. In "Write mode", the label file will be saved automatically when switch image.
 
@@ -35,7 +35,7 @@ The two modes can work at the same time. "labels.json" and the additional label 
 ## UI Operation
 1. Image display area: left-click to drag the image, double-click to maximize  the image, right-click to pop up the menu, and scroll to zoom the image.  
 
-2. ![bottom_buttons.png](images/readme_imgs/bottom_buttons_en.png)  
+2. ![bottom_buttons.png](../images/readme_imgs/bottom_buttons_en.png)  
 From left to right: whether the current image has been collected; whether the current image belongs to the train set or the validation set; only browse the collected (unlabelled, validation set) images; search and jump to a certain image; jump to the indexed image; go to the previous (next) image; set the browse delay; delete the current image.
 
 ## Label Operation
@@ -50,12 +50,12 @@ In Separate File mode, additional category folders will be created. Images will 
 
 
 * Multi Cls  
-![mcls_default.png](images/readme_imgs/mcls_default.png)  
+![mcls_default.png](../images/readme_imgs/mcls_default.png)  
 Right-click the button to input a category, input "-" to disable it. Left-click to classify the image into the corresponding category. Multiple categories can be assigned to the same image. You can use the "Set Default Category" button to set several default categories. If so, if no category is assigned to a certain image, the image category is set as these default categories. 
 
 
 * Sem Seg, Obj Det, Ins Seg  
-![annotation.gif](images/readme_imgs/sem_det_ins.gif)  
+![annotation.gif](../images/readme_imgs/sem_det_ins.gif)  
 1. Draw a shape  
 Hold down Ctrl and click the left mouse button to draw polygons, rectangles, ellipses and rings. To draw rings, you need to draw the outer contour and inner contour of the object in turn. Press Ctrl+Z to undo a point. Hold down Ctrl and drag the left mouse button to draw pixel-level label.   
 2. Modify a shape   
@@ -69,7 +69,7 @@ When doing semantic segmentation tasks, you can mark an unlabelled image as a pu
 6. Obj Det  
 When doing object detection tasks, the shape is limited to "rectangle". The recorded coordinates are the coordinates of the upper left corner and the lower right corner of the rectangle.
 7. Ins Seg  
-When doing instance segmentation tasks, to parse json files, you can consult [scripts/parse_json.py](scripts/parse_json.py).
+When doing instance segmentation tasks, to parse json files, you can consult [scripts/parse_json.py](../scripts/parse_json.py).
 
 
 ## Divide Dataset  
@@ -78,7 +78,7 @@ When doing instance segmentation tasks, to parse json files, you can consult [sc
 In "Write" mode, use these buttons to divide the dataset into train set and validation set. In Separate File mode, additional "imgs" and "labels" folders will be generated.
 
 ## Annotate Image  
-![annotation.gif](images/readme_imgs/annotation.gif)  
+![annotation.gif](../images/readme_imgs/annotation.gif)  
 Annotating image will directly modify the pixel value. Hold down Ctrl and drag the left mouse button to draw the trail. Hold down Ctrl and double-click the left mouse button to input text.
 
 ## Collect Image  

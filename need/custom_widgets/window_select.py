@@ -10,7 +10,7 @@ from need.utils import has_ch
 signal_select_window_close = BoolSignal()
 
 
-class SelectWindow(QMainWindow):
+class SelectItem(QMainWindow):
     def __init__(self, title='窗口', button_signal=None):
         super().__init__()
         loader = QUiLoader()
@@ -33,13 +33,26 @@ class SelectWindow(QMainWindow):
         signal_select_window_close.send(True)
         self.close()
 
-    def select_seg_label(self):
-        self.ui.lineEdit.setText(self.ui.listWidget.currentItem().text())
+    def add_item(self, item):
+        self.ui.listWidget.addItem(item)
+
+    def clear(self):
+        self.ui.listWidget.clear()
 
     def emit_text(self):
         text = self.ui.lineEdit.text().strip()
         if self.button_signal is not None:
             self.button_signal.send(text)
+
+    def select_seg_label(self):
+        self.ui.lineEdit.setText(self.ui.listWidget.currentItem().text())
+
+    def show_at(self, geometry):
+        x, y, w, h = geometry.x(), geometry.y(), geometry.width(), geometry.height()
+        new_x = x + int(w / 3)
+        new_y = y + int(h / 3)
+        self.move(new_x, new_y)
+        self.show()
 
 # if __name__ == '__main__':
 #     from PySide6.QtWidgets import QApplication

@@ -4,21 +4,19 @@ import json
 import pdb
 import cv2
 import numpy as np
-import glob
 
 from os import path as osp
 from PySide6.QtCore import QThread
-from need.utils import get_seg_mask, uniform_path, path_to, file_remove
+from need.utils import get_seg_mask, file_remove
 from need.custom_signals import BoolSignal
 
 signal_docl_done = BoolSignal()
 
 
 class DeleteOneClassLabels(QThread):
-    def __init__(self, imgs, img_dir, work_mode, one_file_label, separate_label, label_file_dict, classes, del_c):
+    def __init__(self, imgs, work_mode, one_file_label, separate_label, label_file_dict, classes, del_c, main_window):
         super().__init__()
         self.imgs = imgs
-        self.img_dir = img_dir
         self.WorkMode = work_mode
         self.OneFileLabel = one_file_label
         self.SeparateLabel = separate_label
@@ -27,6 +25,7 @@ class DeleteOneClassLabels(QThread):
         self.del_c = del_c
         self.del_i = self.classes.index(self.del_c)
         self.classes.remove(self.del_c)
+        self.main_window = main_window
 
     def run(self):
         for i, one in enumerate(self.imgs):
@@ -36,12 +35,12 @@ class DeleteOneClassLabels(QThread):
             img_name = one.split('/')[-1]
 
             tv = 'none'
-            if osp.exists(f'{self.img_dir}/imgs/train/{img_name}'):
+            if osp.exists(f'{self.main_window.get_root("tv")}/imgs/train/{img_name}'):
                 tv = 'train'
-            elif osp.exists(f'{self.img_dir}/imgs/val/{img_name}'):
+            elif osp.exists(f'{self.main_window.get_root("tv")}/imgs/val/{img_name}'):
                 tv = 'val'
 
-            tv_img = f'{self.img_dir}/imgs/{tv}/{img_name}'
+            tv_img = f'{self.main_window.get_root("tv")}/imgs/{tv}/{img_name}'
 
             if self.OneFileLabel:
                 img_dict = self.label_file_dict['labels'].get(img_name)
@@ -61,15 +60,15 @@ class DeleteOneClassLabels(QThread):
 
             if self.SeparateLabel:
                 img_pure_name = img_name[:-4]
-                json_path = path_to(one, img2json=True)
-                png_path = path_to(one, img2png=True)
-                txt_path = path_to(one, img2txt=True)
+                json_path = self.main_window.get_separate_label(one, 'json')
+                png_path = self.main_window.get_separate_label(one, 'png')
+                txt_path = self.main_window.get_separate_label(one, 'txt')
                 if not osp.exists(json_path):
                     continue
 
-                tv_json = f'{self.img_dir}/labels/{tv}/{img_pure_name}.json'
-                tv_png = f'{self.img_dir}/labels/{tv}/{img_pure_name}.png'
-                tv_txt = f'{self.img_dir}/labels/{tv}/{img_pure_name}.txt'
+                tv_json = f'{self.main_window.get_root("tv")}/labels/{tv}/{img_pure_name}.json'
+                tv_png = f'{self.main_window.get_root("tv")}/labels/{tv}/{img_pure_name}.png'
+                tv_txt = f'{self.main_window.get_root("tv")}/labels/{tv}/{img_pure_name}.txt'
 
                 with open(json_path, 'r') as f:
                     content = json.load(f)

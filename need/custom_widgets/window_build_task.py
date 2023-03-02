@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import glob
 import os
+import pdb
 
 from os import path as osp
 from PySide6.QtUiTools import QUiLoader
@@ -9,10 +10,10 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow
 from PySide6.QtWidgets import QMessageBox as QMB
 from need.utils import uniform_path
 from need.custom_threads import CopyImgs, signal_copy_imgs_done
-from need.custom_signals import StrSignal
+from need.custom_signals import ListSignal
 from need.custom_widgets import WaitingLabel
 
-signal_send_imgs = StrSignal()
+signal_send_imgs = ListSignal()
 
 
 class BuildTask(QMainWindow):
@@ -26,6 +27,7 @@ class BuildTask(QMainWindow):
         self.img_folder = None
         self.root_path = None
         self.save_path = None
+        self.version = None
         self.btw.pushButton_img.clicked.connect(lambda: self.set_page(0))
         self.btw.pushButton_video.clicked.connect(lambda: self.set_page(1))
         self.btw.pushButton_import_imgs.clicked.connect(self.import_imgs)
@@ -35,8 +37,12 @@ class BuildTask(QMainWindow):
 
     def build_task_begin(self):
         task_name = self.btw.lineEdit_task_name.text().strip()
+        self.version = self.btw.lineEdit_version.text().strip()
         if not task_name:
             QMB.critical(self.btw, self.tr('未输入任务名称'), self.tr('请输入任务名称。'))
+            return
+        if self.version is None:
+            QMB.critical(self.btw, self.tr('未输入版本名称'), self.tr('请输入版本名称。'))
             return
         if self.save_path is None:
             QMB.critical(self.btw, self.tr('未选择保存路径'), self.tr('请选择任务保存路径。'))
@@ -46,10 +52,11 @@ class BuildTask(QMainWindow):
             return
 
         self.root_path = f'{self.save_path}/{task_name}'
-        dst_path = f'{self.root_path}/{self.work_mode}/{self.img_folder}'
-        if osp.exists(dst_path):
-            QMB.critical(self.btw, self.tr('路径已存在'), self.tr('"{}"已存在，请选择其它保存路径。').format(dst_path))
+        if osp.exists(self.root_path):
+            QMB.critical(self.btw, self.tr('路径已存在'),
+                         self.tr('"{}"已存在，请选择其它保存路径。').format(self.root_path))
         else:
+            dst_path = f'{self.root_path}/{self.work_mode}/{self.img_folder}'
             os.makedirs(dst_path, exist_ok=False)
             method = 'cut' if self.btw.radioButton_cut.isChecked() else 'copy'
             self.thread_copy_imgs = CopyImgs(self.imgs, dst_path, method)
@@ -62,7 +69,8 @@ class BuildTask(QMainWindow):
         self.waiting_label.stop()
         self.waiting_label.close()
         self.btw.close()
-        signal_send_imgs.send(self.root_path)
+        des_text = self.btw.textBrowser_des.toPlainText()
+        signal_send_imgs.send([self.root_path, self.version, des_text])
 
     def get_save_path(self):
         path = self.file_select_dlg.getExistingDirectory(self.btw, self.tr('选择文件夹'))
@@ -71,32 +79,30 @@ class BuildTask(QMainWindow):
             self.save_path = path
 
     def import_imgs(self):
-        img_type = []
+        img_type = ''
         if self.btw.checkBox_jpg.isChecked():
-            img_type.append('jpg')
+            img_type += '*.jpg '
         if self.btw.checkBox_png.isChecked():
-            img_type.append('png')
+            img_type += '*.png '
         if self.btw.checkBox_bmp.isChecked():
-            img_type.append('bmp')
+            img_type += '*.bmp '
 
         if img_type:
-            path = self.file_select_dlg.getExistingDirectory(self.btw, self.tr('选择文件夹'))
-            if osp.exists(path):
-                self.btw.textBrowser_3.clear()
+            paths = self.file_select_dlg.getOpenFileNames(self.btw, self.tr('选择图片'),
+                                                          filter=self.tr('图片类型 ({})').format(img_type))[0]
 
-                imgs = glob.glob(f'{path}/*')
-                imgs = [uniform_path(aa) for aa in imgs if aa[-3:] in img_type]
-                imgs.sort()
-                self.imgs = imgs
+            if paths:
+                self.btw.textBrowser_3.clear()
+                self.imgs = paths
 
                 jpg_num, png_num, bmp_num = 0, 0, 0
-                for one in imgs:
+                for one in self.imgs:
                     suffix = one[-3:]
-                    if 'jpg' in img_type and suffix == 'jpg':
+                    if suffix == 'jpg':
                         jpg_num += 1
-                    if 'png' in img_type and suffix == 'png':
+                    if suffix == 'png':
                         png_num += 1
-                    if 'bmp' in img_type and suffix == 'bmp':
+                    if suffix == 'bmp':
                         bmp_num += 1
 
                 if jpg_num + png_num + bmp_num != 0:
@@ -109,7 +115,7 @@ class BuildTask(QMainWindow):
                 else:
                     self.btw.textBrowser_3.append(self.tr('未找到图片。'))
         else:
-            QMB.critical(self.btw, self.tr('未选择图片类型'), self.tr('请选择至少一种图片类型。'))
+            QMB.warning(self.btw, self.tr('未选择图片类型'), self.tr('请选择至少一种图片类型。'))
 
     def set_page(self, index):
         self.btw.stackedWidget.setCurrentIndex(index)

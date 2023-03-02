@@ -15,23 +15,17 @@ signal_stat_info = ListSignal()
 
 
 class ClassStatistics(QThread):
-    def __init__(self, work_mode, img_root_path, img_num, classes, one_file_label, label_file_dict,
-                 separate_label, language='CN'):
+    def __init__(self, work_mode, img_num, classes, one_file_label, label_file_dict,
+                 separate_label, main_window, language='CN'):
         super().__init__()
         self.WorkMode = work_mode
-        self.img_root_path = img_root_path
         self.img_num = img_num
         self.classes = classes
         self.OneFileLabel = one_file_label
         self.label_file_dict = label_file_dict
         self.SeparateLabel = separate_label
+        self.main_window = main_window
         self.language = language
-        if self.language == 'CN':
-            self.img_folder = '原图'
-            self.label_folder = '标注'
-        elif self.language == 'EN':
-            self.img_folder = 'Original Images'
-            self.label_folder = 'Label Files'
 
     def run(self):
         add_info = []
@@ -123,7 +117,7 @@ class ClassStatistics(QThread):
 
         elif self.SeparateLabel:
             if self.WorkMode in ('单分类', 'Single Cls'):
-                files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/{self.img_folder}/*')
+                files = glob.glob(f'{self.main_window.get_root("separate")}/*')
                 files = [uniform_path(one) for one in files]
 
                 for one in files:
@@ -142,19 +136,19 @@ class ClassStatistics(QThread):
 
                         for one_img in c_imgs:
                             name = one_img.split(os_sep)[-1]
-                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/train/{c_name}/{name}'):
+                            if osp.exists(f'{self.main_window.get_root("tv")}/imgs/train/{c_name}/{name}'):
                                 shape_t.setdefault(c_name, 0)
                                 shape_t[c_name] += 1
                                 img_t.setdefault(c_name, 0)
                                 img_t[c_name] += 1
-                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/imgs/val/{c_name}/{name}'):
+                            if osp.exists(f'{self.main_window.get_root("tv")}/imgs/val/{c_name}/{name}'):
                                 shape_v.setdefault(c_name, 0)
                                 shape_v[c_name] += 1
                                 img_v.setdefault(c_name, 0)
                                 img_v[c_name] += 1
 
             elif self.WorkMode in ('多分类', 'Multi Cls'):
-                files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/{self.label_folder}/*.txt')
+                files = glob.glob(f'{self.main_window.get_root("separate")}/*.txt')
                 for one in files:
                     file_name = one.split(os_sep)[-1]
 
@@ -169,26 +163,26 @@ class ClassStatistics(QThread):
                             img_all.setdefault(c_name, 0)
                             img_all[c_name] += 1
 
-                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/train/{file_name}'):
+                            if osp.exists(f'{self.main_window.get_root("tv")}/labels/train/{file_name}'):
                                 shape_t.setdefault(c_name, 0)
                                 shape_t[c_name] += 1
                                 img_t.setdefault(c_name, 0)
                                 img_t[c_name] += 1
-                            if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/val/{file_name}'):
+                            if osp.exists(f'{self.main_window.get_root("tv")}/labels/val/{file_name}'):
                                 shape_v.setdefault(c_name, 0)
                                 shape_v[c_name] += 1
                                 img_v.setdefault(c_name, 0)
                                 img_v[c_name] += 1
 
             elif self.WorkMode in ('语义分割', 'Sem Seg', '目标检测', 'Obj Det', '实例分割', 'Ins Seg'):
-                files = glob.glob(f'{self.img_root_path}/{self.WorkMode}/{self.label_folder}/*.json')
+                files = glob.glob(f'{self.main_window.get_root("separate")}/*.json')
                 for one in files:
                     class_set = set()
                     file_name = one.split(os_sep)[-1]
                     has_t, has_v = False, False
-                    if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/train/{file_name}'):
+                    if osp.exists(f'{self.main_window.get_root("tv")}/labels/train/{file_name}'):
                         has_t = True
-                    if osp.exists(f'{self.img_root_path}/{self.WorkMode}/labels/val/{file_name}'):
+                    if osp.exists(f'{self.main_window.get_root("tv")}/labels/val/{file_name}'):
                         has_v = True
 
                     if 'labels.json' not in one:

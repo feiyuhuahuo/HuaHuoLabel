@@ -2,7 +2,7 @@
 <img src="images/bg.png" width="600px">  
 </div>
 
-## [===> English README.md](README_EN.md)  
+## [===> English README.md](docs/README_EN.md)  
 
 ## 花火标注  
 <div align=center>
@@ -50,7 +50,7 @@ Ubuntu20.04（已测试），Ubuntu22.04（已测试）
 （待完成）
 
 ## 使用方法
-[花火标注全功能介绍](USAGE_CN.md)
+[花火标注全功能介绍](docs/USAGE_CN.md)
 
 ## 运行项目
 1. 直接下载[发布版本](https://github.com/feiyuhuahuo/HuaHuoLabel/releases/tag/V1.0.0)  
@@ -82,7 +82,33 @@ Ubuntu版本：
 https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side
 https://forum.qt.io/topic/141742/how-to-translate-text-with-quiloader
 
-2. 作者英文水平有限，软件英文版的翻译以及[USAGE_EN.md](USAGE_EN.md)的翻译需要您的宝贵意见。  
+2. 作者英文水平有限，软件英文版的翻译以及[USAGE_EN.md](docs/USAGE_EN.md)的翻译需要您的宝贵意见。  
 
 ## License  
 花火标注采用GNU GPL许可证，您可以随意使用该工具，但在未取得作者许可的情况下，请勿使用该软件进行商业行为。  
+
+
+
+└─根目录
+    ├─deleted
+    └─目标检测（单分类、语义分割...）
+        ├─train_val_set （仅独立标注模式）
+        │   ├─imgs
+        │   │  ├─train
+        │   │  └─val
+        │   └─labels
+        │      └─v1    
+        │        ├─train
+        │        └─val
+        ├─原图
+        └─标注
+            └─v1
+                ├─独立标注
+                ├─labels.json
+                ├─classes.txt
+                └─description.txt
+            └─v2
+                ├─独立标注
+                ├─labels.json
+                ├─classes.txt
+                └─description.txt

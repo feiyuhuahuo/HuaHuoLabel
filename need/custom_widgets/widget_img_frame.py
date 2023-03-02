@@ -11,7 +11,7 @@ from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QC
 from PySide6 import QtCore
 from need.utils import point_in_shape, AnnUndo, shape_type
 from need.custom_signals import *
-from need.custom_widgets import SelectWindow, signal_select_window_close
+from need.custom_widgets import SelectItem, signal_select_window_close
 
 signal_check_draw_enable = BoolSignal()
 signal_del_shape = IntSignal()
@@ -228,12 +228,12 @@ class BaseImgFrame(QFrame):
             return None
 
 
-class ImgShow(BaseImgFrame):
+class CenterImgFrame(BaseImgFrame):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
         self.scaled_img_painted = None
-        self.collection_window = SelectWindow(title=self.tr('收藏标注'), button_signal=signal_select_collection_ok)
-        self.tag_window = SelectWindow(title=self.tr('标签'), button_signal=signal_select_tag_ok)
+        self.collection_window = SelectItem(title=self.tr('收藏标注'), button_signal=signal_select_collection_ok)
+        self.tag_window = SelectItem(title=self.tr('标签'), button_signal=signal_select_tag_ok)
 
         self.det_cross_color = QColor(120, 120, 120)
         self.seg_pen_size = 2

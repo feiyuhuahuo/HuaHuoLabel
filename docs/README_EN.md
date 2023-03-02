@@ -23,13 +23,13 @@ Ubuntu20.04 (tested), Ubuntu22.04 (tested)
 
 |             Single Category Classification             |                 Instance Segmentation                  |
 |:------------------------------------------------------:|:------------------------------------------------------:|
-| ![cls_example.gif](images/readme_imgs/cls_example.gif) | ![ins_example.gif](images/readme_imgs/ins_example.gif) |
+| ![cls_example.gif](../images/readme_imgs/cls_example.gif) | ![ins_example.gif](../images/readme_imgs/ins_example.gif) |
 
 * Ring form and pixel-level label 
 
 |             Ring form label              |             Pixel-level label              |
 |:----------------------------------------:|:------------------------------------------:|
-| ![ring.gif](images/readme_imgs/ring.gif) | ![pixel.gif](images/readme_imgs/pixel.gif) |
+| ![ring.gif](../images/readme_imgs/ring.gif) | ![pixel.gif](../images/readme_imgs/pixel.gif) |
 
 * Real-time image enhancement   
 <img src="images/readme_imgs/enhance.gif" width="500px">  
@@ -78,7 +78,7 @@ This project is compiled with Nuitka. Nuitka supports Windows、Linux and macOS.
     ```
     After compilation is done, copy "images" folder, "ts_files" folder, "ui_files" folder and "project.json" to the project root directory.
 
-3. Clone the source code and run [HHL.py](HHL.py) in your IDE.
+3. Clone the source code and run [HHL.py](../HHL.py) in your IDE.
 
 
 ## Something Need Help  
