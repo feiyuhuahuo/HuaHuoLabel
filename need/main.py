@@ -2721,7 +2721,6 @@ class ImgCls(QMainWindow):
         self.waiting_label.stop()
         self.waiting_label.close()
         self.window_class_stat = ClassStatWidget(info)
-        self.window_class_stat.resize(self.window_class_stat.class_list.size())
         self.window_class_stat.show()
 
     def show_compare_img(self):
@@ -2900,7 +2899,6 @@ class ImgCls(QMainWindow):
             return False
 
 # doing----------
-# todo: 标注文件加入版本管理？
 # todo: 统计信息 加入未标注 未划分 图片标签统计  导出类别统计txt？
 # todo: 类别统计，长类别名 对不齐  用textbrowser？
 # doing----------
