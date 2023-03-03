@@ -42,6 +42,7 @@ class CustomMessageBox(QDialog):
         self.ui.checkBox.toggled.connect(self.set_dont_show_again)
         self.ui.textBrowser.append('  ')
         self.DontShowAgain = False
+        self.dont_show_flag = ''
 
         if not self.has_ch(title):
             self.ui.pushButton.setText('Yes')
@@ -66,6 +67,13 @@ class CustomMessageBox(QDialog):
 
     def result(self):
         return self.__question_result
+
+    # def do_show_again(self):
+    #     self.ui.checkBox.setChecked(False)  # 自动触发 set_dont_show_again
+    def set_dont_show_flag(self, flag: str):
+        if self.dont_show_flag != flag:
+            self.ui.checkBox.setChecked(False)  # 自动触发 set_dont_show_again
+            self.dont_show_flag = flag
 
     def set_dont_show_again(self):
         self.DontShowAgain = self.ui.checkBox.isChecked()

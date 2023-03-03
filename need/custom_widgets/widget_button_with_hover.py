@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import pdb
 
@@ -12,10 +12,10 @@ class ButtonWithHoverWindow(QPushButton):
 
 
     def enterEvent(self, event):
-        print('888')
+        print('in')
 
     def leaveEvent(self, event):
-        print('88668')
+        print('out')
 
 
 if __name__ == '__main__':

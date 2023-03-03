@@ -1,18 +1,17 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-import glob
 import os
+import pdb
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QComboBox, QDialog, QFileDialog, QPushButton, QVBoxLayout, \
-    QSpacerItem, QSizePolicy, QApplication
-from PySide6.QtWidgets import QMessageBox as QMB
+    QSpacerItem, QSizePolicy, QApplication, QLineEdit
 from PySide6.QtGui import QFont
 
 
 class ChooseVersion(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.resize(160, 60)
+        self.setFixedSize(160, 115)
         font = QFont()
         font.setPointSize(10)
 
@@ -24,6 +23,9 @@ class ChooseVersion(QDialog):
         self.label = QLabel(title)
         self.label.setFont(font)
         self.comboBox_versions = QComboBox()
+        self.comboBox_versions.setFont(font)
+        self.comboBox_versions.setMinimumWidth(70)
+        self.comboBox_versions.setMaximumWidth(70)
 
         self.ok_putton = QPushButton(self.tr('确定'))
         self.ok_putton.setFont(font)
@@ -36,6 +38,15 @@ class ChooseVersion(QDialog):
         self.cancel_putton.clicked.connect(lambda: self.set_result(False))
         h_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
+        self.new_button = QLabel(self.tr('新建版本'))
+        self.new_button.setFont(font)
+        self.version_edit = QLineEdit()
+        self.version_edit.setFont(font)
+        self.version_edit.setMinimumWidth(70)
+        self.version_edit.setMaximumWidth(70)
+
+        self.comboBox_versions.currentIndexChanged.connect(lambda: self.version_edit.clear())
+
         layout1 = QHBoxLayout()
         layout1.addWidget(self.label)
         layout1.addWidget(self.comboBox_versions)
@@ -45,29 +56,38 @@ class ChooseVersion(QDialog):
         layout2.addWidget(self.ok_putton)
         layout2.addWidget(self.cancel_putton)
 
+        layout4 = QHBoxLayout()
+        layout4.addWidget(self.new_button)
+        layout4.addWidget(self.version_edit)
+
         layout3 = QVBoxLayout()
         layout3.addLayout(layout1)
+        layout3.addLayout(layout4)
         layout3.addLayout(layout2)
         self.setLayout(layout3)
 
     def exec(self):
-        if self.comboBox_versions.count():
-            super().exec()
-        else:
-            QMB.warning(self, self.tr('未找到标注'), self.tr('未找到任何标注版本，请新建任务。'))
-
+        super().exec()
         return self.__version
 
-    def set_path(self, label_path):
-        versions = [one for one in os.listdir(label_path) if one.startswith('v')]
-        versions = [one for one in versions if os.path.isdir(f'{label_path}/{one}')]
+    def get_versions(self, label_path):
         self.comboBox_versions.clear()
-        for one in versions:
-            self.comboBox_versions.addItem(one)
+        self.__version = ''
+
+        if os.path.exists(label_path):
+            versions = [one for one in os.listdir(label_path)]
+            versions = [one for one in versions if os.path.isdir(f'{label_path}/{one}')]
+
+            for one in versions:
+                self.comboBox_versions.addItem(one)
 
     def set_result(self, result):
         if result:
-            self.__version = self.comboBox_versions.currentText()
+            new_version = self.version_edit.text()
+            if new_version:
+                self.__version = new_version
+            else:
+                self.__version = self.comboBox_versions.currentText()
         else:
             self.__version = ''
 

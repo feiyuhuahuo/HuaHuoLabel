@@ -31,6 +31,7 @@ class BuildTask(QMainWindow):
         self.btw.pushButton_img.clicked.connect(lambda: self.set_page(0))
         self.btw.pushButton_video.clicked.connect(lambda: self.set_page(1))
         self.btw.pushButton_import_imgs.clicked.connect(self.import_imgs)
+        self.btw.pushButton_task_name.clicked.connect(self.get_task_name)
         self.btw.pushButton_save_path.clicked.connect(self.get_save_path)
         self.btw.pushButton_build.clicked.connect(self.build_task_begin)
         signal_copy_imgs_done.signal.connect(self.build_task_end)
@@ -52,11 +53,11 @@ class BuildTask(QMainWindow):
             return
 
         self.root_path = f'{self.save_path}/{task_name}'
-        if osp.exists(self.root_path):
+        dst_path = f'{self.root_path}/{self.work_mode}/{self.img_folder}'
+        if osp.exists(dst_path):
             QMB.critical(self.btw, self.tr('路径已存在'),
-                         self.tr('"{}"已存在，请选择其它保存路径。').format(self.root_path))
+                         self.tr('"{}"已存在，请选择其它保存路径或任务类型。').format(dst_path))
         else:
-            dst_path = f'{self.root_path}/{self.work_mode}/{self.img_folder}'
             os.makedirs(dst_path, exist_ok=False)
             method = 'cut' if self.btw.radioButton_cut.isChecked() else 'copy'
             self.thread_copy_imgs = CopyImgs(self.imgs, dst_path, method)
@@ -77,6 +78,15 @@ class BuildTask(QMainWindow):
         if osp.isdir(path):
             self.btw.lineEdit_6.setText(path)
             self.save_path = path
+
+    def get_task_name(self):
+        path = self.file_select_dlg.getExistingDirectory(self.btw, self.tr('选择文件夹'))
+        if osp.isdir(path):
+            task_name = path.split('/')[-1]
+            self.btw.lineEdit_task_name.setText(task_name)
+            save_path = path.removesuffix(f'/{task_name}')
+            self.btw.lineEdit_6.setText(save_path)
+            self.save_path = save_path
 
     def import_imgs(self):
         img_type = ''

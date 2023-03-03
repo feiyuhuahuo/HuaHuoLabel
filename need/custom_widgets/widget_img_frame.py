@@ -244,7 +244,7 @@ class CenterImgFrame(BaseImgFrame):
         self.ann_font_color = QColor('white')
 
         self.collected_shapes = {}
-        self.all_polygons = []
+        self.__all_polygons = []
         self.widget_points = []
         self.img_points = []
         self.widget_points_huan = []
@@ -443,7 +443,11 @@ class CenterImgFrame(BaseImgFrame):
                 if b_left <= point_br.x() <= b_right and b_up <= point_br.y() <= b_down:
                     if len(self.widget_points):
                         self.add_widget_img_pair(point_br)
-                        signal_open_label_window.send(True)
+
+                        if len(self.widget_points) in (0, 3):  # 一些误操作导致长度错误，直接清空重画
+                            self.clear_widget_img_points()
+                        else:
+                            signal_open_label_window.send(True)
                 else:
                     self.clear_widget_img_points()
             elif self.shape_type in shape_type('像素'):
@@ -492,7 +496,7 @@ class CenterImgFrame(BaseImgFrame):
                             elif self.shape_type in shape_type('椭圆形'):
                                 self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
 
-                    elif self.shape_type in shape_type(['多边形','环形']):
+                    elif self.shape_type in shape_type(['多边形', '环形']):
                         if len(self.widget_points) >= 2:  # 画已完成的完整线段
                             for i in range(len(self.widget_points) - 1):
                                 self.painter.drawLine(self.widget_points[i], self.widget_points[i + 1])
@@ -610,7 +614,7 @@ class CenterImgFrame(BaseImgFrame):
         self.clear_widget_img_points()
 
     def clear_all_polygons(self):
-        self.all_polygons = []
+        self.__all_polygons = []
         self.clear_widget_img_points()
         self.clear_widget_img_points_huan()
         self.update()
@@ -675,7 +679,7 @@ class CenterImgFrame(BaseImgFrame):
                 return
 
         b_left, b_up, b_right, b_down = self.get_border_coor()
-        polygon = self.all_polygons[i]
+        polygon = self.__all_polygons[i]
 
         if polygon['shape_type'] in shape_type('像素'):  # 像素标注不具备这个功能
             return
@@ -740,7 +744,7 @@ class CenterImgFrame(BaseImgFrame):
     def cursor_close_to_corner(self):
         corner_index = None
 
-        for i, polygon in enumerate(self.all_polygons):
+        for i, polygon in enumerate(self.__all_polygons):
             if polygon['shape_type'] in shape_type('环形'):
                 for j, huan in enumerate(polygon['widget_points']):
                     for k, point in enumerate(huan):
@@ -764,16 +768,16 @@ class CenterImgFrame(BaseImgFrame):
 
     def del_polygons(self):
         if (self.DetMode or self.SegMode) and self.ShapeEditMode and self.polygon_editing_i is not None:
-            self.all_polygons.pop(self.polygon_editing_i)
+            self.__all_polygons.pop(self.polygon_editing_i)
             signal_del_shape.send(self.polygon_editing_i)
             self.polygon_editing_i = None
         self.update()
 
     def draw_editing_polygon(self):  # 画正在编辑中的polygon
-        if self.all_polygons and self.polygon_editing_i is not None:
+        if self.__all_polygons and self.polygon_editing_i is not None:
             self.painter.setPen(Qt.NoPen)
             self.painter.setBrush(QColor(0, 255, 0, 150))
-            editing_poly = self.all_polygons[self.polygon_editing_i]
+            editing_poly = self.__all_polygons[self.polygon_editing_i]
 
             st = editing_poly['shape_type']
             if st in shape_type(['矩形', '椭圆形']):
@@ -798,7 +802,7 @@ class CenterImgFrame(BaseImgFrame):
 
     def draw_completed_polygons(self):  # 在标注时画已完成的完整图形
         # note: 在ShapeEditMode时，鼠标移动时也在频繁触发，要关注绘制数量较大时，是否会造成系统负担
-        for one in self.all_polygons:
+        for one in self.__all_polygons:
             self.painter.setPen(QPen(QColor(one['qcolor']), self.seg_pen_size))
             if one['shape_type'] in shape_type('多边形'):
                 self.painter.drawPolygon(one['widget_points'])
@@ -828,8 +832,8 @@ class CenterImgFrame(BaseImgFrame):
         if fill_index is not None:
             x, y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
             new_p = [x, y]
-            img_points = self.all_polygons[fill_index]['img_points']
-            widget_points = self.all_polygons[fill_index]['widget_points']
+            img_points = self.__all_polygons[fill_index]['img_points']
+            widget_points = self.__all_polygons[fill_index]['widget_points']
 
             if new_p in img_points:
                 index = img_points.index(new_p)
@@ -866,7 +870,7 @@ class CenterImgFrame(BaseImgFrame):
     def get_editing_polygon(self):
         editing_i = None
 
-        for i, one in enumerate(self.all_polygons):
+        for i, one in enumerate(self.__all_polygons):
             point = self.cursor_in_widget.toTuple()
             st = one['shape_type']
 
@@ -893,8 +897,11 @@ class CenterImgFrame(BaseImgFrame):
         in_border_y = min(max(b_up, w_p.y()), b_down)
         return QPointF(in_border_x, in_border_y)
 
-    def get_json_polygons(self):
-        json_polygons = deepcopy(self.all_polygons)
+    def get_one_polygon(self, i):
+        return deepcopy(self.__all_polygons[i])
+
+    def get_tuple_polygons(self):
+        json_polygons = deepcopy(self.__all_polygons)
 
         if len(json_polygons):
             for one in json_polygons:
@@ -907,6 +914,9 @@ class CenterImgFrame(BaseImgFrame):
                 one['widget_points'] = widget_points
 
         return json_polygons
+
+    def img_size(self):
+        return self.img.size().toTuple()
 
     def prepare_polygons(self, polygons, ori_h, ori_w):
         img_h, img_w = self.img.size().height(), self.img.size().width()
@@ -934,11 +944,11 @@ class CenterImgFrame(BaseImgFrame):
 
                 one['widget_points'] = ps
 
-            self.all_polygons = polygons
+            self.__all_polygons = polygons
             self.update()
 
     def modify_polygon_class(self, i, new_class, new_color):
-        polygon = self.all_polygons[i]
+        polygon = self.__all_polygons[i]
         polygon['category'] = new_class
         polygon['qcolor'] = new_color
         self.update()
@@ -952,7 +962,7 @@ class CenterImgFrame(BaseImgFrame):
             self.update()
 
     def move_polygons(self, key_left=False, key_right=False, key_up=False, key_down=False):  # 标注整体移动功能
-        editing_polygon = self.all_polygons[self.polygon_editing_i]
+        editing_polygon = self.__all_polygons[self.polygon_editing_i]
         widget_points, img_points = editing_polygon['widget_points'], editing_polygon['img_points']
         st = editing_polygon['shape_type']
 
@@ -1031,11 +1041,11 @@ class CenterImgFrame(BaseImgFrame):
             st = self.shape_type
 
         if st in shape_type('环形'):
-            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
+            self.__all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
                                       'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
             self.clear_widget_img_points_huan()
         else:
-            self.all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
+            self.__all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
                                       'widget_points': self.widget_points, 'img_points': self.img_points})
             self.clear_widget_img_points()
 
@@ -1089,7 +1099,7 @@ class CenterImgFrame(BaseImgFrame):
             if text in self.collected_shapes.keys():
                 QMessageBox.warning(self, self.tr('名称重复'), self.tr('{}已存在。').format(text))
             else:
-                self.collected_shapes[text] = self.all_polygons[self.polygon_editing_i]
+                self.collected_shapes[text] = self.__all_polygons[self.polygon_editing_i]
                 self.collection_window.ui.listWidget.addItem(QListWidgetItem(text))
                 self.collection_window.ui.lineEdit.setText('')
 
@@ -1163,7 +1173,7 @@ class CenterImgFrame(BaseImgFrame):
             signal_open_label_window.send(True)
 
     def shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):
-        for one in self.all_polygons:
+        for one in self.__all_polygons:
             if one['shape_type'] in shape_type('环形'):
                 wp1 = self.shape_scale_convert(one['widget_points'][0], old_img_tl, scale_factor)
                 wp2 = self.shape_scale_convert(one['widget_points'][1], old_img_tl, scale_factor)

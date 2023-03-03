@@ -186,7 +186,7 @@ class ClassStatistics(QThread):
                         has_v = True
 
                     if 'labels.json' not in one:
-                        with open(one, 'r') as f:
+                        with open(one, 'r', encoding='utf-8') as f:
                             content = json.load(f)
 
                         total_num += 1

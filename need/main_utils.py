@@ -37,6 +37,7 @@ def connect_all_other_signals(main_window):
     main_window.main_ui.pushButton_81.clicked.connect(lambda: main_window.img_rotate(do_paint=True))
     main_window.main_ui.pushButton_82.clicked.connect(lambda: main_window.img_flip(h_flip=True, do_paint=True))
     main_window.main_ui.pushButton_83.clicked.connect(lambda: main_window.img_flip(v_flip=True, do_paint=True))
+    main_window.main_ui.pushButton_84.clicked.connect(main_window.img_enhance_reset)
     main_window.main_ui.pushButton_100.clicked.connect(main_window.show_compare_img)
     main_window.main_ui.pushButton_136.clicked.connect(main_window.save_edited_img)
     main_window.main_ui.pushButton_137.clicked.connect(lambda: main_window.save_edited_img(save_all=True))
@@ -150,11 +151,6 @@ def init_menu(main_window):
     main_window.menu_seg_annotation.addAction(main_window.action_delete_one_shape)
     main_window.menu_seg_annotation.addAction(main_window.action_delete_all)
     main_window.menu_seg_annotation.addAction(main_window.action_lock_shape)
-
-    main_window.menu_img_enhance = QMenu(main_window)
-    main_window.main_ui.groupBox_img_enhance.customContextMenuRequested.connect(
-        lambda: main_window.show_menu(main_window.menu_img_enhance))
-    main_window.menu_img_enhance.addAction(main_window.tr('还原')).triggered.connect(main_window.img_enhance_reset)
 
     main_window.menu_set_shape_info = QMenu(main_window)
     main_window.action_oc_shape_info = QAction(main_window.tr('禁用（提高切图速度）'), main_window)

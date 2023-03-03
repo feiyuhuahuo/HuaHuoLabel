@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1359</width>
-    <height>1067</height>
+    <width>1254</width>
+    <height>928</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -139,7 +139,7 @@ QToolBox::tab:selected {
                 <x>0</x>
                 <y>0</y>
                 <width>128</width>
-                <height>577</height>
+                <height>479</height>
                </rect>
               </property>
               <property name="font">
@@ -332,6 +332,11 @@ background-color: rgb(230, 229, 255);</string>
                    <height>10000</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="contextMenuPolicy">
                   <enum>Qt::CustomContextMenu</enum>
                  </property>
@@ -384,6 +389,11 @@ background-color: rgb(230, 229, 255);</string>
                    <height>10000</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="contextMenuPolicy">
                   <enum>Qt::CustomContextMenu</enum>
                  </property>
@@ -432,6 +442,11 @@ background-color: rgb(230, 229, 255);</string>
                    <width>100</width>
                    <height>10000</height>
                   </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
                  </property>
                 </widget>
                </item>
@@ -563,7 +578,7 @@ background-color: rgb(230, 229, 255);</string>
                 <x>0</x>
                 <y>0</y>
                 <width>125</width>
-                <height>577</height>
+                <height>479</height>
                </rect>
               </property>
               <attribute name="label">
@@ -893,7 +908,7 @@ background-color: rgb(230, 229, 255);</string>
                 <x>0</x>
                 <y>0</y>
                 <width>130</width>
-                <height>577</height>
+                <height>479</height>
                </rect>
               </property>
               <attribute name="label">
@@ -1705,7 +1720,7 @@ border-radius: 5px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>963</width>
+             <width>858</width>
              <height>171</height>
             </rect>
            </property>
@@ -1730,7 +1745,7 @@ border-radius: 5px;</string>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,10,3,2">
         <property name="spacing">
-         <number>20</number>
+         <number>30</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -2870,7 +2885,7 @@ QCheckBox::indicator:unchecked {
         <property name="title">
          <string/>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_12">
+        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="2,2,1,3,3">
          <item alignment="Qt::AlignHCenter">
           <widget class="QRadioButton" name="radioButton_read">
            <property name="enabled">
@@ -2975,6 +2990,19 @@ QRadioButton::indicator:disabled {
             <string notr="true">buttonGroup</string>
            </attribute>
           </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item alignment="Qt::AlignHCenter">
           <widget class="QCheckBox" name="checkBox_one_label">
@@ -3725,7 +3753,7 @@ border-bottom-right-radius: 4px;</string>
                 <string>顺时针旋转90°</string>
                </property>
                <property name="text">
-                <string/>
+                <string> 0°</string>
                </property>
                <property name="icon">
                 <iconset>
@@ -3736,6 +3764,9 @@ border-bottom-right-radius: 4px;</string>
                  <width>16</width>
                  <height>16</height>
                 </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -3777,6 +3808,9 @@ border-bottom-right-radius: 4px;</string>
                  <height>16</height>
                 </size>
                </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item>
@@ -3803,13 +3837,53 @@ border-bottom-right-radius: 4px;</string>
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>images/图片21.png</normaloff>images/图片21.png</iconset>
+                 <normaloff>images/v_flip.png</normaloff>images/v_flip.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
                  <width>16</width>
                  <height>16</height>
                 </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_84">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>60</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>还原设置</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>images/reset.png</normaloff>images/reset.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -3977,7 +4051,7 @@ QCheckBox::indicator:unchecked {
              </property>
              <property name="icon">
               <iconset>
-               <normaloff>images/图片21.png</normaloff>images/图片21.png</iconset>
+               <normaloff>images/v_flip.png</normaloff>images/v_flip.png</iconset>
              </property>
              <property name="iconSize">
               <size>
@@ -4394,7 +4468,7 @@ QRadioButton::indicator:unchecked {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1359</width>
+     <width>1254</width>
      <height>22</height>
     </rect>
    </property>

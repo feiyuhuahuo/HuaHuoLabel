@@ -23,7 +23,7 @@ class ClassButton(QPushButton):
             # 如果这里getText()和warning()的parent为self，则会继承这个类的styleSheet
             text, is_ok = QInputDialog().getText(self, self.tr('类别名称'), self.tr('请输入类别名称，输入"-"删除当前类别。'),
                                                  QLineEdit.Normal)
-
+            text = text.strip()
             if is_ok and text:
                 if text in AllClasses.classes():
                     QMessageBox.warning(self, self.tr('类别重复'), self.tr('类别"{}"已存在。').format(text))
