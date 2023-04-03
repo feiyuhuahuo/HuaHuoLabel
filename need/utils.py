@@ -86,9 +86,18 @@ class ClassStatistic:
 
     def colors(self):
         return [aa[1] for aa in self.__classes]
+    
+    def class_at(self, i):
+        return self.__classes[i][0]
+
+    def color_at(self, i):
+        return self.__classes[i][1]
 
     def clear(self):
         self.__classes = []
+
+    def __len__(self):
+        return len(self.__classes)
 
 
 class MultiIndex:

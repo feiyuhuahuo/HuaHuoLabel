@@ -2,6 +2,8 @@
 # -*- coding:utf-8 -*-
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QProgressBar, QLabel
+from need.custom_threads.auto_inference import signal_ai_progress_text, signal_ai_progress_value
+from need.custom_threads.update_semantic_pngs import signal_usp_progress_text, signal_usp_progress_value
 
 
 class ProgressBar(QProgressBar):
@@ -58,6 +60,11 @@ class ProgressWindow(QWidget):
         layout.addWidget(self.progress_bar)
         layout.addWidget(self.info_label)
 
+        signal_ai_progress_text.signal.connect(self.set_text)
+        signal_usp_progress_text.signal.connect(self.set_text)
+        signal_ai_progress_value.signal.connect(self.set_value)
+        signal_usp_progress_value.signal.connect(self.set_value)
+
     def set_text(self, text):
         self.info_label.setText(self.text_prefix + text)
 
@@ -73,6 +80,7 @@ if __name__ == "__main__":
     for i in range(60):
         w.set_value(int((i + 1) / 160))
         import time
+
         time.sleep(0.1)
 
         w.set_text(f'{i + 1}/160')

@@ -17,7 +17,3 @@ cd C:\Users\feiyuhuahuo\AppData\Local\Programs\Python\Python39\Lib\site-packages
 lupdate -no-obsolete E:\HuaHuoLabel\need\main.py -ts E:\HuaHuoLabel\ts_files\main.ts
 lupdate -no-obsolete E:\HuaHuoLabel\main_window.ui -ts E:\HuaHuoLabel\ts_files\main_window.ts
 lupdate E:\HuaHuoLabel\need\custom_widgets\img_show_widget.py  -ts E:\HuaHuoLabel\ts_files\img_show_widget.ts
-
-版本记录：
-1.0.0
-主功能完成，自动标注、伪标签功能待做，Ubuntu测试有瑕疵

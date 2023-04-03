@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1254</width>
-    <height>928</height>
+    <height>929</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="10,0">
         <item>
-         <widget class="CenterImgFrame" name="img_widget">
+         <widget class="CenterImg" name="img_widget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -30,14 +30,11 @@
           <property name="cursor">
            <cursorShape>OpenHandCursor</cursorShape>
           </property>
-          <property name="focusPolicy">
-           <enum>Qt::NoFocus</enum>
-          </property>
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
-          <property name="styleSheet">
-           <string notr="true"/>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
@@ -907,7 +904,7 @@ background-color: rgb(230, 229, 255);</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>130</width>
+                <width>125</width>
                 <height>479</height>
                </rect>
               </property>
@@ -930,242 +927,61 @@ background-color: rgb(230, 229, 255);</string>
                <property name="bottomMargin">
                 <number>2</number>
                </property>
-               <item alignment="Qt::AlignHCenter">
-                <widget class="QListWidget" name="listWidget_3">
+               <item>
+                <widget class="QPushButton" name="pushButton_26">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>0</width>
-                   <height>72</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
                    <width>100</width>
-                   <height>120</height>
+                   <height>0</height>
                   </size>
                  </property>
-                 <property name="viewMode">
-                  <enum>QListView::ListMode</enum>
+                 <property name="text">
+                  <string>绘制生成位置</string>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>添加目标图片</string>
-                  </property>
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                    <underline>false</underline>
-                    <strikeout>false</strikeout>
-                   </font>
-                  </property>
-                  <property name="textAlignment">
-                   <set>AlignCenter</set>
-                  </property>
-                  <property name="background">
-                   <brush brushstyle="SolidPattern">
-                    <color alpha="255">
-                     <red>225</red>
-                     <green>225</green>
-                     <blue>225</blue>
-                    </color>
-                   </brush>
-                  </property>
-                  <property name="foreground">
-                   <brush brushstyle="NoBrush">
-                    <color alpha="255">
-                     <red>0</red>
-                     <green>0</green>
-                     <blue>0</blue>
-                    </color>
-                   </brush>
-                  </property>
-                  <property name="flags">
-                   <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item alignment="Qt::AlignHCenter">
-                <widget class="QGroupBox" name="groupBox_3">
-                 <property name="maximumSize">
-                  <size>
-                   <width>120</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>融合算法</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_13">
-                  <item>
-                   <widget class="QRadioButton" name="radioButton">
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(220, 220, 220);
-    border:                 2px solid white;  
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>像素覆盖</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="radioButton_2">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(220, 220, 220);
-    border:                 2px solid white;  
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>权重相加</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="radioButton_3">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(220, 220, 220);
-    border:                 2px solid white;  
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>泊松融合</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="groupBox_4">
-                 <property name="maximumSize">
+                <widget class="QPushButton" name="pushButton_29">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
                   <size>
-                   <width>120</width>
-                   <height>16777215</height>
+                   <width>100</width>
+                   <height>0</height>
                   </size>
                  </property>
-                 <property name="title">
-                  <string>随机添加目标</string>
+                 <property name="text">
+                  <string>预览</string>
                  </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_30">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout">
-                  <item row="3" column="0" alignment="Qt::AlignHCenter">
-                   <widget class="QPushButton" name="pushButton_28">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>批量生成</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QPushButton" name="pushButton_26">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>绘制生成位置</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QPushButton" name="pushButton_27">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>数量范围</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>批量生成</string>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -4606,12 +4422,6 @@ QRadioButton::indicator:unchecked {
    <header>searchbox.h</header>
   </customwidget>
   <customwidget>
-   <class>CenterImgFrame</class>
-   <extends>QFrame</extends>
-   <header>centerimgframe.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>LabelTrainVal</class>
    <extends>QLabel</extends>
    <header>labeltrainval.h</header>
@@ -4626,12 +4436,17 @@ QRadioButton::indicator:unchecked {
    <extends>QLabel</extends>
    <header>labelvalbar.h</header>
   </customwidget>
+  <customwidget>
+   <class>CenterImg</class>
+   <extends>QLabel</extends>
+   <header>centerimg.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>

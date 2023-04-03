@@ -4,7 +4,7 @@ import pdb
 
 from typing import List, Union
 from copy import deepcopy
-from PySide6.QtWidgets import QInputDialog, QFrame, QMessageBox, QApplication, QMenu, QListWidgetItem
+from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
     QImageReader, QIcon
@@ -27,7 +27,7 @@ signal_xy_color2ui = ListSignal()
 signal_select_tag_ok = StrSignal()
 
 
-class BaseImgFrame(QFrame):
+class BaseImgFrame(QLabel):
     # 基础图片展示控件，只提供基本的图片显示、拖曳、缩放功能，不提供标注功能。
     def __init__(self, parent=None, title='base_frame'):
         super().__init__(parent)
@@ -228,7 +228,7 @@ class BaseImgFrame(QFrame):
             return None
 
 
-class CenterImgFrame(BaseImgFrame):
+class CenterImg(BaseImgFrame):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
         self.scaled_img_painted = None
@@ -1042,11 +1042,11 @@ class CenterImgFrame(BaseImgFrame):
 
         if st in shape_type('环形'):
             self.__all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
-                                      'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
+                                        'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
             self.clear_widget_img_points_huan()
         else:
             self.__all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
-                                      'widget_points': self.widget_points, 'img_points': self.img_points})
+                                        'widget_points': self.widget_points, 'img_points': self.img_points})
             self.clear_widget_img_points()
 
         self.update()

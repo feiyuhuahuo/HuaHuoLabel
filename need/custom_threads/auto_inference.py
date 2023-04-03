@@ -7,29 +7,27 @@ import cv2
 from os import sep as os_sep
 import numpy as np
 from PySide6.QtCore import QThread
-from need.utils import douglas_peuker
-from need.custom_signals import StrSignal, IntSignal, BoolSignal
+from need.utils import douglas_peuker, AllClasses
+from need.custom_signals import StrSignal, IntSignal
 
 signal_ai_progress_text = StrSignal()
 signal_ai_progress_value = IntSignal()
-signal_auto_infer_done = BoolSignal()
 
 
 class RunInference(QThread):
-    def __init__(self, sess, imgs, classes, dp_para=(2, 4, 40), filter_area=16):
+    def __init__(self, work_mode, sess, imgs, meta_paras: dict):
         super().__init__()
+        self.WorkMode = work_mode
         self.sess = sess
         self.imgs = imgs
-        self.classes = classes
-        self.dp_para = dp_para
-        self.filter_area = filter_area
+
+        for k, v in meta_paras.items():
+            setattr(self, k, v)
 
     def run(self):
         img_num = len(self.imgs)
         inp = self.sess.get_inputs()[0]
-        in_shape, in_name = tuple(inp.shape), inp.name
-        img_root = self.imgs[0].split(os_sep)[0]
-        colors = list(ColorCode.keys())
+        in_shape = tuple(inp.shape)
 
         for i, one in enumerate(self.imgs):
             signal_ai_progress_value.send(int((i + 1) / img_num * 100))
@@ -39,7 +37,29 @@ class RunInference(QThread):
             if img_shape != in_shape:
                 img = cv2.resize(img, in_shape[:2])
 
-            result = self.sess.run(None, {in_name: img})[0][0]
+            result = self.sess.run(None, {inp.name: img})
+            self.post_process(result)
+            signal_ai_progress_text.send(f'{i + 1}/{img_num}')
+
+        signal_ai_progress_text.send(f'已完成，推理结果存放在 "{self.task_root}/自动标注"。')
+
+    def post_process(self, result):
+        if self.WorkMode in ('单分类', 'Single Cls'):
+            scores = result[0][0]
+            category = int(scores.argmax())
+            if self.score_thre > 0.:
+                if scores[category] < self.score_thre:
+                    category = -1
+
+            pdb.set_trace()
+        elif self.WorkMode in ('多分类', 'Multi Cls'):
+            pass
+        elif self.WorkMode in ('目标检测', 'Obj Det'):
+            pass
+        elif self.WorkMode in ('语义分割', 'Sem Seg', '实例分割', 'Ins Seg'):
+            img_root = self.imgs[0].split(os_sep)[0]
+            colors = list(ColorCode.keys())
+
             result = cv2.resize(result.astype('uint8'), img_shape[:2], interpolation=cv2.INTER_NEAREST)
 
             json_dict = {'img_height': img_shape[0], 'img_width': img_shape[1], 'polygons': []}
@@ -83,7 +103,3 @@ class RunInference(QThread):
             json_name = one.split(os_sep)[-1][:-3] + 'json'
             with open(f'{save_path}/{json_name}', 'w') as f:
                 json.dump(json_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
-
-            signal_ai_progress_text.send(f'{i + 1}/{img_num}')
-
-        signal_auto_infer_done.send(True)

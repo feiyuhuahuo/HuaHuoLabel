@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from .dialog_message import CustomMessageBox, signal_question_result
 from .window_select import SelectItem, signal_select_window_close
-from .widget_img_frame import CenterImgFrame, signal_shape_type, signal_xy_color2ui, signal_set_shape_list_selected, \
+from .widget_center_img import CenterImg, signal_shape_type, signal_xy_color2ui, signal_set_shape_list_selected, \
     signal_del_shape, signal_draw_selected_shape, signal_open_label_window, signal_one_collection_done, \
     BaseImgFrame, signal_move2new_folder, signal_shape_info_update, signal_check_draw_enable
 from .widget_unified_list import ClassListWidget, signal_update_num, ShapeListWidget
@@ -18,11 +18,13 @@ from .widget_search_box import SearchBox
 from .widget_label_train_val import LabelTrainVal
 from .widget_label_train_bar import LabelTrainBar
 from .widget_label_val_bar import LabelValBar
+from .window_auto_infer import AutoInfer, signal_request_imgs
 
-__all__ = ['CenterImgFrame', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'SelectItem', 'ProgressWindow',
+__all__ = ['CenterImg', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'SelectItem', 'ProgressWindow',
            'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'ClassListWidget', 'signal_shape_type',
            'signal_xy_color2ui', 'signal_set_shape_list_selected', 'signal_del_shape', 'signal_draw_selected_shape',
            'signal_open_label_window', 'signal_one_collection_done', 'BaseImgFrame', 'signal_move2new_folder',
            'signal_shape_info_update', 'signal_check_draw_enable', 'signal_show_plain_img', 'signal_show_label_img',
            'signal_update_num', 'ShapeListWidget', 'signal_select_window_close', 'BuildTask', 'signal_send_imgs',
-           'signal_question_result', 'ChooseVersion', 'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar']
+           'signal_question_result', 'ChooseVersion', 'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar',
+           'AutoInfer', 'signal_request_imgs']

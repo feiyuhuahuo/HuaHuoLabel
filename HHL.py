@@ -1,7 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import json
-from need.main import ImgCls
+from need.main import HHL_MainWindow
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QProcess, QTranslator
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         app.installTranslator(trans_img_show)
         app.installTranslator(trans_class_button)
 
-    ui = ImgCls()
+    ui = HHL_MainWindow()
     ui.show()
     exit_code = app.exec()
     ui.close()
