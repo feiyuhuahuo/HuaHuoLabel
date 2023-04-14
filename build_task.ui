@@ -163,12 +163,12 @@ border-radius: 5px;</string>
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/image.png</normaloff>images/image.png</iconset>
+           <normaloff>images/Photo_black.svg</normaloff>images/Photo_black.svg</iconset>
          </property>
          <property name="iconSize">
           <size>
-           <width>22</width>
-           <height>22</height>
+           <width>18</width>
+           <height>20</height>
           </size>
          </property>
         </widget>
@@ -186,12 +186,12 @@ border-radius: 5px;</string>
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/video.png</normaloff>images/video.png</iconset>
+           <normaloff>images/Movie_black.svg</normaloff>images/Movie_black.svg</iconset>
          </property>
          <property name="iconSize">
           <size>
-           <width>26</width>
-           <height>26</height>
+           <width>20</width>
+           <height>20</height>
           </size>
          </property>
         </widget>
@@ -209,12 +209,12 @@ border-radius: 5px;</string>
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/camera.png</normaloff>images/camera.png</iconset>
+           <normaloff>images/Camera_black.svg</normaloff>images/Camera_black.svg</iconset>
          </property>
          <property name="iconSize">
           <size>
-           <width>26</width>
-           <height>26</height>
+           <width>20</width>
+           <height>20</height>
           </size>
          </property>
         </widget>

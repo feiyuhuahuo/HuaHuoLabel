@@ -40,6 +40,7 @@ class BaseImgFrame(QLabel):
         self.resize(512, 512)
         # todo: bug, 不知道为什么基类的menu右键的时候不显示
         self.img_menu = QMenu('img_menu', self)
+        self.img_menu.setFixedWidth(135)
         self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
         self.action_bilinear.triggered.connect(lambda: self.set_interpolation(Qt.SmoothTransformation))
         self.action_nearest = QAction(self.tr('最近邻插值缩放'), self)
@@ -290,13 +291,20 @@ class CenterImg(BaseImgFrame):
         self.FlagDrawCollection = False
 
         self.draw_collection_shape = QAction(self.tr('绘制收藏的标注'), self)
+        self.draw_collection_shape.setIcon(QIcon('images/draw.png'))
         self.draw_collection_shape.triggered.connect(lambda: self.show_collection_window(True))
         self.draw_collection_shape.setDisabled(True)
+        self.action_move2folder = QAction(self.tr('移动至新文件夹'), self)
+        self.action_move2folder.setIcon(QIcon('images/move_to.png'))
+        self.action_move2folder.triggered.connect(self.move_to_new_folder)
         self.img_menu.addAction(self.draw_collection_shape)
-        self.img_menu.addAction(self.tr('移动至新文件夹')).triggered.connect(self.move_to_new_folder)
+        self.img_menu.addAction(self.action_move2folder)
 
         self.shape_menu = QMenu('shape_menu', self)
-        self.shape_menu.addAction(self.tr('收藏标注')).triggered.connect(lambda: self.show_collection_window(False))
+        self.action_add_collection = QAction(self.tr('收藏标注'), self)
+        self.action_add_collection.setIcon(QIcon('images/favorite.png'))
+        self.action_add_collection.triggered.connect(lambda: self.show_collection_window(False))
+        self.shape_menu.addAction(self.action_add_collection)
         self.shape_menu.addAction(self.tr('添加标签')).triggered.connect(self.show_tag_window)
 
         signal_draw_selected_shape.signal.connect(self.draw_selected_shape)

@@ -61,6 +61,8 @@ class HHL_MainWindow(QMainWindow):
         loader.registerCustomWidget(LabelTrainVal)
         loader.registerCustomWidget(LabelTrainBar)
         loader.registerCustomWidget(LabelValBar)
+        loader.registerCustomWidget(ImgEditor)
+        loader.registerCustomWidget(ImgTagList)
 
         self.ui = loader.load('main_window.ui')  # 主界面
         self.setCentralWidget(self.ui)
@@ -81,17 +83,20 @@ class HHL_MainWindow(QMainWindow):
         self.file_select_dlg = QFileDialog(self)
         self.input_dlg = QInputDialog(self)
 
+        self.set_seg_lists()
+        self.reset_init_variables()
+        init_menu(self)
+        self.set_action_disabled()
+        self.connect_signals()
+
         self.marquees = QWidget(self)
         self.marquees_layout = QHBoxLayout()
         self.marquees_layout.addStretch()
         self.marquees.setLayout(self.marquees_layout)
         self.ui.scrollArea.setWidget(self.marquees)
 
-        self.set_seg_lists()
-        self.reset_init_variables()
-        init_menu(self)
-        self.set_action_disabled()
-        self.connect_signals()
+        # self.ui.comboBox.setIcon(QIcon('images/icon_6.png'))
+        self.ui.groupBox_img_edit.set_disabled(True)
 
         self.ui.img_widget.paint_img('images/bg.png')
         self.log_info('Application opened.', mark_line=True)
@@ -1008,25 +1013,15 @@ class HHL_MainWindow(QMainWindow):
         self.waiting_label.stop()
         self.waiting_label.close()
 
-    def disable_some_widgets(self):
-        self.ui.tabWidget.setDisabled(True)
-        self.ui.groupBox_6.setDisabled(True)
-        self.ui.groupBox_7.setDisabled(True)
-        self.ui.label_train.setDisabled(True)
-        self.ui.label_val.setDisabled(True)
-        self.ui.toolBox.setDisabled(True)
-        self.ui.pushButton_pin.setDisabled(True)
-        self.ui.label_train_val.setDisabled(True)
-
     def edit_img(self):
         folder = self.file_select_dlg.getExistingDirectory(self.ui, self.tr('选择文件夹'))
         if folder:
             self.set_work_mode()
             self.EditImgMode = True
-            self.disable_some_widgets()
             self.task_root = folder
             self.imgs = glob_imgs(folder)
             self.after_get_self_imgs()
+            self.ui.groupBox_img_edit.prepare_editing(self)
 
     def export_classes(self):
         txt, is_ok = QInputDialog().getText(self, self.tr('名称'), self.tr('请输入导出txt的名称。'),
@@ -1294,6 +1289,11 @@ class HHL_MainWindow(QMainWindow):
             if one['category'] in self.looking_classes:
                 return True
         return False
+
+    def hide_img_tag(self):
+        self.ui.listWidget_img_tag.set_visible(self)
+        # for i in range(self.ui.verticalLayout_13.count()):
+        #     print(self.ui.verticalLayout_13.itemAt(i).widget())
 
     def img_enhance(self):
         self.ui.horizontalSlider_3.setValue(100)
@@ -1729,7 +1729,8 @@ class HHL_MainWindow(QMainWindow):
             self.ui.lineEdit_version.setText(version)
             version_path = f'{file_path}/{self.WorkMode}/{self.label_folder}/{version}'
             os.makedirs(version_path, exist_ok=True)
-            with open(f'{version_path}/description.txt', 'w', encoding='utf-8') as f:
+            version_str = '版本描述' if self.language == 'CN' else 'version description'
+            with open(f'{version_path}/{version_str}.txt', 'w', encoding='utf-8') as f:
                 f.writelines(des_text)
         else:
             file_path = self.file_select_dlg.getExistingDirectory(self.ui, self.tr('选择任务'))
@@ -1789,19 +1790,19 @@ class HHL_MainWindow(QMainWindow):
             if osp.exists(ann_jpg):
                 self.ui.img_widget.set_ann_painted_img(ann_jpg)
 
-    def pin_unpin_image(self):
-        if self.task_root:
-            img_name = self.current_img_name()
-            if img_name in self.pinned_imgs:
-                self.pinned_imgs.remove(img_name)
-                self.ui.pushButton_pin.setIcon(QIcon('images/pin_black.png'))
-            else:
-                self.pinned_imgs.append(img_name)
-                self.ui.pushButton_pin.setIcon(QIcon('images/pin_green.png'))
-
-            json_dict = {'images': self.pinned_imgs}
-            with open(f'{self.task_root}/{self.WorkMode}/pinned_images.json', 'w', encoding='utf-8') as f:
-                json.dump(json_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
+    # def pin_unpin_image(self):
+    #     if self.task_root:
+    #         img_name = self.current_img_name()
+    #         if img_name in self.pinned_imgs:
+    #             self.pinned_imgs.remove(img_name)
+    #             self.ui.pushButton_pin.setIcon(QIcon('images/pin_black.png'))
+    #         else:
+    #             self.pinned_imgs.append(img_name)
+    #             self.ui.pushButton_pin.setIcon(QIcon('images/pin_green.png'))
+    #
+    #         json_dict = {'images': self.pinned_imgs}
+    #         with open(f'{self.task_root}/{self.WorkMode}/pinned_images.json', 'w', encoding='utf-8') as f:
+    #             json.dump(json_dict, f, sort_keys=False, ensure_ascii=False, indent=4)
 
     def polygons_to_img(self):
         self.ui.img_widget.clear_all_polygons()
@@ -2782,12 +2783,6 @@ class HHL_MainWindow(QMainWindow):
             self.ui.label_img_info.setText('宽: {}, 高: {}<br>创建: {}, 修改: {}'.
                                            format(img_h, img_w, c_time, m_time))
 
-            img_name = path.split('/')[-1]
-            if img_name in self.pinned_imgs:
-                self.ui.pushButton_pin.setIcon(QIcon('images/pin_green.png'))
-            else:
-                self.ui.pushButton_pin.setIcon(QIcon('images/pin_black.png'))
-
             self.paint_ann_img()
 
     def show_label_to_ui(self):
@@ -2879,7 +2874,8 @@ class HHL_MainWindow(QMainWindow):
             return False
 
         version_path = self.get_root('version')
-        txt_path = f'{version_path}/description.txt'
+        version_str = '版本描述' if self.language == 'CN' else 'version description'
+        txt_path = f'{version_path}/{version_str}.txt'
         if osp.exists(txt_path):
             return True
         else:
@@ -2887,12 +2883,13 @@ class HHL_MainWindow(QMainWindow):
                                                  self.tr('请输入版本描述,可直接点击"确定"跳过。'), QLineEdit.Normal)
             if is_ok:
                 os.makedirs(version_path, exist_ok=True)
-                with open(f'{version_path}/description.txt', 'w', encoding='utf-8') as f:
+                with open(f'{version_path}/{version_str}.txt', 'w', encoding='utf-8') as f:
                     f.writelines(text)
                 return True
             return False
 
 # doing----------
+# todo:  标注批量删除功能
 # todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
 # doing----------
 # todo: auto inference 全功能  支持 ONNX、openvino、（opencv接口？ 自写接口？）
