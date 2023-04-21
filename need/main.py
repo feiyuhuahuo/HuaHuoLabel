@@ -46,7 +46,6 @@ class HHL_MainWindow(QMainWindow):
         self.OneFileLabel = True
         self.SeparateLabel = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
-        self.EditImgMode = False
         self.marquee_num = 30  # 小图的最大数量, 越大占用内存越多
         self.marquee_size = 150
         self.scan_delay = 0
@@ -58,13 +57,15 @@ class HHL_MainWindow(QMainWindow):
         loader.registerCustomWidget(ShapeListWidget)
         loader.registerCustomWidget(ButtonWithHoverWindow)
         loader.registerCustomWidget(SearchBox)
+        loader.registerCustomWidget(ScanButton)
         loader.registerCustomWidget(LabelTrainVal)
         loader.registerCustomWidget(LabelTrainBar)
         loader.registerCustomWidget(LabelValBar)
-        loader.registerCustomWidget(ImgEditor)
         loader.registerCustomWidget(ImgTagList)
+        loader.registerCustomWidget(JumpToImg)
 
-        self.ui = loader.load('main_window.ui')  # 主界面
+        # self.ui = loader.load('main_window.ui')  # 主界面
+        self.ui = loader.load('main_window_new_fw.ui')  # 主界面
         self.setCentralWidget(self.ui)
         self.setWindowTitle(self.tr('花火标注'))
         self.setWindowIcon(QIcon('images/icon.png'))
@@ -72,6 +73,7 @@ class HHL_MainWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
 
         self.window_build_task = BuildTask()
+        self.window_img_edit = ImgEdit(self)
         self.window_select_class = SelectItem(title=self.tr('类别'), button_signal=signal_select_class_ok)
         self.window_sem_class_changed = CustomMessageBox('information', self.tr('类别列表变化'))
         self.window_ann_saved = CustomMessageBox('information', self.tr('已保存'))
@@ -94,9 +96,6 @@ class HHL_MainWindow(QMainWindow):
         self.marquees_layout.addStretch()
         self.marquees.setLayout(self.marquees_layout)
         self.ui.scrollArea.setWidget(self.marquees)
-
-        # self.ui.comboBox.setIcon(QIcon('images/icon_6.png'))
-        self.ui.groupBox_img_edit.set_disabled(True)
 
         self.ui.img_widget.paint_img('images/bg.png')
         self.log_info('Application opened.', mark_line=True)
@@ -162,6 +161,9 @@ class HHL_MainWindow(QMainWindow):
                 self.scan_img(last=True)
             elif event.key() == Qt.Key_D:
                 self.scan_img(next=True)
+            elif event.key() == Qt.Key_Return:
+                if self.ui.jump_to.spinBox.hasFocus():
+                    self.img_jump()
 
     def resizeEvent(self, event):
         font_metrics = QFontMetrics(self.ui.label_path.font())
@@ -171,6 +173,10 @@ class HHL_MainWindow(QMainWindow):
         if str_w > label_w - 12:  # 左下角信息自动省略
             elideNote = font_metrics.elidedText(self.bottom_img_text, Qt.ElideRight, label_w)
             self.ui.label_path.setText(elideNote)
+
+    @property
+    def cur_i(self):
+        return self.__cur_i
 
     def about_hhl(self):
         self.hhl_info = hhl_info(self.language)
@@ -184,7 +190,7 @@ class HHL_MainWindow(QMainWindow):
             return
 
         if img_path is None:  # 直接由按钮触发
-            cur_path = self.imgs[self.cur_i]
+            cur_path = self.imgs[self.__cur_i]
         else:
             cur_path = img_path
 
@@ -291,15 +297,6 @@ class HHL_MainWindow(QMainWindow):
         self.set_tv_label()
         self.set_tv_bar()
 
-    def after_get_self_imgs(self):
-        self.img_num = len(self.imgs)
-        if self.img_num:
-            self.cur_i = 0
-            self.cur_mar_i = -1
-            self.clear_marquee_layout()
-            self.show_img_status_info()
-            self.marquee_add(the_first_one=True)
-
     def auto_in(self):
         return
 
@@ -384,7 +381,7 @@ class HHL_MainWindow(QMainWindow):
             return
         button = self.sender()
         c_name = button.text()
-        img_path = self.imgs[self.cur_i]
+        img_path = self.imgs[self.__cur_i]
         img_name = img_path.split('/')[-1]
         if img_path == 'images/图片已删除.png':
             return
@@ -413,8 +410,8 @@ class HHL_MainWindow(QMainWindow):
                         if old_class != c_name:
                             self.file_move(img_path, label_path)
                             self.cls_train_val_move(img_name, old_class, c_name)
-                            self.imgs[self.cur_i] = f'{label_path}/{img_name}'  # 随着图片路径变化而变化
-                            self.cls_op_track.append(('re_cls', self.cur_i, self.cur_mar_i, img_path, label_path))
+                            self.imgs[self.__cur_i] = f'{label_path}/{img_name}'  # 随着图片路径变化而变化
+                            self.cls_op_track.append(('re_cls', self.__cur_i, self.cur_mar_i, img_path, label_path))
                             self.show_label_to_ui()
 
                             QMB.information(self.ui, self.tr('移动图片'),
@@ -423,12 +420,12 @@ class HHL_MainWindow(QMainWindow):
                     else:
                         if self.ui.radioButton_read.isChecked():  # cut
                             self.file_move(img_path, label_path)
-                            self.cls_op_track.append(('cut', self.cur_i, self.cur_mar_i, img_path, label_path))
+                            self.cls_op_track.append(('cut', self.__cur_i, self.cur_mar_i, img_path, label_path))
                         elif self.ui.radioButton_write.isChecked():  # copy
                             self.file_copy(img_path, label_path)
-                            self.cls_op_track.append(('copy', self.cur_i, self.cur_mar_i, img_path, label_path))
+                            self.cls_op_track.append(('copy', self.__cur_i, self.cur_mar_i, img_path, label_path))
 
-                        self.imgs[self.cur_i] = f'{label_path}/{img_name}'  # 随着图片路径变化而变化
+                        self.imgs[self.__cur_i] = f'{label_path}/{img_name}'  # 随着图片路径变化而变化
 
                     if len(self.cls_op_track) > 100:
                         self.cls_op_track.pop(0)
@@ -775,7 +772,7 @@ class HHL_MainWindow(QMainWindow):
             self.remove_empty_cls_folder()
 
     def cls_has_classified(self, img_path=None):  # 查看单分类，多分类模式下，图片是否已分类
-        path = img_path if img_path else self.imgs[self.cur_i]
+        path = img_path if img_path else self.imgs[self.__cur_i]
         if '图片已删除' in path:
             return False
 
@@ -841,7 +838,7 @@ class HHL_MainWindow(QMainWindow):
             self.file_move(img_path, dir_path)
 
     def connect_buttons_signal(self):
-        layouts = [self.ui.groupBox_1.layout(), self.ui.groupBox_2.layout()]
+        layouts = [self.ui.groupBox_cls.layout(), self.ui.groupBox_mcls.layout()]
         for lo in layouts:
             for i in range(lo.count()):
                 item = lo.itemAt(i)
@@ -852,7 +849,7 @@ class HHL_MainWindow(QMainWindow):
                         button.clicked.connect(self.button_action)
 
     def current_img_name(self):
-        return self.imgs[self.cur_i].split('/')[-1]
+        return self.imgs[self.__cur_i].split('/')[-1]
 
     def current_shape_info_widget(self):
         if self.WorkMode == self.AllModes[2]:
@@ -896,14 +893,16 @@ class HHL_MainWindow(QMainWindow):
             return True
 
     def del_img(self, dst_path=None):
-        if not (0 <= self.cur_i < len(self.imgs)):
+        if not (0 <= self.__cur_i < len(self.imgs)):
             return
-        img_path = self.imgs[self.cur_i]
+
+        img_path = self.imgs[self.__cur_i]
         img_name = img_path.split('/')[-1]
         if '图片已删除' in img_name:
             return
 
-        if self.EditImgMode:
+        if not self.window_img_edit.isHidden():
+            self.window_img_edit.set_img_removed(self.__cur_i)
             file_remove(img_path)
         else:
             if dst_path is None:
@@ -974,7 +973,7 @@ class HHL_MainWindow(QMainWindow):
 
             self.set_tv_bar()
 
-        self.imgs[self.cur_i] = 'images/图片已删除.png'  # 将删除的图片替换为背景图片
+        self.imgs[self.__cur_i] = 'images/图片已删除.png'  # 将删除的图片替换为背景图片
         self.show_img_status_info()
         del_map = QPixmap('images/图片已删除.png').scaled(self.marquee_size, self.marquee_size, Qt.KeepAspectRatio)
         self.marquees_layout.itemAt(self.cur_mar_i).widget().setPixmap(del_map, del_img=True)
@@ -1014,14 +1013,8 @@ class HHL_MainWindow(QMainWindow):
         self.waiting_label.close()
 
     def edit_img(self):
-        folder = self.file_select_dlg.getExistingDirectory(self.ui, self.tr('选择文件夹'))
-        if folder:
-            self.set_work_mode()
-            self.EditImgMode = True
-            self.task_root = folder
-            self.imgs = glob_imgs(folder)
-            self.after_get_self_imgs()
-            self.ui.groupBox_img_edit.prepare_editing(self)
+        self.window_img_edit.show()
+        self.set_work_mode()
 
     def export_classes(self):
         txt, is_ok = QInputDialog().getText(self, self.tr('名称'), self.tr('请输入导出txt的名称。'),
@@ -1154,7 +1147,7 @@ class HHL_MainWindow(QMainWindow):
             height = points[1][1] - points[0][1]
             text = self.tr('类别：{}\n宽度：{}\n高度：{}\n').format(polygon['category'], width, height)
         elif self.WorkMode in self.AllModes[(2, 4)]:
-            img_path = self.imgs[self.cur_i]
+            img_path = self.imgs[self.__cur_i]
             img_w, img_h = QPixmap(img_path).size().toTuple()
             mask = get_seg_mask(['fake'], [polygon], img_h, img_w, value=1)
             mask = (mask > 0).astype('uint8')
@@ -1237,8 +1230,8 @@ class HHL_MainWindow(QMainWindow):
     def go_next_img(self):  # 单分类模式或删除图片时触发
         self.marquee_move(right=True)
 
-        if self.cur_i < self.img_num - 1:
-            self.cur_i += 1
+        if self.__cur_i < self.img_num - 1:
+            self.__cur_i += 1
             self.show_img_status_info()
             self.show_label_to_ui()
             self.set_tv_label()
@@ -1246,18 +1239,18 @@ class HHL_MainWindow(QMainWindow):
             self.show_label_to_ui()
             self.set_tv_label()
             self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat('done')
-            self.cur_i += 1
+            self.__cur_i += 1
             self.cur_mar_i += 1
             self.ui.label_path.setText(self.tr('已完成。'))
             QMB.information(self.ui, self.tr('已完成'), self.tr('已完成。'))
 
     def go_next_marquee_window(self):
         if self.window_marquee_label:
-            qimg_png = self.get_qimg_png(self.imgs[self.cur_i])
+            qimg_png = self.get_qimg_png(self.imgs[self.__cur_i])
             if qimg_png:
                 self.window_marquee_label.paint_img(qimg_png)
         if self.window_marquee_img:
-            self.window_marquee_img.paint_img(QPixmap(self.imgs[self.cur_i]))
+            self.window_marquee_img.paint_img(QPixmap(self.imgs[self.__cur_i]))
 
     def has_img_root(self):
         if not self.task_root:
@@ -1331,16 +1324,16 @@ class HHL_MainWindow(QMainWindow):
         if i:
             index = i
         else:
-            value = self.ui.spinBox_2.value()
+            value = self.ui.jump_to.spinBox.value()
             value = max(1, min(self.img_num, value))
-            self.ui.spinBox_2.setValue(value)
+            self.ui.jump_to.spinBox.setValue(value)
             index = value - 1
 
-        if index < self.cur_i:
-            self.scan_img(last=True, count=self.cur_i - index, from_jump=True)
+        if index < self.__cur_i:
+            self.scan_img(last=True, count=self.__cur_i - index, from_jump=True)
 
-        elif index > self.cur_i:
-            self.scan_img(next=True, count=index - self.cur_i, from_jump=True)
+        elif index > self.__cur_i:
+            self.scan_img(next=True, count=index - self.__cur_i, from_jump=True)
 
     def img_pil_contrast(self):
         self.ui.horizontalSlider.setValue(0)
@@ -1526,9 +1519,9 @@ class HHL_MainWindow(QMainWindow):
 
     def marquee_add(self, the_first_one=False):
         if the_first_one:
-            img_path = self.imgs[self.cur_i]
+            img_path = self.imgs[self.__cur_i]
         else:
-            img_path = self.imgs[self.cur_i + 1]
+            img_path = self.imgs[self.__cur_i + 1]
 
         m_label = MarqueeLabel(img_path=img_path, stat='doing', parent=self)
         pix_map = QPixmap(img_path)
@@ -1539,9 +1532,18 @@ class HHL_MainWindow(QMainWindow):
         max_len = self.ui.scrollArea.horizontalScrollBar().maximum()
         self.ui.scrollArea.horizontalScrollBar().setValue(max_len)
 
+    def marquee_and_show_img(self):
+        self.img_num = len(self.imgs)
+        if self.img_num:
+            self.__cur_i = 0
+            self.cur_mar_i = -1
+            self.clear_marquee_layout()
+            self.show_img_status_info()
+            self.marquee_add(the_first_one=True)
+
     def marquee_insert(self, first=False, last=True):  # 在头或尾插入一个新的marquee
         if first:
-            img_path = self.imgs[self.cur_i - 1]
+            img_path = self.imgs[self.__cur_i - 1]
             m_label = MarqueeLabel(img_path=img_path, stat='doing', parent=self)
             m_label.setPixmap(QPixmap(img_path).scaled(self.marquee_size, self.marquee_size, Qt.KeepAspectRatio))
 
@@ -1550,7 +1552,7 @@ class HHL_MainWindow(QMainWindow):
             self.marquees_layout.removeWidget(widget)
             self.marquees_layout.insertWidget(0, m_label)
         elif last:
-            img_path = self.imgs[self.cur_i + 1]
+            img_path = self.imgs[self.__cur_i + 1]
             m_label = MarqueeLabel(img_path=img_path, stat='doing', parent=self)
             m_label.setPixmap(QPixmap(img_path).scaled(self.marquee_size, self.marquee_size, Qt.KeepAspectRatio))
 
@@ -1566,10 +1568,10 @@ class HHL_MainWindow(QMainWindow):
         # 单分类模式已完成后会出现获取不到marquee的情况
         cur_marquee = self.marquees_layout.itemAt(self.cur_mar_i).widget()
         if cur_marquee is not None:
-            if '图片已删除' in self.imgs[self.cur_i] or self.EditImgMode:
+            if '图片已删除' in self.imgs[self.__cur_i] or not self.window_img_edit.isHidden():
                 cur_marquee.set_stat('undo')
             else:
-                stat = self.marquee_stat(self.imgs[self.cur_i])
+                stat = self.marquee_stat(self.imgs[self.__cur_i])
                 cur_marquee.set_stat(stat)
 
         if left:
@@ -1577,14 +1579,14 @@ class HHL_MainWindow(QMainWindow):
                 self.cur_mar_i -= 1
                 self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat('doing')
             else:
-                if self.cur_i > 0:
+                if self.__cur_i > 0:
                     self.marquee_insert(first=True, last=False)
         elif right:
             if self.cur_mar_i < self.marquees_layout.count() - 2:
                 self.cur_mar_i += 1
                 self.marquees_layout.itemAt(self.cur_mar_i).widget().set_stat('doing')
             else:
-                if self.cur_i < self.img_num - 1:
+                if self.__cur_i < self.img_num - 1:
                     if self.marquees_layout.count() - 1 < self.marquee_num:
                         self.marquee_add()
                     else:
@@ -1715,6 +1717,14 @@ class HHL_MainWindow(QMainWindow):
         self.window_select_class.close()
         self.ui.setFocus()
 
+    def new_img_window(self):
+        path = self.file_select_dlg.getOpenFileName(self.ui, self.tr('选择图片'),
+                                                    filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
+        if path:
+            self.window_compare = BaseImgFrame(title=self.tr('图片窗口'))
+            self.window_compare.paint_img(path)
+            self.window_compare.show()
+
     def oc_shape_info(self):
         if self.action_oc_shape_info.text() == self.tr('禁用（提高切图速度）'):
             self.clear_shape_info()
@@ -1762,7 +1772,7 @@ class HHL_MainWindow(QMainWindow):
                 self.task_root = file_path
                 self.ui.lineEdit.setText(self.task_root)
                 self.task = self.task_root.split('/')[-1]
-                self.after_get_self_imgs()
+                self.marquee_and_show_img()
                 self.set_action_disabled()
                 self.load_pinned_images()
                 self.img_enhance_reset()
@@ -1808,7 +1818,7 @@ class HHL_MainWindow(QMainWindow):
         self.ui.img_widget.clear_all_polygons()
         self.ui.shape_list.clear()
 
-        img_path = self.imgs[self.cur_i]
+        img_path = self.imgs[self.__cur_i]
         if '图片已删除' in img_path:
             return
 
@@ -1972,7 +1982,7 @@ class HHL_MainWindow(QMainWindow):
         self.label_file_dict = {}
         self.img_num = 0
         self.train_num, self.val_num = 0, 0
-        self.cur_i = 0
+        self.__cur_i = 0
         self.cur_mar_i = -1  # 当前小图的索引，最小有效值为0
         self.mcls_default_c = ''  # 多分类的默认类别
         self.cv2_img = None
@@ -2024,7 +2034,7 @@ class HHL_MainWindow(QMainWindow):
                 f.writelines(lines)
 
     def save_det_seg(self):
-        img_path = self.imgs[self.cur_i]
+        img_path = self.imgs[self.__cur_i]
         if img_path == 'images/图片已删除.png':
             return
 
@@ -2105,59 +2115,6 @@ class HHL_MainWindow(QMainWindow):
 
                 file_remove([tv_img, json_path, tv_json, png_path, tv_png, txt_path, tv_txt])
 
-    def save_edited_img(self, save_all=False):
-        if self.ui.radioButton_14.isChecked():
-            suffix = '.jpg'
-        elif self.ui.radioButton_15.isChecked():
-            suffix = '.png'
-        elif self.ui.radioButton_16.isChecked():
-            suffix = '.bmp'
-
-        if save_all:
-            imgs_path = [aa for aa in self.imgs if aa != 'images/图片已删除.png']
-            re = QMB.question(self.ui, self.tr('覆盖图片'),
-                              self.tr('"{}"下的同名图片将被覆盖，继续吗？').format(self.task_root))
-            if re != QMB.Yes:
-                return
-        else:
-            if self.imgs[self.cur_i][-4:] == suffix:
-                re = QMB.question(self.ui, self.tr('覆盖图片'),
-                                  self.tr('"{}"将被覆盖，继续吗？').format(self.imgs[self.cur_i]))
-                if re != QMB.Yes:
-                    return
-
-            imgs_path = [self.imgs[self.cur_i]]
-
-        for one in imgs_path:
-            cv2_img = cv2.imdecode(np.fromfile(one, dtype='uint8'), cv2.IMREAD_UNCHANGED)
-            ori_h, ori_w = cv2_img.shape[:2]
-            rotate_a = self.ui.spinBox_16.value()
-
-            if rotate_a == 90:
-                cv2_img = cv2.rotate(cv2_img, cv2.ROTATE_90_CLOCKWISE)
-            elif rotate_a == 180:
-                cv2_img = cv2.rotate(cv2_img, cv2.ROTATE_180)
-            elif rotate_a == 270:
-                cv2_img = cv2.rotate(cv2_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-            if self.ui.checkBox_131.isChecked():
-                cv2_img = cv2.flip(cv2_img, 1)
-            if self.ui.checkBox_132.isChecked():
-                cv2_img = cv2.flip(cv2_img, 0)
-
-            if self.ui.checkBox_scale.isChecked():
-                resize_w, resize_h = self.ui.spinBox_13.value(), self.ui.spinBox_14.value()
-                if ori_w != resize_w or ori_h != resize_h:
-                    if self.ui.radioButton_12.isChecked():
-                        scale_alg = cv2.INTER_NEAREST
-                    elif self.ui.radioButton_13.isChecked():
-                        scale_alg = cv2.INTER_LINEAR
-                    cv2_img = cv2.resize(cv2_img, (resize_w, resize_h), scale_alg)
-
-            cv2.imencode(suffix, cv2_img.astype('uint8'))[1].tofile(one[:-4] + suffix)
-
-        QMB.information(self.ui, self.tr('保存完成'), self.tr('保存完成，共{}张图片。').format(len(imgs_path)))
-
     def save_m_cls(self):
         img_name = self.current_img_name()
         if '图片已删除' in img_name:
@@ -2183,7 +2140,7 @@ class HHL_MainWindow(QMainWindow):
         if self.OneFileLabel:
             if lines:
                 labels = [aa.strip() for aa in lines]
-                img_w, img_h = QPixmap(self.imgs[self.cur_i]).size().toTuple()
+                img_w, img_h = QPixmap(self.imgs[self.__cur_i]).size().toTuple()
                 one_label = {'img_height': img_h, 'img_width': img_w, 'tv': tv, 'class': labels}
                 self.label_file_dict['labels'][img_name] = one_label
             else:
@@ -2272,11 +2229,11 @@ class HHL_MainWindow(QMainWindow):
 
         if not self.task_root:
             return
-        if self.cur_i < 0 or self.cur_i > self.img_num:
-            QMB.critical(self.ui, self.tr('索引超限'), self.tr('当前图片索引为{}，超出限制！').format(self.cur_i))
+        if self.__cur_i < 0 or self.__cur_i > self.img_num:
+            QMB.critical(self.ui, self.tr('索引超限'), self.tr('当前图片索引为{}，超出限制！').format(self.__cur_i))
             return
 
-        if not self.EditImgMode:
+        if self.window_img_edit.isHidden():
             if not from_jump:
                 part_scan = self.ui.comboBox.currentText()
                 # 只看部分类别功能
@@ -2313,17 +2270,17 @@ class HHL_MainWindow(QMainWindow):
                 elif self.WorkMode in self.AllModes[(2, 3, 4)]:
                     self.save_det_seg()
 
-        if last and 0 < self.cur_i <= self.img_num:
+        if last and 0 < self.__cur_i <= self.img_num:
             for _ in range(count):
                 self.marquee_move(left=True)
-                self.cur_i -= 1
+                self.__cur_i -= 1
 
-        elif next and self.cur_i < self.img_num - 1:
+        elif next and self.__cur_i < self.img_num - 1:
             for _ in range(count):
                 self.marquee_move(right=True)
-                self.cur_i += 1
+                self.__cur_i += 1
 
-        if 0 <= self.cur_i < self.img_num:
+        if 0 <= self.__cur_i < self.img_num:
             self.ui.img_widget.set_shape_locked(False)
             self.show_img_status_info()
             self.show_label_to_ui()
@@ -2339,7 +2296,7 @@ class HHL_MainWindow(QMainWindow):
 
     def scan_unlabeled_imgs(self, last=False, next=False):
         result = True
-        i = self.cur_i
+        i = self.__cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
                 i -= 1
@@ -2365,11 +2322,11 @@ class HHL_MainWindow(QMainWindow):
                 break
 
         i = min(max(0, i), self.img_num - 1)
-        count = abs(i - self.cur_i)
+        count = abs(i - self.__cur_i)
         return count
 
     def scan_part_classes(self, last=False, next=False):  # 只浏览部分类别的标注的功能
-        i = self.cur_i
+        i = self.__cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
                 i -= 1
@@ -2380,15 +2337,15 @@ class HHL_MainWindow(QMainWindow):
                 break
 
             if self.has_looking_classes(self.imgs[i]):
-                count = abs(i - self.cur_i)
+                count = abs(i - self.__cur_i)
                 return count
 
         i = min(max(0, i), self.img_num - 1)
-        count = abs(i - self.cur_i)
+        count = abs(i - self.__cur_i)
         return count
 
     def scan_pinned_imgs(self, last=False, next=False):
-        i = self.cur_i
+        i = self.__cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
                 i -= 1
@@ -2400,15 +2357,15 @@ class HHL_MainWindow(QMainWindow):
 
             img_name = self.imgs[i].split('/')[-1]
             if img_name in self.pinned_imgs:
-                count = abs(i - self.cur_i)
+                count = abs(i - self.__cur_i)
                 return count
 
         i = min(max(0, i), self.img_num - 1)
-        count = abs(i - self.cur_i)
+        count = abs(i - self.__cur_i)
         return count
 
     def scan_train_val_imgs(self, split, last=False, next=False):
-        i = self.cur_i
+        i = self.__cur_i
         while 0 <= i <= self.img_num - 1:
             if last:
                 i -= 1
@@ -2423,14 +2380,14 @@ class HHL_MainWindow(QMainWindow):
             if tv == split:
                 if not self.LookingAll:
                     if self.has_looking_classes(self.imgs[i]):
-                        count = abs(i - self.cur_i)
+                        count = abs(i - self.__cur_i)
                         return count
                 else:
-                    count = abs(i - self.cur_i)
+                    count = abs(i - self.__cur_i)
                     return count
 
         i = min(max(0, i), self.img_num - 1)
-        count = abs(i - self.cur_i)
+        count = abs(i - self.__cur_i)
         return count
 
     def sem_class_modified_tip(self):
@@ -2440,7 +2397,7 @@ class HHL_MainWindow(QMainWindow):
                 self.window_sem_class_changed.show(self.tr('类别列表发生变化，以往的png标注可能需要更新。'))
 
     def send_auto_infer_imgs(self, infer_all):
-        imgs = self.imgs if infer_all else [self.imgs[self.cur_i]]
+        imgs = self.imgs if infer_all else [self.imgs[self.__cur_i]]
         self.window_auto_infer.receive_imgs(imgs)
 
     def set_action_disabled(self):
@@ -2463,14 +2420,10 @@ class HHL_MainWindow(QMainWindow):
     def set_hide_cross(self):
         self.ui.img_widget.set_hide_cross(self.ui.checkBox_hide_cross.isChecked())
 
-    def set_img_edit_scale(self):
-        enabled = self.ui.checkBox_scale.isChecked()
-        self.ui.spinBox_13.setDisabled(not enabled)
-        self.ui.spinBox_14.setDisabled(not enabled)
-        self.ui.label_46.setDisabled(not enabled)
-        self.ui.label_44.setDisabled(not enabled)
-        self.ui.radioButton_12.setDisabled(not enabled)
-        self.ui.radioButton_13.setDisabled(not enabled)
+    def set_imgs(self, imgs: list):
+        self.imgs = imgs
+        self.task_root = self.imgs[0].split('/')[0]
+        self.marquee_and_show_img()
 
     def set_info_widget_selected(self):
         lw = self.current_shape_info_widget()
@@ -2557,8 +2510,8 @@ class HHL_MainWindow(QMainWindow):
             self.ui.pushButton_bg.setIcon(QIcon('images/non_bg_label'))
 
     def set_semantic_bg_when_scan(self):
-        img_path = self.imgs[self.cur_i]
-        if self.EditImgMode or '图片已删除' in img_path:
+        img_path = self.imgs[self.__cur_i]
+        if not self.window_img_edit.isHidden() or '图片已删除' in img_path:
             return
 
         img_name = img_path.split('/')[-1]
@@ -2622,7 +2575,7 @@ class HHL_MainWindow(QMainWindow):
             self.ui.label_val.set_tv(self.train_num, self.val_num)
 
     def set_tv_label(self):
-        if self.EditImgMode:
+        if not self.window_img_edit.isHidden():
             return
 
         img_name = self.current_img_name()
@@ -2734,16 +2687,8 @@ class HHL_MainWindow(QMainWindow):
         self.window_class_stat = ClassStatWidget(add_info=info, version_path=self.get_root('version'))
         self.window_class_stat.show()
 
-    def show_compare_img(self):
-        path = self.file_select_dlg.getOpenFileName(self.ui, self.tr('选择图片'),
-                                                    filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
-        if path:
-            self.window_compare = BaseImgFrame(title=self.tr('图片窗口'))
-            self.window_compare.paint_img(path)
-            self.window_compare.show()
-
     def show_img_status_info(self):
-        path = self.imgs[self.cur_i]
+        path = self.imgs[self.__cur_i]
         self.cv2_img = cv2.imdecode(np.fromfile(path, dtype='uint8'), cv2.IMREAD_COLOR)
         self.cv2_img = cv2.cvtColor(self.cv2_img, cv2.COLOR_BGR2RGB)
         self.cv2_img_changed = self.cv2_img
@@ -2774,7 +2719,7 @@ class HHL_MainWindow(QMainWindow):
         if path == 'images/图片已删除.png':
             self.ui.label_path.setText(self.tr('图片已删除。'))
         else:
-            self.ui.label_index.setText(f'<font color=violet>{self.cur_i + 1}</font>/{self.img_num}')
+            self.ui.label_index.setText(f'<font color=violet>{self.__cur_i + 1}</font>/{self.img_num}')
             self.bottom_img_text = path
             self.ui.label_path.setTextFormat(Qt.PlainText)
             self.ui.label_path.setText(uniform_path(self.bottom_img_text))
@@ -2786,7 +2731,7 @@ class HHL_MainWindow(QMainWindow):
             self.paint_ann_img()
 
     def show_label_to_ui(self):
-        if not self.EditImgMode:
+        if self.window_img_edit.isHidden():
             if self.WorkMode == self.AllModes[0]:
                 self.cls_to_button()
             elif self.WorkMode == self.AllModes[1]:
@@ -2888,10 +2833,24 @@ class HHL_MainWindow(QMainWindow):
                 return True
             return False
 
-# doing----------
+# todo: 新架构-----------------------------------------
+# todo: 1. 去除任务类别，统一为体格类别
+# todo: 2. 定义新的文件结构
+# todo: 3. 动画，主要用于控件的隐藏、折叠，参考流式布局？
+# todo: 6. graphicsitem 或者无边框 dockwidget做个bookmark？
+# todo: 7. 类别统计因此也要重做，用QtableWidget
+# todo: 8. 完整的undo，redo功能
+# todo: 8. 检查图库功能也同步变化
+# todo: 9. 分类按钮的 屏蔽、观察、默认的图标
+# todo: 10. 程序配置记录文件
+# todo: 新架构-----------------------------------------
+
 # todo:  标注批量删除功能
 # todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
-# doing----------
+
+# todo: 搜索按钮的spinbox左边设置成圆角
+# todo: cvat式的标注修改
+# todo: 版本描述扩展为版本详细记录功能
 # todo: auto inference 全功能  支持 ONNX、openvino、（opencv接口？ 自写接口？）
 # todo: shape的交集、差集  环形支持多形状组合以及多孔洞环形
 # todo: 合并labels.json
@@ -2900,13 +2859,14 @@ class HHL_MainWindow(QMainWindow):
 # todo: 视频标注 全功能
 # todo: 摄像头 实时检测与标注？
 # todo: 旋转目标检测？
-
+# todo: 设置Qmessagebox的字体大小
 # todo: win11测试
-# todo: 完善log
-# todo: shape list drag
 
 # todo: ubuntu 部分弹出窗口不在屏幕中心位置
 # todo: ubuntu 按钮右键时同时弹出上层容器的右键菜单
+
+# keep update---------------------
+# todo: 完善log
 
 # 搁置-------------------
 # todo: marquee进度条同步 https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side

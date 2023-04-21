@@ -58,6 +58,9 @@ class BaseImgFrame(QLabel):
 
         self.IsClosed = False
 
+    def contextMenuEvent(self, event):
+        self.img_menu.exec(self.mapToGlobal(event.pos()))
+
     def closeEvent(self, event):
         self.IsClosed = True
         self.close()

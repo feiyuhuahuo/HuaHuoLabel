@@ -68,8 +68,6 @@ class CustomMessageBox(QDialog):
     def result(self):
         return self.__question_result
 
-    # def do_show_again(self):
-    #     self.ui.checkBox.setChecked(False)  # 自动触发 set_dont_show_again
     def set_dont_show_flag(self, flag: str):
         if self.dont_show_flag != flag:
             self.ui.checkBox.setChecked(False)  # 自动触发 set_dont_show_again

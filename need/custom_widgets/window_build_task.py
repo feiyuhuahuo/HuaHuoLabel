@@ -1,14 +1,12 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-import glob
 import os
 import pdb
-
 from os import path as osp
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from PySide6.QtWidgets import QMessageBox as QMB
-from need.utils import uniform_path
+
 from need.custom_threads import CopyImgs, signal_copy_imgs_done
 from need.custom_signals import ListSignal
 from need.custom_widgets import WaitingLabel
@@ -20,7 +18,7 @@ class BuildTask(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         loader = QUiLoader()
-        self.btw = loader.load('build_task.ui')
+        self.btw = loader.load('ui_files/build_task.ui')
         self.file_select_dlg = QFileDialog(self.btw)
         self.imgs = None
         self.work_mode = None

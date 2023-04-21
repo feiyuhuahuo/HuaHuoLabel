@@ -5,7 +5,6 @@ from need.main import HHL_MainWindow
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QProcess, QTranslator
 
-
 # QProcess 用py文件调试时无法实现重启，用这个方法代替调试
 # import os
 # import sys
@@ -20,13 +19,15 @@ if __name__ == '__main__':
         language = json.load(f)['language']
 
     if language == 'CN':
-        app.setStyleSheet('QMessageBox QPushButton[text="&Yes"] {qproperty-text: "确定"}'
-                          'QMessageBox QPushButton[text="&No"] {qproperty-text: "取消"}'
-                          'QMessageBox QPushButton[text="OK"] {qproperty-text: "确定"}'
-                          'QFileDialog QPushButton[text="OK"] {qproperty-text: "确定"}'
-                          'QFileDialog QPushButton[text="Cancel"] {qproperty-text: "取消"}'
-                          'QInputDialog QPushButton[text="OK"] {qproperty-text: "确定"}'
-                          'QInputDialog QPushButton[text="Cancel"] {qproperty-text: "取消"}')
+        app.setStyleSheet(
+            'QMessageBox QPushButton[text="&Yes"] {qproperty-text: "确定"}'
+            'QMessageBox QPushButton[text="&No"] {qproperty-text: "取消"}'
+            'QMessageBox QPushButton[text="OK"] {qproperty-text: "确定"}'
+            'QFileDialog QPushButton[text="OK"] {qproperty-text: "确定"}'
+            'QFileDialog QPushButton[text="Cancel"] {qproperty-text: "取消"}'
+            'QInputDialog QPushButton[text="OK"] {qproperty-text: "确定"}'
+            'QInputDialog QPushButton[text="Cancel"] {qproperty-text: "取消"}'
+        )
     elif language == 'EN':
         trans_main_window = QTranslator()
         trans_main = QTranslator()
