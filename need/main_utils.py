@@ -29,20 +29,25 @@ def connect_all_other_signals(main_window):
     main_window.ui.class_list.itemDoubleClicked.connect(lambda: main_window.look_or_not_look(double=True))
     main_window.ui.shape_list.itemSelectionChanged.connect(main_window.set_info_widget_selected)
 
+    main_window.ui.pushButton_img_cate.clicked.connect(main_window.fold_buttons)
+    main_window.ui.pushButton_img_tag.clicked.connect(main_window.fold_buttons)
+    main_window.ui.pushButton_obj_cate.clicked.connect(main_window.fold_buttons)
+    main_window.ui.pushButton_obj_tag.clicked.connect(main_window.fold_buttons)
+
     main_window.ui.pushButton_35.clicked.connect(main_window.undo_painting)
     main_window.ui.pushButton_36.clicked.connect(main_window.save_ann_img)
     main_window.ui.pushButton_40.clicked.connect(main_window.clear_painted_img)
-    main_window.ui.pushButton_50.clicked.connect(main_window.set_m_cls_default_c)
+    # main_window.ui.pushButton_50.clicked.connect(main_window.set_m_cls_default_c)
     main_window.ui.pushButton_81.clicked.connect(lambda: main_window.img_rotate(do_paint=True))
     main_window.ui.pushButton_82.clicked.connect(lambda: main_window.img_flip(h_flip=True, do_paint=True))
     main_window.ui.pushButton_83.clicked.connect(lambda: main_window.img_flip(v_flip=True, do_paint=True))
     main_window.ui.pushButton_84.clicked.connect(main_window.img_enhance_reset)
     main_window.ui.pushButton_auto_infer.clicked.connect(main_window.auto_inference)
-    main_window.ui.pushButton_bg.pressed.connect(main_window.set_semantic_bg_when_press)
+    # main_window.ui.pushButton_bg.pressed.connect(main_window.set_semantic_bg_when_press)
     main_window.ui.pushButton_build_task.pressed.connect(main_window.show_task_window)
     main_window.ui.pushButton_check_label.clicked.connect(main_window.check_dataset)
     main_window.ui.pushButton_class_list.clicked.connect(main_window.fold_list)
-    main_window.ui.pushButton_cls_back.clicked.connect(main_window.cls_back)
+    # main_window.ui.pushButton_cls_back.clicked.connect(main_window.cls_back)
     main_window.ui.pushButton_cross_color.clicked.connect(main_window.change_cross_color)
     main_window.ui.pushButton_delay.clicked.connect(main_window.set_scan_delay)
     main_window.ui.pushButton_delete.clicked.connect(lambda: main_window.del_img(None))
@@ -50,7 +55,6 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_generate_train.clicked.connect(main_window.generate_train)
     main_window.ui.pushButton_goto_train.clicked.connect(lambda: main_window.add_to_train_val(dst_part='train'))
     main_window.ui.pushButton_goto_val.clicked.connect(lambda: main_window.add_to_train_val(dst_part='val'))
-    main_window.ui.pushButton_hide_img_tag.pressed.connect(main_window.hide_img_tag)
     main_window.ui.pushButton_img_edit.clicked.connect(main_window.edit_img)
     main_window.ui.pushButton_img_window.clicked.connect(main_window.new_img_window)
     main_window.ui.jump_to.pushButton_jump.clicked.connect(main_window.img_jump)
@@ -63,7 +67,6 @@ def connect_all_other_signals(main_window):
     # main_window.ui.pushButton_pin.clicked.connect(main_window.pin_unpin_image)
     main_window.ui.pushButton_shape_list.clicked.connect(main_window.fold_list)
     main_window.ui.pushButton_stat.clicked.connect(main_window.show_class_statistic)
-    main_window.ui.pushButton_tag_list.clicked.connect(main_window.fold_list)
     main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
     main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
@@ -72,7 +75,7 @@ def connect_all_other_signals(main_window):
     main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
     main_window.ui.spinBox_6.valueChanged.connect(main_window.change_pen_size)
 
-    main_window.ui.tabWidget.currentChanged.connect(main_window.set_work_mode)
+    # main_window.ui.tabWidget.currentChanged.connect(main_window.set_work_mode)
 
     main_window.ui.toolBox.currentChanged.connect(main_window.set_tool_mode)
 
@@ -146,10 +149,7 @@ def init_menu(main_win):
     main_win.action_oc_shape_info = QAction(main_win.tr('禁用（提高切图速度）'), main_win)
     main_win.action_oc_shape_info.triggered.connect(main_win.oc_shape_info)
     main_win.menu_set_shape_info.addAction(main_win.action_oc_shape_info)
-    main_win.ui.listWidget_sem.customContextMenuRequested.connect(
-        lambda: main_win.show_menu(main_win.menu_set_shape_info))
-    main_win.ui.listWidget_ins.customContextMenuRequested.connect(
-        lambda: main_win.show_menu(main_win.menu_set_shape_info))
+
 
     main_win.ui.action_cn.triggered.connect(lambda: main_win.set_language('CN'))
     main_win.ui.action_en.triggered.connect(lambda: main_win.set_language('EN'))

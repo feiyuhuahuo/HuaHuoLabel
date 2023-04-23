@@ -10,7 +10,7 @@ class ScanButton(QWidget):
         self.setFixedSize(65, 25)
         self.pushButton_last = QPushButton(self)
         self.pushButton_last.setFixedSize(32, 24)
-        self.pushButton_last.setIcon(QIcon('images/icon_50 - 副本.png'))
+        self.pushButton_last.setIcon(QIcon('images/direction/icon_50 - 副本.png'))
         self.pushButton_last.setToolTip(self.tr('浏览上一张图片，快捷键"A"'))
         self.pushButton_last.setStyleSheet(
             """
@@ -27,7 +27,7 @@ class ScanButton(QWidget):
         )
         self.pushButton_next = QPushButton(self)
         self.pushButton_next.setFixedSize(32, 24)
-        self.pushButton_next.setIcon(QIcon('images/icon_50.png'))
+        self.pushButton_next.setIcon(QIcon('images/direction/icon_50.png'))
         self.pushButton_next.setToolTip(self.tr('浏览下一张图片，快捷键"D"'))
         self.pushButton_next.setStyleSheet(
             """

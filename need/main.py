@@ -110,7 +110,7 @@ class HHL_MainWindow(QMainWindow):
         # self.ui.statusBar().showMessage('Ready')
 
     def connect_signals(self):
-        self.connect_buttons_signal()
+        # self.connect_buttons_signal()
         connect_all_other_signals(self)
         signal_select_class_ok.signal.connect(self.save_one_shape)
         sys.stderr = signal_error2app
@@ -837,16 +837,16 @@ class HHL_MainWindow(QMainWindow):
             os.makedirs(dir_path, exist_ok=True)
             self.file_move(img_path, dir_path)
 
-    def connect_buttons_signal(self):
-        layouts = [self.ui.groupBox_cls.layout(), self.ui.groupBox_mcls.layout()]
-        for lo in layouts:
-            for i in range(lo.count()):
-                item = lo.itemAt(i)
-                for j in range(item.count()):
-                    button = item.itemAt(j).widget()
-                    clicked_signal = button.metaObject().method(37)  # 37为信号clicked的索引
-                    if not button.isSignalConnected(clicked_signal):  # 避免信号重复连接
-                        button.clicked.connect(self.button_action)
+    # def connect_buttons_signal(self):
+    #     layouts = [self.ui.groupBox_cls.layout(), self.ui.groupBox_mcls.layout()]
+    #     for lo in layouts:
+    #         for i in range(lo.count()):
+    #             item = lo.itemAt(i)
+    #             for j in range(item.count()):
+    #                 button = item.itemAt(j).widget()
+    #                 clicked_signal = button.metaObject().method(37)  # 37为信号clicked的索引
+    #                 if not button.isSignalConnected(clicked_signal):  # 避免信号重复连接
+    #                     button.clicked.connect(self.button_action)
 
     def current_img_name(self):
         return self.imgs[self.__cur_i].split('/')[-1]
@@ -1043,6 +1043,28 @@ class HHL_MainWindow(QMainWindow):
         if self.del_existed_file(src_path, new_file_path):
             shutil.move(src_path, dst_dir)
 
+    def fold_buttons(self):
+        visible = True
+        widget = self.sender()
+
+        if widget.objectName() == 'pushButton_img_cate':
+            visible = self.ui.groupBox_img_cate.isVisible()
+            self.ui.groupBox_img_cate.setVisible(not visible)
+        elif widget.objectName() == 'pushButton_img_tag':
+            visible = self.ui.groupBox_img_tag.isVisible()
+            self.ui.groupBox_img_tag.setVisible(not visible)
+        elif widget.objectName() == 'pushButton_obj_cate':
+            visible = self.ui.groupBox_obj_cate.isVisible()
+            self.ui.groupBox_obj_cate.setVisible(not visible)
+        elif widget.objectName() == 'pushButton_obj_tag':
+            visible = self.ui.groupBox_obj_tag.isVisible()
+            self.ui.groupBox_obj_tag.setVisible(not visible)
+
+        if visible:
+            widget.setIcon(QIcon('images/direction/down.png'))
+        else:
+            widget.setIcon(QIcon('images/direction/up.png'))
+
     def fold_list(self):
         button = self.sender()
         button_name = button.objectName()
@@ -1052,8 +1074,6 @@ class HHL_MainWindow(QMainWindow):
             self.ui.class_list.setVisible(not self.ui.class_list.isVisible())
         elif button_name == 'pushButton_shape_list':
             self.ui.shape_list.setVisible(not self.ui.shape_list.isVisible())
-        elif button_name == 'pushButton_tag_list':
-            self.ui.tag_list.setVisible(not self.ui.tag_list.isVisible())
 
         sh1, sh2 = sh.split('background-color')
         if '(230, 229, 255)' in sh:
@@ -1283,10 +1303,6 @@ class HHL_MainWindow(QMainWindow):
                 return True
         return False
 
-    def hide_img_tag(self):
-        self.ui.listWidget_img_tag.set_visible(self)
-        # for i in range(self.ui.verticalLayout_13.count()):
-        #     print(self.ui.verticalLayout_13.itemAt(i).widget())
 
     def img_enhance(self):
         self.ui.horizontalSlider_3.setValue(100)
@@ -2493,9 +2509,8 @@ class HHL_MainWindow(QMainWindow):
         self.ui.class_list.set_name('class')
         self.ui.shape_list.set_name('shape')
         self.ui.shape_list.setVisible(False)
-        self.ui.tag_list.setVisible(False)
 
-        for button in [self.ui.pushButton_shape_list, self.ui.pushButton_tag_list]:
+        for button in [self.ui.pushButton_shape_list]:
             sh = button.styleSheet()
             sh1, sh2 = sh.split('background-color')
             new_sh = sh1 + 'background-color: rgb(220, 220, 220);'
@@ -2843,25 +2858,26 @@ class HHL_MainWindow(QMainWindow):
 # todo: 8. 检查图库功能也同步变化
 # todo: 9. 分类按钮的 屏蔽、观察、默认的图标
 # todo: 10. 程序配置记录文件
-# todo: 新架构-----------------------------------------
-
-# todo:  标注批量删除功能
-# todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
-
-# todo: 皮肤功能
-# todo: 搜索按钮的spinbox左边设置成圆角
+# todo: 11. 图库统计和检查图库合并为一个功能
 # todo: cvat式的标注修改
 # todo: 版本描述扩展为版本详细记录功能
+# todo:  标注批量删除功能
+# todo: 新架构-----------------------------------------
+
+# todo: 设置Qmessagebox的字体大小
+# todo: win11测试
+
+# todo: 搜索按钮的spinbox左边设置成圆角
 # todo: auto inference 全功能  支持 ONNX、openvino、（opencv接口？ 自写接口？）
 # todo: shape的交集、差集  环形支持多形状组合以及多孔洞环形
+
+# todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
+# todo: 皮肤功能
 # todo: 合并labels.json
-# todo：按shape 的tag浏览
-# todo: pin 功能 扩展为tag功能, 统计信息 图片标签统计
 # todo: 视频标注 全功能
 # todo: 摄像头 实时检测与标注？
 # todo: 旋转目标检测？
-# todo: 设置Qmessagebox的字体大小
-# todo: win11测试
+
 
 # todo: ubuntu 部分弹出窗口不在屏幕中心位置
 # todo: ubuntu 按钮右键时同时弹出上层容器的右键菜单

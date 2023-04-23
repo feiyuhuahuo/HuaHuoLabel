@@ -23,7 +23,7 @@ class SearchBox(QLineEdit):
             """)
 
         self.search_btn = QPushButton(self)
-        self.search_btn.setIcon(QIcon('../../images/search.png'))
+        self.search_btn.setIcon(QIcon('images/search.png'))
         self.search_btn.setFont(font)
         self.search_btn.setFixedSize(30, self.height())
         self.search_btn.setCursor(Qt.PointingHandCursor)
