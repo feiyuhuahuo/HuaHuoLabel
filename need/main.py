@@ -2848,6 +2848,7 @@ class HHL_MainWindow(QMainWindow):
 # todo:  标注批量删除功能
 # todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
 
+# todo: 皮肤功能
 # todo: 搜索按钮的spinbox左边设置成圆角
 # todo: cvat式的标注修改
 # todo: 版本描述扩展为版本详细记录功能
