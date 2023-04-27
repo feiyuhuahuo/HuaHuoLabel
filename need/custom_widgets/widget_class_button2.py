@@ -2,10 +2,11 @@
 # -*- coding:utf-8 -*-
 import pdb
 
-from PySide6.QtWidgets import QInputDialog, QPushButton, QMessageBox, QMenu, QWidget, QApplication, QSizePolicy
+from PySide6.QtWidgets import QInputDialog, QPushButton, QMessageBox, QMenu, QWidget, QApplication, \
+    QMainWindow, QHBoxLayout, QLineEdit
 from PySide6.QtCore import Qt
 # from need.utils import AllClasses
-from PySide6.QtGui import QIcon, QFont, QAction
+from PySide6.QtGui import QIcon, QFont, QAction, QCursor
 
 
 class BaseButton(QWidget):
@@ -14,10 +15,26 @@ class BaseButton(QWidget):
         font = self.font()
         font.setPointSize(10)
         self.setFont(font)
-        self.setFixedHeight(24)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.menu = QMenu(self)
+        self.menu.setFixedWidth(90)
+
+        self.action_edit = QAction(QIcon('images/图片14.png'), self.tr('编辑'), self)
+        self.action_edit.triggered.connect(self.edit_class)
+        self.action_default = QAction(QIcon('images/favorite2.ico'), self.tr('设为默认'), self)
+        self.action_default.triggered.connect(self.set_as_default)
+
+        self.action_delete = QAction(QIcon('images/icon_43.png'), self.tr('删除'), self)
+        # self.action_delete.triggered.connect(lambda: self.set_interpolation(Qt.FastTransformation))
+        self.menu.addAction(self.action_edit)
+        self.menu.addAction(self.action_default)
+        self.menu.addAction(self.action_delete)
+
+        self.customContextMenuRequested.connect(self.show_menu)
+
         self.pushButton_look = QPushButton(self)
-        self.pushButton_look.setFixedSize(25, 24)
-        self.pushButton_look.setIcon(QIcon('../../images/look2.png'))
+        self.pushButton_look.setFixedSize(25, 22)
+        self.pushButton_look.setIcon(QIcon('images/look/look2.png'))
         self.pushButton_look.setAccessibleName('looking')
         self.pushButton_look.setStyleSheet(
             """
@@ -46,30 +63,65 @@ class BaseButton(QWidget):
         )
 
         self.class_button.move(23, 0)
-        self.class_button.setMinimumHeight(24)
+        self.class_button.setMinimumHeight(22)
+        self.adjust_size()
 
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+    def adjust_size(self):
+        self.class_button.setFixedWidth(self.class_button.sizeHint().width())
+        self.setFixedWidth(self.class_button.width() + 24)
 
-        self.class_button.setSizePolicy(sizePolicy)
-        # self.menu_task = QMenu(self)
-        # self.action_load_cls_classes = QAction(main_win.tr('加载类别'), main_win)
-        # main_win.action_load_cls_classes.triggered.connect(main_win.load_classes)
-        # main_win.menu_task.addAction(main_win.action_load_cls_classes)
-        # main_win.action_export_cls_classes = QAction(main_win.tr('导出类别'), main_win)
-        # main_win.action_export_cls_classes.triggered.connect(main_win.export_classes)
-        # main_win.menu_task.addAction(main_win.action_export_cls_classes)
+    def delete(self):
+        pass
+
+    def edit_class(self):
+        text, is_ok = QInputDialog().getText(self, self.tr('类别名称'), self.tr('请输入类别名称，输入"-"删除当前类别。'),
+                                             QLineEdit.Normal)
+        if is_ok and text:
+            self.class_button.setText(text)
+            self.adjust_size()
+
+    def set_as_default(self):
+        ss = self.class_button.styleSheet()
+        if '3px solid green' in ss:
+            self.class_button.setStyleSheet("""
+                QPushButton {background-color: rgb(235, 235, 235);
+                            border: 1px solid gray;
+                            border-top-right-radius: 4px;
+                            border-bottom-right-radius: 4px;
+                            padding-left:5px;
+                            padding-right:5px;}
+                QPushButton:hover {background-color:rgb(225, 225, 225);}
+                QPushButton:pressed {background-color:rgb(215, 215, 215);}
+                """)
+            self.action_default.setText(self.tr('设为默认'))
+        else:
+            self.class_button.setStyleSheet("""
+            QPushButton {background-color: rgb(235, 235, 235);
+                        border: 1px solid gray;
+                        border-top-right-radius: 4px;
+                        border-bottom-right-radius: 4px;
+                        border-bottom: 3px solid green;
+                        padding-left:5px;
+                        padding-right:5px;}
+                QPushButton:hover {background-color:rgb(225, 225, 225);}
+                QPushButton:pressed {background-color:rgb(215, 215, 215);}
+                """)
+            self.action_default.setText(self.tr('取消默认'))
 
     def set_look(self):
         if self.pushButton_look.accessibleName() == 'looking':
             self.pushButton_look.setAccessibleName('not_looking')
-            self.pushButton_look.setIcon(QIcon('../../images/not_look2.png'))
+            self.pushButton_look.setIcon(QIcon('images/look/not_look2.png'))
         else:
             self.pushButton_look.setAccessibleName('looking')
-            self.pushButton_look.setIcon(QIcon('../../images/look2.png'))
+            self.pushButton_look.setIcon(QIcon('images/look/look2.png'))
 
-    def show(self):
-        super().show()
-        self.setFixedWidth(self.pushButton_look.width() + self.class_button.width() - 2)
+    def show_menu(self):  # 在鼠标位置显示菜单
+        self.menu.exec(QCursor.pos())
+
+    # def show(self):
+    #     super().show()
+    #     self.setFixedWidth(self.pushButton_look.width() + self.class_button.width() - 2)
 
     # def mousePressEvent(self, e):
     #     super().mousePressEvent(e)
@@ -98,9 +150,27 @@ class BaseButton(QWidget):
     #         AllClasses.add(text)
 
 
+class test_w(QMainWindow):
+    def __init__(self):
+        super().__init__(parent=None)
+        c_w = QWidget(self)
+        self.layout = QHBoxLayout()
+        pb = QPushButton()
+        pb.clicked.connect(self.addd)
+        self.layout.addWidget(pb)
+        self.layout.addWidget(BaseButton())
+        c_w.setLayout(self.layout)
+        self.setCentralWidget(c_w)
+
+    def addd(self):
+        self.layout.addWidget(BaseButton())
+
 
 if __name__ == '__main__':
     app = QApplication()
-    img_edit = BaseButton()
-    img_edit.show()
+    kk = test_w()
+    kk.show()
+    # img_edit = BaseButton()
+    # img_edit.show()
+
     app.exec()

@@ -33,6 +33,10 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_img_tag.clicked.connect(main_window.fold_buttons)
     main_window.ui.pushButton_obj_cate.clicked.connect(main_window.fold_buttons)
     main_window.ui.pushButton_obj_tag.clicked.connect(main_window.fold_buttons)
+    main_window.ui.pushButton_img_cate_add.clicked.connect(main_window.add_buttons)
+    main_window.ui.pushButton_img_tag_add.clicked.connect(main_window.add_buttons)
+    main_window.ui.pushButton_obj_cate_add.clicked.connect(main_window.add_buttons)
+    main_window.ui.pushButton_obj_tag_add.clicked.connect(main_window.add_buttons)
 
     main_window.ui.pushButton_35.clicked.connect(main_window.undo_painting)
     main_window.ui.pushButton_36.clicked.connect(main_window.save_ann_img)
@@ -44,6 +48,7 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_84.clicked.connect(main_window.img_enhance_reset)
     main_window.ui.pushButton_auto_infer.clicked.connect(main_window.auto_inference)
     # main_window.ui.pushButton_bg.pressed.connect(main_window.set_semantic_bg_when_press)
+    main_window.ui.pushButton_bookmark.pressed.connect(main_window.show_bookmark)
     main_window.ui.pushButton_build_task.pressed.connect(main_window.show_task_window)
     main_window.ui.pushButton_check_label.clicked.connect(main_window.check_dataset)
     main_window.ui.pushButton_class_list.clicked.connect(main_window.fold_list)

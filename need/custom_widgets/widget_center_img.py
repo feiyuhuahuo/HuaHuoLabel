@@ -1,11 +1,11 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import pdb
-
 from typing import List, Union
 from copy import deepcopy
-from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel
-from PySide6.QtCore import Qt, QPoint, QPointF, QRect
+from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel, QGraphicsView, \
+    QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QGraphicsPixmapItem
+from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QEvent
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
     QImageReader, QIcon
 from PySide6 import QtCore
@@ -48,11 +48,13 @@ class BaseImgFrame(QLabel):
         self.action_nearest.triggered.connect(lambda: self.set_interpolation(Qt.FastTransformation))
         self.img_menu.addAction(self.action_nearest)
         self.img_menu.addAction(self.action_bilinear)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_menu)
 
         self.img, self.scaled_img = None, None
         self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
         self.start_pos = None
+        self.bm_start = None
         self.LeftClick = False  # 用于图片拖曳和标注拖曳功能中，判断左键是否按下
         self.interpolation = Qt.FastTransformation
 
@@ -358,76 +360,88 @@ class CenterImg(BaseImgFrame):
     def mouseMoveEvent(self, e):
         self.cursor_in_widget = e.position()  # 相当于self.mapFromGlobal(e.globalPosition())
 
-        img_pixel_x, img_pixel_y, qcolor = self.widget_coor_to_img_coor(self.cursor_in_widget)
-        if img_pixel_x is not None:  # 实时显示坐标，像素值
-            signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
-
-        if self.AnnMode:
-            if QApplication.keyboardModifiers() == Qt.ControlModifier:
-                self.ann_draw()
-            else:
-                self.move_pix_img()
+        if self.bm_start is not None:
+            self.parent().moving_bookmark(self.cursor_in_widget - self.bm_start)
+            self.bm_start = self.cursor_in_widget
         else:
-            if self.DetMode:  # 触发画十字线
-                self.update()
+            img_pixel_x, img_pixel_y, qcolor = self.widget_coor_to_img_coor(self.cursor_in_widget)
+            if img_pixel_x is not None:  # 实时显示坐标，像素值
+                signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
 
-            if QApplication.keyboardModifiers() == Qt.ControlModifier:
-                if self.DetMode or self.SegMode:
-                    self.update()
-
-                    if self.shape_type in shape_type('像素') and len(self.img_points):
-                        self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-            else:
-                if self.ShapeEditMode:
-                    if QApplication.keyboardModifiers() != Qt.ShiftModifier:
-                        # 有了self.polygon_editing_i后，在paintEvent()里触发draw_editing_polygon()才有效
-                        if not self.MovingPolygon and not self.PolygonLocked:
-                            self.polygon_editing_i = self.get_editing_polygon()
-
-                        if self.LeftClick:
-                            if not self.MovingPolygon and self.corner_index is not None:
-                                self.corner_point_move(self.corner_index)  # 角点移动功能先于标注移动功能
-                            elif self.polygon_editing_i is not None:
-                                self.move_polygons()
-                            else:
-                                self.move_pix_img()
-                        else:
-                            self.update()  # 为了触发draw_editing_polygon()
+            if self.AnnMode:
+                if QApplication.keyboardModifiers() == Qt.ControlModifier:
+                    self.ann_draw()
                 else:
                     self.move_pix_img()
+            else:
+                if self.DetMode:  # 触发画十字线
+                    self.update()
+
+                if QApplication.keyboardModifiers() == Qt.ControlModifier:
+                    if self.DetMode or self.SegMode:
+                        self.update()
+
+                        if self.shape_type in shape_type('像素') and len(self.img_points):
+                            self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+                else:
+                    if self.ShapeEditMode:
+                        if QApplication.keyboardModifiers() != Qt.ShiftModifier:
+                            # 有了self.polygon_editing_i后，在paintEvent()里触发draw_editing_polygon()才有效
+                            if not self.MovingPolygon and not self.PolygonLocked:
+                                self.polygon_editing_i = self.get_editing_polygon()
+
+                            if self.LeftClick:
+                                if not self.MovingPolygon and self.corner_index is not None:
+                                    self.corner_point_move(self.corner_index)  # 角点移动功能先于标注移动功能
+                                elif self.polygon_editing_i is not None:
+                                    self.move_polygons()
+                                else:
+                                    self.move_pix_img()
+                            else:
+                                self.update()  # 为了触发draw_editing_polygon()
+                    else:
+                        self.move_pix_img()
 
         self.set_focus()
 
     def mousePressEvent(self, e):
-        if self.AnnMode or self.ClsMode or self.MClsMode:
-            self.setCursor(Qt.ClosedHandCursor)
-
-        if QApplication.keyboardModifiers() == Qt.ControlModifier:
-            signal_check_draw_enable.send(True)
-
-            if self.AnnMode:
-                self.setCursor(self.pencil_cursor)
-                self.ann_point_cur = e.position() - self.img_tl
-                self.ann_point_last = self.ann_point_cur
-
-                command = AnnUndo(self, self.scaled_img.copy())
-                self.undo_stack.push(command)  # 添加command用于撤销功能
-            else:
-                if self.DetMode or self.SegMode:
-                    if self.PolygonLastPointDone:
-                        self.shape_done_open_label_window()
-                    else:
-                        self.cursor_in_widget = e.position()
-                        if self.shape_type in shape_type('像素'):
-                            self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-                        else:
-                            self.add_widget_img_pair(self.cursor_in_widget)
+        e_pos = e.pos().toTuple()
+        bm_tl, bm_br = self.parent().bm_active_area()
+        if bm_tl[0] < e_pos[0] < bm_br[0] and bm_tl[1] < e_pos[1] < bm_br[1]:  # move bookmark
+            self.bm_start = e.pos()
         else:
-            if e.button() == Qt.LeftButton:
-                self.LeftClick = True
-                self.start_pos = e.position()
+            if self.AnnMode or self.ClsMode or self.MClsMode:
+                self.setCursor(Qt.ClosedHandCursor)
+
+            if QApplication.keyboardModifiers() == Qt.ControlModifier:
+                signal_check_draw_enable.send(True)
+
+                if self.AnnMode:
+                    self.setCursor(self.pencil_cursor)
+                    self.ann_point_cur = e.position() - self.img_tl
+                    self.ann_point_last = self.ann_point_cur
+
+                    command = AnnUndo(self, self.scaled_img.copy())
+                    self.undo_stack.push(command)  # 添加command用于撤销功能
+                else:
+                    if self.DetMode or self.SegMode:
+                        if self.PolygonLastPointDone:
+                            self.shape_done_open_label_window()
+                        else:
+                            self.cursor_in_widget = e.position()
+                            if self.shape_type in shape_type('像素'):
+                                self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+                            else:
+                                self.add_widget_img_pair(self.cursor_in_widget)
+            else:
+                if e.button() == Qt.LeftButton:
+                    self.LeftClick = True
+                    self.start_pos = e.position()
 
     def mouseReleaseEvent(self, e):
+        if self.bm_start is not None:
+            self.parent().moved_bookmark()
+            self.bm_start = None
         if self.MovingPolygon:
             signal_shape_info_update.send(self.polygon_editing_i)
             self.MovingPolygon = False
@@ -1213,3 +1227,48 @@ class CenterImg(BaseImgFrame):
 
     def show_tag_window(self):
         self.tag_window.show()
+
+
+class CenterImgView(QGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.img_area = CenterImg(self)
+        self.img_area.paint_img('images/bg.png')
+
+        self.scene = QGraphicsScene(self)
+        self.bookmark = QGraphicsPixmapItem()
+        self.bookmark.setPixmap(QPixmap('images/bookmark/bookmark_red.png').scaled(48, 48))
+        self.bookmark.setFlags(QGraphicsItem.ItemIsMovable)
+        self.bookmark.setPos(0, -5)
+        self.bookmark.setVisible(False)
+        self.scene.addItem(self.bookmark)
+        self.setScene(self.scene)
+
+    def adjust_area(self):  # 窗口大小改变时，图片大小也随着改变
+        view_w, view_h = self.size().toTuple()
+        self.scene.setSceneRect(0, 0, view_w, view_h)
+        self.img_area.resize(view_w, view_h)
+        self.img_area.mouseDoubleClickEvent(None, True)
+
+    def bm_active_area(self):
+        if self.bookmark.isVisible():
+            tl = self.bookmark.pos() + QPoint(12, 0)
+            br = self.bookmark.pos() + QPoint(40, 40)
+            return tl.toTuple(), br.toTuple()
+        else:
+            return (-10, -10), (-10, -10)
+
+    def moving_bookmark(self, offset: QPoint):
+        self.bookmark.setPos(self.bookmark.pos() + offset)
+
+    def moved_bookmark(self):
+        x, y = self.bookmark.pos().toTuple()
+        view_w, view_h = self.size().toTuple()
+        new_x = min(max(-10, x), view_w - 40)
+        new_y = min(max(-5, y), view_h - 50)
+        if y < 10:
+            new_y = -5
+        self.bookmark.setPos(new_x, new_y)
+
+    def show_bookmark(self):
+        self.bookmark.setVisible(not self.bookmark.isVisible())

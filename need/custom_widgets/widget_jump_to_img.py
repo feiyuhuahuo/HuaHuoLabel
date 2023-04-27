@@ -8,6 +8,7 @@ class JumpToImg(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.spinBox = QSpinBox(self)
+        self.spinBox.setObjectName('round_spin')
         self.spinBox.setMinimum(1)
         self.spinBox.setMaximum(9999)
         self.spinBox.setValue(0)
@@ -15,11 +16,18 @@ class JumpToImg(QWidget):
         font = QFont()
         font.setPointSize(10)
         self.spinBox.setFont(font)
-        self.spinBox.setStyleSheet("""
-                                   QSpinBox 
-                                   {padding-right: 40px;
-                                    border-width: 3; }
-                                   """)
+
+        self.spinBox.setStyleSheet("QSpinBox{border: 1px solid gray; border-radius: 4px;}"
+                                   "QSpinBox::down-button {border: 1px solid gray;"
+                                   "background-color: rgb(235, 235, 235);"
+                                   " border-image:url(images/direction/down3.png)}"
+                                   "QSpinBox::down-button:hover {background-color:rgb(225, 225, 225);}"
+                                   "QSpinBox::down-button:pressed {background-color:rgb(215, 215, 215);}"
+                                   "QSpinBox::up-button {border: 1px solid gray;"
+                                   "background-color: rgb(235, 235, 235);"
+                                   " border-image:url(images/direction/up3.png)}"
+                                   "QSpinBox::up-button:hover {background-color:rgb(225, 225, 225);}"
+                                   "QSpinBox::up-button:pressed {background-color:rgb(215, 215, 215);}")
 
         self.pushButton_jump = QPushButton(self)
         self.pushButton_jump.setFixedSize(32, 24)

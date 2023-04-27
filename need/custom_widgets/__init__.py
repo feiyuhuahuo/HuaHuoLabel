@@ -4,7 +4,7 @@ from .dialog_message import CustomMessageBox, signal_question_result
 from .window_select import SelectItem, signal_select_window_close
 from .widget_center_img import CenterImg, signal_shape_type, signal_xy_color2ui, signal_set_shape_list_selected, \
     signal_del_shape, signal_draw_selected_shape, signal_open_label_window, signal_one_collection_done, \
-    BaseImgFrame, signal_move2new_folder, signal_shape_info_update, signal_check_draw_enable
+    BaseImgFrame, signal_move2new_folder, signal_shape_info_update, signal_check_draw_enable, CenterImgView
 from .widget_unified_list import ClassListWidget, signal_update_num, ShapeListWidget
 from .widget_class_stat import ClassStatWidget
 from .widget_class_button import ClassButton
@@ -23,6 +23,7 @@ from .widget_hide_img_tag import ImgTagList
 from .window_img_edit import ImgEdit
 from .widget_scan_button import ScanButton
 from .widget_jump_to_img import JumpToImg
+from .widget_class_button2 import BaseButton
 
 __all__ = ['CenterImg', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'SelectItem', 'ProgressWindow',
            'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'ClassListWidget', 'signal_shape_type',
@@ -31,4 +32,5 @@ __all__ = ['CenterImg', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'Selec
            'signal_shape_info_update', 'signal_check_draw_enable', 'signal_show_plain_img', 'signal_show_label_img',
            'signal_update_num', 'ShapeListWidget', 'signal_select_window_close', 'BuildTask', 'signal_send_imgs',
            'signal_question_result', 'ChooseVersion', 'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar',
-           'AutoInfer', 'signal_request_imgs', 'ImgTagList', 'ImgEdit', 'ScanButton', 'JumpToImg']
+           'AutoInfer', 'signal_request_imgs', 'ImgTagList', 'ImgEdit', 'ScanButton', 'JumpToImg', 'CenterImgView',
+           'BaseButton']

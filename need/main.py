@@ -15,7 +15,7 @@ from os import path as osp
 from PIL import Image, ImageEnhance
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QLineEdit, QWidget, \
-    QHBoxLayout, QColorDialog, QListWidgetItem, QApplication, QGroupBox
+    QHBoxLayout, QColorDialog, QListWidgetItem, QApplication, QGroupBox, QPushButton
 from PySide6.QtWidgets import QMessageBox as QMB
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QPixmap, QImage, QColor, QFontMetrics, QIcon
@@ -49,9 +49,10 @@ class HHL_MainWindow(QMainWindow):
         self.marquee_num = 30  # 小图的最大数量, 越大占用内存越多
         self.marquee_size = 150
         self.scan_delay = 0
+        self.bookmark_list = []
 
         loader = QUiLoader()
-        loader.registerCustomWidget(CenterImg)
+        loader.registerCustomWidget(CenterImgView)
         loader.registerCustomWidget(ClassButton)
         loader.registerCustomWidget(ClassListWidget)
         loader.registerCustomWidget(ShapeListWidget)
@@ -97,8 +98,12 @@ class HHL_MainWindow(QMainWindow):
         self.marquees.setLayout(self.marquees_layout)
         self.ui.scrollArea.setWidget(self.marquees)
 
-        self.ui.img_widget.paint_img('images/bg.png')
         self.log_info('Application opened.', mark_line=True)
+
+        # self.ui.jump_to.spinBox.setStyleSheet("#" + self.ui.jump_to.spinBox.objectName() + "QLineEdit { border-radius: 4px; border: 1px solid gray; }")
+        # self.ui.jump_to.spinBox.setStyleSheet( "QSpinBox QAbstractSpinBox {border: 1px solid gray;border-radius: 10px;padding: 2px;height: 24px;}"
+        #                                        "QSpinBox QAbstractSpinBox QLineEdit {background-color: white;border-radius: 8px;}")
+        # print(  self.ui.jump_to.spinBox.styleSheet())
 
         # 获取字符串宽度
         # self.ui.toolBox.currentWidget().fontMetrics().boundingRect('hello')
@@ -116,9 +121,9 @@ class HHL_MainWindow(QMainWindow):
         sys.stderr = signal_error2app
         sys.stderr.signal.connect(self.log_sys_error)
 
-    def changeEvent(self, event):  # 窗口大小改变时，背景图片大小也随着改变
+    def changeEvent(self, event):  # 设置在这里的代码, 相关控件的尺寸相当于是调用show()之后的实际展示尺寸
         if not self.ui.lineEdit.text():
-            self.ui.img_widget.mouseDoubleClickEvent(None, True)
+            self.ui.graphicsView.adjust_area()
 
     def closeEvent(self, e):
         self.window_build_task.close()
@@ -181,6 +186,19 @@ class HHL_MainWindow(QMainWindow):
     def about_hhl(self):
         self.hhl_info = hhl_info(self.language)
         self.hhl_info.show(clear_old=False)
+
+    def add_buttons(self):
+        widget = self.sender()
+        if widget.objectName() == 'pushButton_img_cate_add':
+            self.ui.hl_img_cate_buttons.insertWidget(self.ui.hl_img_cate_buttons.count() - 1, BaseButton(self))
+
+        elif widget.objectName() == 'pushButton_img_tag_add':
+            print(self.ui.groupBox.contentsRect())
+            QHBoxLayout.set
+        elif widget.objectName() == 'pushButton_obj_cate_add':
+            pass
+        elif widget.objectName() == 'pushButton_obj_tag_add':
+            pass
 
     def add_to_train_val(self, dst_part, img_path=None, pass_one_file=False, pass_separate_file=False):
         if not self.has_img_root():
@@ -1050,15 +1068,19 @@ class HHL_MainWindow(QMainWindow):
         if widget.objectName() == 'pushButton_img_cate':
             visible = self.ui.groupBox_img_cate.isVisible()
             self.ui.groupBox_img_cate.setVisible(not visible)
+            self.ui.pushButton_img_cate_add.setDisabled(visible)
         elif widget.objectName() == 'pushButton_img_tag':
             visible = self.ui.groupBox_img_tag.isVisible()
             self.ui.groupBox_img_tag.setVisible(not visible)
+            self.ui.pushButton_img_tag.setDisabled(visible)
         elif widget.objectName() == 'pushButton_obj_cate':
             visible = self.ui.groupBox_obj_cate.isVisible()
             self.ui.groupBox_obj_cate.setVisible(not visible)
+            self.ui.pushButton_obj_cate_add.setDisabled(visible)
         elif widget.objectName() == 'pushButton_obj_tag':
             visible = self.ui.groupBox_obj_tag.isVisible()
             self.ui.groupBox_obj_tag.setVisible(not visible)
+            self.ui.pushButton_obj_tag_add.setDisabled(visible)
 
         if visible:
             widget.setIcon(QIcon('images/direction/down.png'))
@@ -1302,7 +1324,6 @@ class HHL_MainWindow(QMainWindow):
             if one['category'] in self.looking_classes:
                 return True
         return False
-
 
     def img_enhance(self):
         self.ui.horizontalSlider_3.setValue(100)
@@ -2686,6 +2707,14 @@ class HHL_MainWindow(QMainWindow):
         self.ui.img_widget.paint_img('images/bg.png')
         self.ui.img_widget.clear_all_polygons()
 
+    def show_bookmark(self):
+        if 0 <= self.__cur_i < self.img_num:
+            if self.__cur_i in self.bookmark_list:
+                self.bookmark_list.remove(self.__cur_i)
+            else:
+                self.bookmark_list.append(self.__cur_i)
+        self.ui.graphicsView.show_bookmark()
+
     def show_class_selection_list(self):
         self.window_select_class.show_at(self.frameGeometry())
 
@@ -2851,8 +2880,6 @@ class HHL_MainWindow(QMainWindow):
 # todo: 新架构-----------------------------------------
 # todo: 1. 去除任务类别，统一为体格类别
 # todo: 2. 定义新的文件结构
-# todo: 3. 动画，主要用于控件的隐藏、折叠，参考流式布局？
-# todo: 6. graphicsitem 或者无边框 dockwidget做个bookmark？
 # todo: 7. 类别统计因此也要重做，用QtableWidget
 # todo: 8. 完整的undo，redo功能
 # todo: 8. 检查图库功能也同步变化
@@ -2867,7 +2894,6 @@ class HHL_MainWindow(QMainWindow):
 # todo: 设置Qmessagebox的字体大小
 # todo: win11测试
 
-# todo: 搜索按钮的spinbox左边设置成圆角
 # todo: auto inference 全功能  支持 ONNX、openvino、（opencv接口？ 自写接口？）
 # todo: shape的交集、差集  环形支持多形状组合以及多孔洞环形
 
@@ -2875,6 +2901,7 @@ class HHL_MainWindow(QMainWindow):
 # todo: 皮肤功能
 # todo: 合并labels.json
 # todo: 视频标注 全功能
+# todo: 动画? 主要用于控件的隐藏、折叠，参考流式布局？
 # todo: 摄像头 实时检测与标注？
 # todo: 旋转目标检测？
 
