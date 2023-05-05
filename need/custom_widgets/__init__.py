@@ -7,7 +7,6 @@ from .widget_center_img import CenterImg, signal_shape_type, signal_xy_color2ui,
     BaseImgFrame, signal_move2new_folder, signal_shape_info_update, signal_check_draw_enable, CenterImgView
 from .widget_unified_list import ClassListWidget, signal_update_num, ShapeListWidget
 from .widget_class_stat import ClassStatWidget
-from .widget_class_button import ClassButton
 from .widget_marquee_label import MarqueeLabel, signal_show_plain_img, signal_show_label_img
 from .widget_progress_bar import ProgressWindow
 from .widget_waiting_label import WaitingLabel
@@ -23,9 +22,13 @@ from .widget_hide_img_tag import ImgTagList
 from .window_img_edit import ImgEdit
 from .widget_scan_button import ScanButton
 from .widget_jump_to_img import JumpToImg
-from .widget_class_button2 import BaseButton
+from .widget_button_group import ImgCateButtons
+from .widget_obj_list import ObjList
+from .widget_icon_spin import IconSpin
+from .widget_marquees import Marquees
+from .window_read_edit import ReadEditInfo
 
-__all__ = ['CenterImg', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'SelectItem', 'ProgressWindow',
+__all__ = ['CenterImg', 'ClassStatWidget', 'MarqueeLabel', 'SelectItem', 'ProgressWindow', 'ImgCateButtons',
            'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'ClassListWidget', 'signal_shape_type',
            'signal_xy_color2ui', 'signal_set_shape_list_selected', 'signal_del_shape', 'signal_draw_selected_shape',
            'signal_open_label_window', 'signal_one_collection_done', 'BaseImgFrame', 'signal_move2new_folder',
@@ -33,4 +36,4 @@ __all__ = ['CenterImg', 'ClassStatWidget', 'ClassButton', 'MarqueeLabel', 'Selec
            'signal_update_num', 'ShapeListWidget', 'signal_select_window_close', 'BuildTask', 'signal_send_imgs',
            'signal_question_result', 'ChooseVersion', 'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar',
            'AutoInfer', 'signal_request_imgs', 'ImgTagList', 'ImgEdit', 'ScanButton', 'JumpToImg', 'CenterImgView',
-           'BaseButton']
+           'ObjList', 'IconSpin', 'Marquees', 'ReadEditInfo']

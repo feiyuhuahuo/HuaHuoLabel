@@ -9,7 +9,6 @@ import sys
 import time
 import glob
 
-from need.main_utils import connect_all_other_signals, init_menu
 from copy import deepcopy
 from os import path as osp
 from PIL import Image, ImageEnhance
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QLineEdit,
 from PySide6.QtWidgets import QMessageBox as QMB
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QPixmap, QImage, QColor, QFontMetrics, QIcon
+from need.main_utils import *
 from need.custom_widgets import *
 from need.custom_threads import *
 from need.custom_signals import StrSignal, ErrorSignal
@@ -46,45 +46,27 @@ class HHL_MainWindow(QMainWindow):
         self.OneFileLabel = True
         self.SeparateLabel = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
-        self.marquee_num = 30  # 小图的最大数量, 越大占用内存越多
-        self.marquee_size = 150
         self.scan_delay = 0
         self.bookmark_list = []
 
-        loader = QUiLoader()
-        loader.registerCustomWidget(CenterImgView)
-        loader.registerCustomWidget(ClassButton)
-        loader.registerCustomWidget(ClassListWidget)
-        loader.registerCustomWidget(ShapeListWidget)
-        loader.registerCustomWidget(ButtonWithHoverWindow)
-        loader.registerCustomWidget(SearchBox)
-        loader.registerCustomWidget(ScanButton)
-        loader.registerCustomWidget(LabelTrainVal)
-        loader.registerCustomWidget(LabelTrainBar)
-        loader.registerCustomWidget(LabelValBar)
-        loader.registerCustomWidget(ImgTagList)
-        loader.registerCustomWidget(JumpToImg)
+        self.loader = QUiLoader()
+        register_custom_widgets(self)
 
-        # self.ui = loader.load('main_window.ui')  # 主界面
-        self.ui = loader.load('main_window_new_fw.ui')  # 主界面
+        self.ui = self.loader.load('main_window_new_fw.ui')  # 主界面
         self.setCentralWidget(self.ui)
         self.setWindowTitle(self.tr('花火标注'))
         self.setWindowIcon(QIcon('images/icon.png'))
-        self.resize(1280, 920)
         self.setFocusPolicy(Qt.StrongFocus)
+        self.resize(1280, 920)
 
-        self.window_build_task = BuildTask()
-        self.window_img_edit = ImgEdit(self)
+        init_custom_widgets(self)
         self.window_select_class = SelectItem(title=self.tr('类别'), button_signal=signal_select_class_ok)
-        self.window_sem_class_changed = CustomMessageBox('information', self.tr('类别列表变化'))
-        self.window_ann_saved = CustomMessageBox('information', self.tr('已保存'))
-        self.window_version_remind = CustomMessageBox('question', self.tr('版本提醒'))
-        self.window_choose_version = ChooseVersion(self.ui)
 
         self.thread_auto_save = AutoSave(5 * 60)  # 5min
 
         self.file_select_dlg = QFileDialog(self)
         self.input_dlg = QInputDialog(self)
+        self.color_dlg = QColorDialog(self)
 
         self.set_seg_lists()
         self.reset_init_variables()
@@ -92,30 +74,17 @@ class HHL_MainWindow(QMainWindow):
         self.set_action_disabled()
         self.connect_signals()
 
-        self.marquees = QWidget(self)
-        self.marquees_layout = QHBoxLayout()
-        self.marquees_layout.addStretch()
-        self.marquees.setLayout(self.marquees_layout)
-        self.ui.scrollArea.setWidget(self.marquees)
+        # self.marquees = QWidget(self)
+        # self.marquees_layout = QHBoxLayout()
+        # self.marquees_layout.addStretch()
+        # self.marquees.setLayout(self.marquees_layout)
+        # self.ui.scrollArea.setWidget(self.marquees)
 
         self.log_info('Application opened.', mark_line=True)
-
-        # self.ui.jump_to.spinBox.setStyleSheet("#" + self.ui.jump_to.spinBox.objectName() + "QLineEdit { border-radius: 4px; border: 1px solid gray; }")
-        # self.ui.jump_to.spinBox.setStyleSheet( "QSpinBox QAbstractSpinBox {border: 1px solid gray;border-radius: 10px;padding: 2px;height: 24px;}"
-        #                                        "QSpinBox QAbstractSpinBox QLineEdit {background-color: white;border-radius: 8px;}")
-        # print(  self.ui.jump_to.spinBox.styleSheet())
-
-        # 获取字符串宽度
-        # self.ui.toolBox.currentWidget().fontMetrics().boundingRect('hello')
-        # 工具栏和状态栏
-        # self.ui.toolbar = self.ui.addToolBar('toolbar')
-        # tool_show_png = QAction('查看实例分割标注', self)
-        # tool_show_png.triggered.connect(self.show_seg_png)
-        # self.ui.toolbar.addAction(tool_show_png)
-        # self.ui.statusBar().showMessage('Ready')
+        self.aa = ReadEditInfo()
+        self.aa.show()
 
     def connect_signals(self):
-        # self.connect_buttons_signal()
         connect_all_other_signals(self)
         signal_select_class_ok.signal.connect(self.save_one_shape)
         sys.stderr = signal_error2app
@@ -190,15 +159,13 @@ class HHL_MainWindow(QMainWindow):
     def add_buttons(self):
         widget = self.sender()
         if widget.objectName() == 'pushButton_img_cate_add':
-            self.ui.hl_img_cate_buttons.insertWidget(self.ui.hl_img_cate_buttons.count() - 1, BaseButton(self))
-
+            self.ui.img_cate_buttons.add_button()
         elif widget.objectName() == 'pushButton_img_tag_add':
-            print(self.ui.groupBox.contentsRect())
-            QHBoxLayout.set
+            self.ui.img_tag_buttons.add_button()
         elif widget.objectName() == 'pushButton_obj_cate_add':
-            pass
+            self.ui.obj_cate_buttons.add_button()
         elif widget.objectName() == 'pushButton_obj_tag_add':
-            pass
+            self.ui.obj_tag_buttons.add_button()
 
     def add_to_train_val(self, dst_part, img_path=None, pass_one_file=False, pass_separate_file=False):
         if not self.has_img_root():
@@ -462,22 +429,6 @@ class HHL_MainWindow(QMainWindow):
             else:
                 QMB.warning(self.ui, self.tr('模式错误'), self.tr('请先切换至编辑模式!'))
 
-    def buttons_add_line(self):
-        if self.WorkMode == self.AllModes[0]:
-            button_layout = self.ui.groupBox_1.layout()
-        elif self.WorkMode == self.AllModes[1]:
-            button_layout = self.ui.groupBox_2.layout()
-
-        new_line = QHBoxLayout()
-        for i in range(4):
-            new_button = ClassButton()
-            new_button.setText('-')
-            new_button.clicked.connect(self.button_action)
-            new_line.addWidget(new_button)
-
-        button_layout.addLayout(new_line)
-        self.ui.setFocus()
-
     def buttons_clear(self):  # 清除按钮组中按钮的stylesheet
         if self.WorkMode == self.AllModes[0]:
             button_layout = self.ui.groupBox_1.layout()
@@ -489,30 +440,16 @@ class HHL_MainWindow(QMainWindow):
             for j in range(item.count()):
                 item.itemAt(j).widget().setStyleSheet('')
 
-    def buttons_remove_line(self):
-        if self.WorkMode == self.AllModes[0]:
-            button_layout = self.ui.groupBox_1.layout()
-        elif self.WorkMode == self.AllModes[1]:
-            button_layout = self.ui.groupBox_2.layout()
-
-        count = button_layout.count()
-        line = button_layout.takeAt(count - 1)
-        for i in range(4):
-            widget = line.takeAt(0).widget()
-            widget.setParent(None)
-
-        self.ui.setFocus()
-
     def change_cross_color(self):
         if self.WorkMode == self.AllModes[3]:
-            color = QColorDialog.getColor()
-            if color.isValid():
+            if self.color_dlg.exec() == QColorDialog.Accepted:
+                color = self.color_dlg.selectedColor()
                 self.ui.pushButton_cross_color.setStyleSheet('QPushButton { background-color: %s }' % color.name())
                 self.ui.img_widget.change_pen(det_cross_color=QColor(color.name()))
 
     def change_font_color(self):
-        color = QColorDialog.getColor()
-        if color.isValid():
+        if self.color_dlg.exec() == QColorDialog.Accepted:
+            color = self.color_dlg.selectedColor()
             self.ui.pushButton_font_color.setStyleSheet('QPushButton { color: %s }' % color.name())
             self.ui.img_widget.change_font(ann_font_color=QColor(color.name()))
 
@@ -1066,20 +1003,20 @@ class HHL_MainWindow(QMainWindow):
         widget = self.sender()
 
         if widget.objectName() == 'pushButton_img_cate':
-            visible = self.ui.groupBox_img_cate.isVisible()
-            self.ui.groupBox_img_cate.setVisible(not visible)
+            visible = self.ui.img_cate_buttons.isVisible()
+            self.ui.img_cate_buttons.setVisible(not visible)
             self.ui.pushButton_img_cate_add.setDisabled(visible)
         elif widget.objectName() == 'pushButton_img_tag':
-            visible = self.ui.groupBox_img_tag.isVisible()
-            self.ui.groupBox_img_tag.setVisible(not visible)
-            self.ui.pushButton_img_tag.setDisabled(visible)
+            visible = self.ui.img_tag_buttons.isVisible()
+            self.ui.img_tag_buttons.setVisible(not visible)
+            self.ui.pushButton_img_tag_add.setDisabled(visible)
         elif widget.objectName() == 'pushButton_obj_cate':
-            visible = self.ui.groupBox_obj_cate.isVisible()
-            self.ui.groupBox_obj_cate.setVisible(not visible)
+            visible = self.ui.obj_cate_buttons.isVisible()
+            self.ui.obj_cate_buttons.setVisible(not visible)
             self.ui.pushButton_obj_cate_add.setDisabled(visible)
         elif widget.objectName() == 'pushButton_obj_tag':
-            visible = self.ui.groupBox_obj_tag.isVisible()
-            self.ui.groupBox_obj_tag.setVisible(not visible)
+            visible = self.ui.obj_tag_buttons.isVisible()
+            self.ui.obj_tag_buttons.setVisible(not visible)
             self.ui.pushButton_obj_tag_add.setDisabled(visible)
 
         if visible:
@@ -2527,7 +2464,6 @@ class HHL_MainWindow(QMainWindow):
         self.ui.setFocus()
 
     def set_seg_lists(self):
-        self.ui.class_list.set_name('class')
         self.ui.shape_list.set_name('shape')
         self.ui.shape_list.setVisible(False)
 
@@ -2878,8 +2814,8 @@ class HHL_MainWindow(QMainWindow):
             return False
 
 # todo: 新架构-----------------------------------------
-# todo: 1. 去除任务类别，统一为体格类别
-# todo: 2. 定义新的文件结构
+# todo:  支持滚轮切换 只读，编辑
+# todo：多分类设置  独占组
 # todo: 7. 类别统计因此也要重做，用QtableWidget
 # todo: 8. 完整的undo，redo功能
 # todo: 8. 检查图库功能也同步变化
@@ -2891,6 +2827,11 @@ class HHL_MainWindow(QMainWindow):
 # todo:  标注批量删除功能
 # todo: 新架构-----------------------------------------
 
+# todo: QColorDialog可以使用翻译吗？
+# todo: 使用正确的删除控件的方法：
+# first_button = layout.itemAt(0).widget()
+# layout.takeAt(0)
+# first_button.deleteLater()
 # todo: 设置Qmessagebox的字体大小
 # todo: win11测试
 
@@ -2898,7 +2839,6 @@ class HHL_MainWindow(QMainWindow):
 # todo: shape的交集、差集  环形支持多形状组合以及多孔洞环形
 
 # todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
-# todo: 皮肤功能
 # todo: 合并labels.json
 # todo: 视频标注 全功能
 # todo: 动画? 主要用于控件的隐藏、折叠，参考流式布局？

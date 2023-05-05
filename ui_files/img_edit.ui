@@ -189,11 +189,13 @@ border-radius: 5px;</string>
          <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
         </property>
         <property name="text">
@@ -228,11 +230,13 @@ QCheckBox::indicator:unchecked {
          <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
         </property>
         <property name="text">
@@ -294,11 +298,13 @@ QCheckBox::indicator:unchecked {
          <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
         </property>
         <property name="text">
@@ -435,7 +441,7 @@ QCheckBox::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
         </property>
@@ -466,7 +472,7 @@ QRadioButton::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
         </property>
@@ -532,7 +538,7 @@ QRadioButton::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
         </property>
@@ -557,7 +563,7 @@ QRadioButton::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
         </property>
@@ -585,7 +591,7 @@ QRadioButton::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
         </property>

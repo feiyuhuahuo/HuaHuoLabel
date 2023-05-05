@@ -18,14 +18,14 @@ class JumpToImg(QWidget):
         self.spinBox.setFont(font)
 
         self.spinBox.setStyleSheet("QSpinBox{border: 1px solid gray; border-radius: 4px;}"
-                                   "QSpinBox::down-button {border: 1px solid gray;"
+                                   "QSpinBox::down-button {border: 1px solid grey;"
                                    "background-color: rgb(235, 235, 235);"
-                                   " border-image:url(images/direction/down3.png)}"
+                                   "border-image:url(images/direction/down3.png)}"
                                    "QSpinBox::down-button:hover {background-color:rgb(225, 225, 225);}"
                                    "QSpinBox::down-button:pressed {background-color:rgb(215, 215, 215);}"
                                    "QSpinBox::up-button {border: 1px solid gray;"
                                    "background-color: rgb(235, 235, 235);"
-                                   " border-image:url(images/direction/up3.png)}"
+                                   "border-image:url(images/direction/up3.png)}"
                                    "QSpinBox::up-button:hover {background-color:rgb(225, 225, 225);}"
                                    "QSpinBox::up-button:pressed {background-color:rgb(215, 215, 215);}")
 

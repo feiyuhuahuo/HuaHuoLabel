@@ -25,8 +25,8 @@ def connect_all_other_signals(main_window):
 
     main_window.ui.lineEdit_search.search_btn.clicked.connect(main_window.img_search)
 
-    main_window.ui.class_list.itemClicked.connect(lambda: main_window.look_or_not_look(double=False))
-    main_window.ui.class_list.itemDoubleClicked.connect(lambda: main_window.look_or_not_look(double=True))
+    # main_window.ui.class_list.itemClicked.connect(lambda: main_window.look_or_not_look(double=False))
+    # main_window.ui.class_list.itemDoubleClicked.connect(lambda: main_window.look_or_not_look(double=True))
     main_window.ui.shape_list.itemSelectionChanged.connect(main_window.set_info_widget_selected)
 
     main_window.ui.pushButton_img_cate.clicked.connect(main_window.fold_buttons)
@@ -51,7 +51,6 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_bookmark.pressed.connect(main_window.show_bookmark)
     main_window.ui.pushButton_build_task.pressed.connect(main_window.show_task_window)
     main_window.ui.pushButton_check_label.clicked.connect(main_window.check_dataset)
-    main_window.ui.pushButton_class_list.clicked.connect(main_window.fold_list)
     # main_window.ui.pushButton_cls_back.clicked.connect(main_window.cls_back)
     main_window.ui.pushButton_cross_color.clicked.connect(main_window.change_cross_color)
     main_window.ui.pushButton_delay.clicked.connect(main_window.set_scan_delay)
@@ -72,13 +71,13 @@ def connect_all_other_signals(main_window):
     # main_window.ui.pushButton_pin.clicked.connect(main_window.pin_unpin_image)
     main_window.ui.pushButton_shape_list.clicked.connect(main_window.fold_list)
     main_window.ui.pushButton_stat.clicked.connect(main_window.show_class_statistic)
-    main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
+    # main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
     main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
 
-    main_window.ui.spinBox.valueChanged.connect(main_window.change_pen_size)
-    main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
-    main_window.ui.spinBox_6.valueChanged.connect(main_window.change_pen_size)
+    # main_window.ui.spinBox.valueChanged.connect(main_window.change_pen_size)
+    # main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
+    # main_window.ui.spinBox_6.valueChanged.connect(main_window.change_pen_size)
 
     # main_window.ui.tabWidget.currentChanged.connect(main_window.set_work_mode)
 
@@ -110,8 +109,6 @@ def init_menu(main_win):
     main_win.action_export_cls_classes = QAction(main_win.tr('导出类别'), main_win)
     main_win.action_export_cls_classes.triggered.connect(main_win.export_classes)
     main_win.menu_task.addAction(main_win.action_export_cls_classes)
-    main_win.menu_task.addAction(main_win.tr('增加一行')).triggered.connect(main_win.buttons_add_line)
-    main_win.menu_task.addAction(main_win.tr('删减一行')).triggered.connect(main_win.buttons_remove_line)
 
     main_win.ui.groupBox_1.customContextMenuRequested.connect(
         lambda: main_win.show_menu(main_win.menu_task))
@@ -131,8 +128,6 @@ def init_menu(main_win):
     main_win.action_del_one_class_jsons = QAction(main_win.tr('删除类别'), main_win)
     main_win.action_del_one_class_jsons.triggered.connect(main_win.delete_one_class_jsons)
     main_win.menu_seg_class.addAction(main_win.action_del_one_class_jsons)
-    main_win.ui.class_list.customContextMenuRequested.connect(
-        lambda: main_win.show_menu(main_win.menu_seg_class))
 
     main_win.menu_seg_annotation = QMenu(title='label_list_menu', parent=main_win)
     main_win.ui.shape_list.customContextMenuRequested.connect(
@@ -155,7 +150,37 @@ def init_menu(main_win):
     main_win.action_oc_shape_info.triggered.connect(main_win.oc_shape_info)
     main_win.menu_set_shape_info.addAction(main_win.action_oc_shape_info)
 
-
     main_win.ui.action_cn.triggered.connect(lambda: main_win.set_language('CN'))
     main_win.ui.action_en.triggered.connect(lambda: main_win.set_language('EN'))
     main_win.ui.action_about.triggered.connect(main_win.about_hhl)
+
+
+def init_custom_widgets(main_window):
+    main_window.window_build_task = BuildTask()
+    main_window.window_img_edit = ImgEdit(main_window)
+    main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
+    main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
+    main_window.window_version_remind = CustomMessageBox('question', main_window.tr('版本提醒'))
+    main_window.window_choose_version = ChooseVersion(main_window.ui)
+    main_window.marquees = Marquees(main_window)
+    main_window.ui.scrollArea.setWidget(main_window.marquees)
+    main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)
+    main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
+    main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)
+
+
+def register_custom_widgets(main_window):
+    main_window.loader.registerCustomWidget(CenterImgView)
+    main_window.loader.registerCustomWidget(ClassListWidget)
+    main_window.loader.registerCustomWidget(ShapeListWidget)
+    main_window.loader.registerCustomWidget(ButtonWithHoverWindow)
+    main_window.loader.registerCustomWidget(SearchBox)
+    main_window.loader.registerCustomWidget(ScanButton)
+    main_window.loader.registerCustomWidget(LabelTrainVal)
+    main_window.loader.registerCustomWidget(LabelTrainBar)
+    main_window.loader.registerCustomWidget(LabelValBar)
+    main_window.loader.registerCustomWidget(ImgTagList)
+    main_window.loader.registerCustomWidget(JumpToImg)
+    main_window.loader.registerCustomWidget(ImgCateButtons)
+    main_window.loader.registerCustomWidget(ObjList)
+    main_window.loader.registerCustomWidget(IconSpin)

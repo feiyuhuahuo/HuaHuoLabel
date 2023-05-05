@@ -14,7 +14,6 @@ from PySide6.QtCore import QProcess, QTranslator
 
 if __name__ == '__main__':
     app = QApplication()
-
     with open('project.json', 'r') as f:
         language = json.load(f)['language']
 

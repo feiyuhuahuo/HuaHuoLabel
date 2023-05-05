@@ -73,7 +73,7 @@ border-radius: 4px;
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>22</height>
+         <height>24</height>
         </size>
        </property>
        <property name="font">
@@ -191,6 +191,9 @@ border-radius: 5px;</string>
        <pointsize>10</pointsize>
       </font>
      </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
      <property name="readOnly">
       <bool>false</bool>
      </property>
@@ -214,9 +217,18 @@ border-radius: 5px;</string>
         <widget class="QPushButton" name="pushButton_img">
          <property name="minimumSize">
           <size>
-           <width>30</width>
-           <height>30</height>
+           <width>28</width>
+           <height>28</height>
           </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>28</width>
+           <height>28</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>图片</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton
@@ -238,12 +250,12 @@ border-radius: 4px;
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/Photo_black.svg</normaloff>images/Photo_black.svg</iconset>
+           <normaloff>images/img_video_camera/img2.png</normaloff>images/img_video_camera/img2.png</iconset>
          </property>
          <property name="iconSize">
           <size>
            <width>18</width>
-           <height>20</height>
+           <height>18</height>
           </size>
          </property>
         </widget>
@@ -252,15 +264,18 @@ border-radius: 4px;
         <widget class="QPushButton" name="pushButton_video">
          <property name="minimumSize">
           <size>
-           <width>30</width>
-           <height>24</height>
+           <width>28</width>
+           <height>28</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>16777215</width>
-           <height>30</height>
+           <width>28</width>
+           <height>28</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>视频</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton
@@ -282,7 +297,7 @@ border-radius: 4px;
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/Movie_black.svg</normaloff>images/Movie_black.svg</iconset>
+           <normaloff>images/img_video_camera/video3.png</normaloff>images/img_video_camera/video3.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -296,15 +311,18 @@ border-radius: 4px;
         <widget class="QPushButton" name="pushButton_camera">
          <property name="minimumSize">
           <size>
-           <width>30</width>
-           <height>24</height>
+           <width>28</width>
+           <height>28</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>16777215</width>
-           <height>30</height>
+           <width>28</width>
+           <height>28</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>摄像头</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton
@@ -326,7 +344,7 @@ border-radius: 4px;
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>images/Camera_black.svg</normaloff>images/Camera_black.svg</iconset>
+           <normaloff>images/img_video_camera/camera3.png</normaloff>images/img_video_camera/camera3.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -382,11 +400,13 @@ border-radius: 4px;
               <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
              </property>
              <property name="text">
@@ -408,11 +428,13 @@ QCheckBox::indicator:unchecked {
               <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
              </property>
              <property name="text">
@@ -434,11 +456,13 @@ QCheckBox::indicator:unchecked {
               <string notr="true">QCheckBox::indicator:checked {
     background-color:       blue;
     border:                 2px solid white;  
+
 }
 
 QCheckBox::indicator:unchecked {
-    background-color:      white;
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
+
 }</string>
              </property>
              <property name="text">
@@ -508,7 +532,7 @@ QCheckBox::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
              </property>
@@ -539,7 +563,7 @@ QRadioButton::indicator:unchecked {
 
 QRadioButton::indicator:unchecked {
 
-    background-color:       rgb(220, 220, 220);
+    background-color:       rgb(225, 225, 225);
     border:                 2px solid white;  
 }</string>
              </property>
