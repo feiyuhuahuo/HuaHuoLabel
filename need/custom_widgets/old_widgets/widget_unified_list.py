@@ -8,7 +8,7 @@ from need.utils import AllClasses, palette
 from need.custom_signals import IntSignal
 from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
 
-signal_update_num = IntSignal()
+signal_update_list_num = IntSignal()
 
 
 class ClassListWidget(QListWidget):
@@ -102,8 +102,8 @@ class ClassListWidget(QListWidget):
         self.name = name
 
     def update_list_num(self):
-        signal_update_num.set_name(self.name)
-        signal_update_num.send(self.count())
+        signal_update_list_num.set_name(self.name)
+        signal_update_list_num.send(self.count())
 
 
 class ShapeListWidget(ClassListWidget):

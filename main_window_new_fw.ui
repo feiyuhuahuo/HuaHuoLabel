@@ -10,8 +10,17 @@
     <height>940</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>花火标注</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>images/icon.png</normaloff>images/icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="10,1">
@@ -73,7 +82,7 @@
          </widget>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="20,1,1,1,1">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="20,0,1">
           <property name="topMargin">
            <number>8</number>
           </property>
@@ -143,7 +152,7 @@ QToolBox::tab:selected {
                <x>0</x>
                <y>0</y>
                <width>128</width>
-               <height>424</height>
+               <height>422</height>
               </rect>
              </property>
              <property name="font">
@@ -154,7 +163,7 @@ QToolBox::tab:selected {
              <attribute name="label">
               <string>        绘制标注</string>
              </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,1,1,20,1,1,0">
+             <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,20,1,1,0">
               <property name="spacing">
                <number>6</number>
               </property>
@@ -417,60 +426,6 @@ QCheckBox::indicator:unchecked {
                </layout>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_shape_list">
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">border: 1px solid gray;
-padding: 1px;
-border-radius: 4px;
-background-color: rgb(220, 230, 240);</string>
-                </property>
-                <property name="text">
-                 <string>标注列表</string>
-                </property>
-               </widget>
-              </item>
-              <item alignment="Qt::AlignHCenter">
-               <widget class="ShapeListWidget" name="shape_list">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>115</width>
-                  <height>72</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>100</width>
-                  <height>10000</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                 </font>
-                </property>
-                <property name="contextMenuPolicy">
-                 <enum>Qt::CustomContextMenu</enum>
-                </property>
-                <property name="resizeMode">
-                 <enum>QListView::Fixed</enum>
-                </property>
-                <property name="modelColumn">
-                 <number>0</number>
-                </property>
-               </widget>
-              </item>
-              <item>
                <widget class="ObjList" name="obj_list" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -671,8 +626,6 @@ padding-right:4px;
              </layout>
              <zorder>checkBox_shape_edit</zorder>
              <zorder>comboBox_2</zorder>
-             <zorder>pushButton_shape_list</zorder>
-             <zorder>shape_list</zorder>
              <zorder>obj_list</zorder>
              <zorder>verticalSpacer_3</zorder>
             </widget>
@@ -682,7 +635,7 @@ padding-right:4px;
                <x>0</x>
                <y>0</y>
                <width>130</width>
-               <height>424</height>
+               <height>422</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1054,7 +1007,7 @@ padding-right:4px;
                <x>0</x>
                <y>0</y>
                <width>128</width>
-               <height>424</height>
+               <height>422</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1151,110 +1104,124 @@ padding-right:4px;
            </widget>
           </item>
           <item>
-           <widget class="Line" name="line_10">
+           <widget class="VersionTrack" name="groupBox_version">
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
             <property name="styleSheet">
-             <string notr="true"/>
+             <string notr="true">QGroupBox{border：none;}</string>
             </property>
-            <property name="frameShadow">
-             <enum>QFrame::Sunken</enum>
+            <property name="title">
+             <string/>
             </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+            <property name="flat">
+             <bool>true</bool>
             </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <item>
-             <widget class="QLabel" name="label_version">
-              <property name="maximumSize">
-               <size>
-                <width>20</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>当前版本</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="pixmap">
-               <pixmap>images/version2.png</pixmap>
-              </property>
-              <property name="scaledContents">
-               <bool>true</bool>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="lineEdit_version">
-              <property name="minimumSize">
-               <size>
-                <width>100</width>
-                <height>23</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::NoContextMenu</enum>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border: 1px solid gray;
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <item>
+                <widget class="QLabel" name="label_version">
+                 <property name="maximumSize">
+                  <size>
+                   <width>20</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>当前版本</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="pixmap">
+                  <pixmap>images/version2.png</pixmap>
+                 </property>
+                 <property name="scaledContents">
+                  <bool>true</bool>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEdit_version">
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>23</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::CustomContextMenu</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">border: 1px solid gray;
 border-radius: 5px;</string>
-              </property>
-              <property name="text">
-               <string>最新</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <item>
-             <widget class="QPushButton" name="pushButton_version_note">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>32</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>32</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::NoContextMenu</enum>
-              </property>
-              <property name="toolTip">
-               <string>编辑版本记录</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="placeholderText">
+                  <string>版本名称</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_15">
+               <item>
+                <widget class="QPushButton" name="pushButton_version_note">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>32</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>32</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>编辑版本说明</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
 {background-color: rgb(235, 235, 235);
 border: 1px solid gray;
 border-radius: 4px;
@@ -1267,52 +1234,52 @@ border-radius: 4px;
             background-color:  rgb(215, 215, 215);
         }        
 </string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>images/note.png</normaloff>images/note.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>20</width>
-                <height>16</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_add_version">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>32</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>32</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::NoContextMenu</enum>
-              </property>
-              <property name="toolTip">
-               <string>记录当前版本</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normaloff>images/note.png</normaloff>images/note.png</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>20</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_add_version">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>32</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>32</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>记录当前版本</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
 {background-color: rgb(235, 235, 235);
 border: 1px solid gray;
 border-radius: 4px;
@@ -1325,52 +1292,52 @@ border-radius: 4px;
             background-color:  rgb(215, 215, 215);
         }        
 </string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>images/mark.png</normaloff>images/mark.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_select_version">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>32</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>32</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::NoContextMenu</enum>
-              </property>
-              <property name="toolTip">
-               <string>版本回退&amp;前进</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normaloff>images/mark.png</normaloff>images/mark.png</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>16</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_select_version">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>32</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>32</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>版本回退&amp;前进</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
 {background-color: rgb(235, 235, 235);
 border: 1px solid gray;
 border-radius: 4px;
@@ -1383,23 +1350,26 @@ border-radius: 4px;
             background-color:  rgb(215, 215, 215);
         }        
 </string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>images/direction/left_right.png</normaloff>images/direction/left_right.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-           </layout>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normaloff>images/direction/left_right.png</normaloff>images/direction/left_right.png</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>16</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
            <widget class="Line" name="line_11">
@@ -1538,6 +1508,11 @@ QComboBox::down-arrow {
           <item>
            <property name="text">
             <string>按标签浏览</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>按形状浏览</string>
            </property>
           </item>
           <item>
@@ -1893,7 +1868,7 @@ border-radius: 4px;
           </property>
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
@@ -2341,6 +2316,12 @@ QCheckBox::indicator:unchecked {
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
         <property name="styleSheet">
          <string notr="true">QGroupBox{border: 1px solid  rgb(180, 220, 180);}</string>
         </property>
@@ -2457,7 +2438,7 @@ padding-right:4px;
           </layout>
          </item>
          <item>
-          <widget class="ImgCateButtons" name="img_cate_buttons" native="true"/>
+          <widget class="BaseButtonGroup" name="img_cate_buttons" native="true"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,10,0">
@@ -2570,7 +2551,7 @@ padding-right:4px;
           </layout>
          </item>
          <item>
-          <widget class="ImgCateButtons" name="img_tag_buttons" native="true"/>
+          <widget class="BaseButtonGroup" name="img_tag_buttons" native="true"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="0,10,0">
@@ -2680,7 +2661,7 @@ padding-right:4px;
           </layout>
          </item>
          <item>
-          <widget class="ImgCateButtons" name="obj_cate_buttons" native="true"/>
+          <widget class="BaseButtonGroup" name="obj_cate_buttons" native="true"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_38" stretch="0,10,0">
@@ -2790,7 +2771,7 @@ padding-right:4px;
           </layout>
          </item>
          <item>
-          <widget class="ImgCateButtons" name="obj_tag_buttons" native="true"/>
+          <widget class="BaseButtonGroup" name="obj_tag_buttons" native="true"/>
          </item>
          <item>
           <widget class="Line" name="line_9">
@@ -2836,56 +2817,6 @@ QCheckBox::indicator:unchecked {
              </property>
              <property name="checked">
               <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton_cls_folder">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>24</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>将同一图片类别的图片存放于同一文件夹</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QPushButton
-{background-color: rgb(235, 235, 235);
-border: 1px solid gray;
-border-radius: 4px;
-padding-left:4px;
-padding-right:4px;
-
-
-}
- QPushButton:hover {
-            background-color:  rgb(225, 225, 225);
-}
-
- QPushButton:pressed {
-            background-color:  rgb(215, 215, 215);
-        }        
-
-</string>
-             </property>
-             <property name="text">
-              <string>图片类别文件夹</string>
              </property>
             </widget>
            </item>
@@ -2936,6 +2867,56 @@ padding-right:4px;
              </property>
              <property name="text">
               <string>生成语义分割PNG</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_cls_folder">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>将同一图片类别的图片存放于同一文件夹</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton
+{background-color: rgb(235, 235, 235);
+border: 1px solid gray;
+border-radius: 4px;
+padding-left:4px;
+padding-right:4px;
+
+
+}
+ QPushButton:hover {
+            background-color:  rgb(225, 225, 225);
+}
+
+ QPushButton:pressed {
+            background-color:  rgb(215, 215, 215);
+        }        
+
+</string>
+             </property>
+             <property name="text">
+              <string>按图片类别存放</string>
              </property>
             </widget>
            </item>
@@ -3727,16 +3708,6 @@ border-radius: 4px;
            </property>
           </widget>
          </item>
-         <item row="4" column="5">
-          <widget class="QPushButton" name="pushButton">
-           <property name="autoFillBackground">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>sd</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -4283,7 +4254,7 @@ border-radius: 4px;
      <x>0</x>
      <y>0</y>
      <width>1244</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -4440,11 +4411,6 @@ border-radius: 4px;
    <header>buttonwithhoverwindow.h</header>
   </customwidget>
   <customwidget>
-   <class>ShapeListWidget</class>
-   <extends>QListWidget</extends>
-   <header>shapelistwidget.h</header>
-  </customwidget>
-  <customwidget>
    <class>SearchBox</class>
    <extends>QLineEdit</extends>
    <header>searchbox.h</header>
@@ -4482,12 +4448,6 @@ border-radius: 4px;
    <header>centerimgview.h</header>
   </customwidget>
   <customwidget>
-   <class>ImgCateButtons</class>
-   <extends>QWidget</extends>
-   <header>imgcatebuttons.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>ObjList</class>
    <extends>QWidget</extends>
    <header>objlist.h</header>
@@ -4497,6 +4457,18 @@ border-radius: 4px;
    <class>IconSpin</class>
    <extends>QWidget</extends>
    <header>iconspin.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>VersionTrack</class>
+   <extends>QGroupBox</extends>
+   <header>versiontrack.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BaseButtonGroup</class>
+   <extends>QWidget</extends>
+   <header>basebuttongroup.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -5,17 +5,16 @@ import pdb
 from PySide6.QtWidgets import QInputDialog, QPushButton, QMessageBox, QMenu, QWidget, QApplication, \
     QMainWindow, QHBoxLayout, QLineEdit
 from PySide6.QtCore import Qt
-# from need.utils import AllClasses
+from need.utils import AllClasses
 from PySide6.QtGui import QIcon, QFont, QAction, QCursor
 
 
 class BaseButton(QWidget):
-    def __init__(self, parent=None, cate=''):  # parent=None 必须要实现
+    def __init__(self, parent=None, cate=''):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.menu = QMenu(self)
-        self.menu.setFixedWidth(90)
-        self.customContextMenuRequested.connect(self.show_menu)
+        self.menu.setFixedWidth(110)
 
         self.action_edit = QAction(QIcon('images/图片14.png'), self.tr('编辑'), self)
         self.action_edit.triggered.connect(self.edit_class)
@@ -23,9 +22,12 @@ class BaseButton(QWidget):
         self.action_default.triggered.connect(self.set_as_default)
         self.action_delete = QAction(QIcon('images/icon_43.png'), self.tr('删除'), self)
         self.action_delete.triggered.connect(self.delete)
+        self.action_ex_group = QAction(QIcon('images/only_one.png'), self.tr('设置独占组'), self)
+        self.action_ex_group.triggered.connect(self.set_exclusive_group)
         self.menu.addAction(self.action_edit)
         self.menu.addAction(self.action_default)
         self.menu.addAction(self.action_delete)
+        self.menu.addAction(self.action_ex_group)
 
         self.pushButton_look = QPushButton(self)
         self.pushButton_look.setFixedSize(25, 22)
@@ -41,7 +43,7 @@ class BaseButton(QWidget):
             QPushButton:pressed {background-color:  rgb(215, 215, 215);}        
             """
         )
-        self.pushButton_look.clicked.connect(self.set_look)
+        self.pushButton_look.clicked.connect(self.set_looking)
 
         self.ss_dict = {'base': 'QPushButton {border: 1px solid gray; border-top-right-radius: 4px; '
                                 'border-bottom-right-radius: 4px;padding-left:5px; padding-right:5px;}',
@@ -61,6 +63,11 @@ class BaseButton(QWidget):
         self.class_button.setFont(font)
         self.class_button.clicked.connect(self.set_selected)
         self.set_cate(cate)
+
+        if cate != 'as_sem_bg':
+            self.customContextMenuRequested.connect(self.show_menu)
+        else:
+            self.class_button.setDisabled(True)
 
     def adjust_size(self):
         self.class_button.setFixedWidth(max(26, self.class_button.sizeHint().width()))
@@ -84,6 +91,9 @@ class BaseButton(QWidget):
         ss = [self.ss_dict[one] for one in ss_names]
         return ''.join(ss)
 
+    def is_default(self):
+        return self.ss_dict['default'] in self.class_button.styleSheet()
+
     def set_as_default(self):
         ori_ss = self.class_button.styleSheet()
         ss_default = '' if self.get_ss(['default']) in ori_ss else self.get_ss(['default'])
@@ -91,10 +101,14 @@ class BaseButton(QWidget):
             ['selected'])
         self.class_button.setStyleSheet(self.get_ss(['base']) + ss_default + ss_selected)
         self.action_default.setText('取消默认' if ss_default else '设为默认')
+        self.parent().set_button_default(self.class_button.text(), True if ss_default else False)
 
     def set_cate(self, cate: str):
         self.class_button.setText(cate.strip())
         self.adjust_size()
+
+    def set_exclusive_group(self):
+        pass
 
     def set_selected(self):
         ori_ss = self.class_button.styleSheet()
@@ -103,39 +117,42 @@ class BaseButton(QWidget):
             ['selected'])
         self.class_button.setStyleSheet(self.get_ss(['base']) + ss_default + ss_selected)
 
-    def set_look(self):
+    def set_looking(self):
         if self.pushButton_look.accessibleName() == 'looking':
             self.pushButton_look.setAccessibleName('not_looking')
             self.pushButton_look.setIcon(QIcon('images/look/not_look2.png'))
+            self.parent().set_button_looking(self.class_button.text(), False)
         else:
             self.pushButton_look.setAccessibleName('looking')
             self.pushButton_look.setIcon(QIcon('images/look/look2.png'))
+            self.parent().set_button_looking(self.class_button.text(), True)
 
     def show_menu(self):  # 在鼠标位置显示菜单
         self.menu.exec(QCursor.pos())
 
 
-class test_w(QMainWindow):
-    def __init__(self):
-        super().__init__(parent=None)
-        c_w = QWidget(self)
-        self.layout = QHBoxLayout()
-        pb = QPushButton()
-        pb.clicked.connect(self.addd)
-        self.layout.addWidget(pb)
-        self.layout.addWidget(BaseButton())
-        c_w.setLayout(self.layout)
-        self.setCentralWidget(c_w)
-
-    def addd(self):
-        self.layout.addWidget(BaseButton())
+class ImgCateButton(BaseButton):
+    def __init__(self, parent=None, cate=''):
+        super().__init__(parent, cate)
 
 
-if __name__ == '__main__':
-    app = QApplication()
-    kk = test_w()
-    kk.show()
-    # img_edit = BaseButton()
-    # img_edit.show()
+class ImgTagButton(BaseButton):
+    def __init__(self, parent=None, cate=''):
+        super().__init__(parent, cate)
 
-    app.exec()
+
+class ObjCateButton(BaseButton):
+    def __init__(self, parent=None, cate='', color=''):
+        super().__init__(parent, cate)
+        self.ss_dict = {'base': 'QPushButton {border: 1px solid gray; border-top-right-radius: 4px; '
+                                'border-bottom-right-radius: 4px;padding-left:5px; padding-right:5px;}',
+                        'selected': 'QPushButton {background-color: rgb(154, 202, 144);}',
+                        'not_selected': 'QPushButton {background-color: rgb(235, 235, 235);}',
+                        'default': 'QPushButton {border-bottom: 3px solid rgb(195, 39, 43);}'}
+        self.class_button.setStyleSheet(self.get_ss(['base', 'not_selected']))
+        self.class_button.clicked.disconnect()
+
+
+class ObjTagButton(BaseButton):
+    def __init__(self, parent=None, cate=''):
+        super().__init__(parent, cate)

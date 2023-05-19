@@ -140,19 +140,6 @@ class ClassStatistic:
         return len(self.__classes)
 
 
-class MultiIndex:
-    def __init__(self, data):
-        self.__data = data
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self.__data[item]
-        elif isinstance(item, (list, tuple)):
-            return [self.__data[one] for one in item]
-        else:
-            raise TypeError('Wrong item type for "MultiIndex".')
-
-
 class Palette:
     def __init__(self):
         self.color_names = ColorNames.copy()
@@ -293,8 +280,8 @@ def get_file_cmtime(path):
     c_time = str(datetime.fromtimestamp(int(osp.getctime(path))))
     m_time = str(datetime.fromtimestamp(int(osp.getmtime(path))))
     c_time, m_time = c_time.split(' '), m_time.split(' ')
-    c_time = f'{c_time[0][2:]}-{c_time[1][:2]}'
-    m_time = f'{m_time[0][2:]}-{m_time[1][:2]}'
+    c_time = f'{c_time[0][2:]} {c_time[1][:2]}h'
+    m_time = f'{m_time[0][2:]} {m_time[1][:2]}h'
     return c_time, m_time
 
 

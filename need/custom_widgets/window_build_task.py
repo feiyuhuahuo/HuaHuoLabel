@@ -8,10 +8,7 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow
 from PySide6.QtWidgets import QMessageBox as QMB
 
 from need.custom_threads import CopyImgs, signal_copy_imgs_done
-from need.custom_signals import ListSignal
 from need.custom_widgets import WaitingLabel
-
-signal_send_imgs = ListSignal()
 
 
 class BuildTask(QMainWindow):
@@ -21,11 +18,9 @@ class BuildTask(QMainWindow):
         self.btw = loader.load('ui_files/build_task.ui')
         self.file_select_dlg = QFileDialog(self.btw)
         self.imgs = None
-        self.work_mode = None
         self.img_folder = None
         self.root_path = None
         self.save_path = None
-        self.version = None
         self.btw.pushButton_img.clicked.connect(lambda: self.set_page(0))
         self.btw.pushButton_video.clicked.connect(lambda: self.set_page(1))
         self.btw.pushButton_import_imgs.clicked.connect(self.import_imgs)
@@ -34,14 +29,14 @@ class BuildTask(QMainWindow):
         self.btw.pushButton_build.clicked.connect(self.build_task_begin)
         signal_copy_imgs_done.signal.connect(self.build_task_end)
 
+    def closeEvent(self, event):
+        self.btw.close()
+        self.close()
+
     def build_task_begin(self):
         task_name = self.btw.lineEdit_task_name.text().strip()
-        self.version = self.btw.lineEdit_version.text().strip()
         if not task_name:
             QMB.critical(self.btw, self.tr('未输入任务名称'), self.tr('请输入任务名称。'))
-            return
-        if self.version is None:
-            QMB.critical(self.btw, self.tr('未输入版本名称'), self.tr('请输入版本名称。'))
             return
         if self.save_path is None:
             QMB.critical(self.btw, self.tr('未选择保存路径'), self.tr('请选择任务保存路径。'))
@@ -51,10 +46,10 @@ class BuildTask(QMainWindow):
             return
 
         self.root_path = f'{self.save_path}/{task_name}'
-        dst_path = f'{self.root_path}/{self.work_mode}/{self.img_folder}'
+        dst_path = f'{self.root_path}/{self.img_folder}'
         if osp.exists(dst_path):
             QMB.critical(self.btw, self.tr('路径已存在'),
-                         self.tr('"{}"已存在，请选择其它保存路径或任务类型。').format(dst_path))
+                         self.tr('"{}"已存在，请选择其它保存路径。').format(dst_path))
         else:
             os.makedirs(dst_path, exist_ok=False)
             method = 'cut' if self.btw.radioButton_cut.isChecked() else 'copy'
@@ -67,9 +62,10 @@ class BuildTask(QMainWindow):
     def build_task_end(self):
         self.waiting_label.stop()
         self.waiting_label.close()
+
+        self.parent().task_desc_edit(self.btw.textBrowser_des.toPlainText())
+        self.parent().task_opened(self.root_path)
         self.btw.close()
-        des_text = self.btw.textBrowser_des.toPlainText()
-        signal_send_imgs.send([self.root_path, self.version, des_text])
 
     def get_save_path(self):
         path = self.file_select_dlg.getExistingDirectory(self.btw, self.tr('选择文件夹'))
@@ -128,10 +124,7 @@ class BuildTask(QMainWindow):
     def set_page(self, index):
         self.btw.stackedWidget.setCurrentIndex(index)
 
-    def set_work_mode_img_folder(self, work_mode, img_folder):
-        self.work_mode = work_mode
+    def show(self, img_folder):
         self.img_folder = img_folder
-
-    def show(self):
         self.btw.textBrowser_3.clear()
         self.btw.show()

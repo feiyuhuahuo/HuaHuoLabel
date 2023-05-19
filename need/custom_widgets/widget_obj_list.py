@@ -114,11 +114,11 @@ class ObjList(QWidget):
         self.obj_list.setVisible(not self.obj_list.isVisible())
         self.resize(self.sizeHint())
         if self.obj_list.isVisible():
-            self.parent().layout().setStretch(4, 20)
-            self.parent().layout().setStretch(7, 1)
+            self.parent().layout().setStretch(3, 20)
+            self.parent().layout().setStretch(6, 1)
         else:
-            self.parent().layout().setStretch(4, 1)
-            self.parent().layout().setStretch(7, 20)
+            self.parent().layout().setStretch(3, 1)
+            self.parent().layout().setStretch(6, 20)
 
     def modify_cur_c(self, new_c: str):
         item = self.obj_list.currentItem()

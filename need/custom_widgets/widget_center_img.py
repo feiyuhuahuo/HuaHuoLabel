@@ -235,7 +235,7 @@ class BaseImgFrame(QLabel):
 
 
 class CenterImg(BaseImgFrame):
-    def __init__(self, parent=None):  # parent=None 必须要实现
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.scaled_img_painted = None
         self.collection_window = SelectItem(title=self.tr('收藏标注'), button_signal=signal_select_collection_ok)
