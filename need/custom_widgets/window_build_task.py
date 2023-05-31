@@ -24,7 +24,6 @@ class BuildTask(QMainWindow):
         self.btw.pushButton_img.clicked.connect(lambda: self.set_page(0))
         self.btw.pushButton_video.clicked.connect(lambda: self.set_page(1))
         self.btw.pushButton_import_imgs.clicked.connect(self.import_imgs)
-        self.btw.pushButton_task_name.clicked.connect(self.get_task_name)
         self.btw.pushButton_save_path.clicked.connect(self.get_save_path)
         self.btw.pushButton_build.clicked.connect(self.build_task_begin)
         signal_copy_imgs_done.signal.connect(self.build_task_end)
@@ -63,7 +62,7 @@ class BuildTask(QMainWindow):
         self.waiting_label.stop()
         self.waiting_label.close()
 
-        self.parent().task_desc_edit(self.btw.textBrowser_des.toPlainText())
+        self.parent().task_desc_edit(self.btw.textBrowser_des.toPlainText(), True)
         self.parent().task_opened(self.root_path)
         self.btw.close()
 
@@ -72,15 +71,6 @@ class BuildTask(QMainWindow):
         if osp.isdir(path):
             self.btw.lineEdit_6.setText(path)
             self.save_path = path
-
-    def get_task_name(self):
-        path = self.file_select_dlg.getExistingDirectory(self.btw, self.tr('选择文件夹'))
-        if osp.isdir(path):
-            task_name = path.split('/')[-1]
-            self.btw.lineEdit_task_name.setText(task_name)
-            save_path = path.removesuffix(f'/{task_name}')
-            self.btw.lineEdit_6.setText(save_path)
-            self.save_path = save_path
 
     def import_imgs(self):
         img_type = ''

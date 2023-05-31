@@ -161,7 +161,6 @@ class Palette:
 AllClasses = ClassStatistic()
 palette = Palette()
 
-
 class ShapeType:
     def __init__(self):
         self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '环形': 'Ring',

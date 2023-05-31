@@ -26,9 +26,10 @@ from .widget_icon_spin import IconSpin
 from .widget_marquees import Marquees
 from .window_read_edit import ReadEditInfo
 from .widget_version_track import VersionTrack
+from .window_select_list import BaseSelectList
 
 __all__ = ['CenterImg', 'ClassStatWidget', 'SelectItem', 'ProgressWindow', 'BaseButtonGroup', 'Marquees',
-           'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'signal_shape_type',
+           'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'signal_shape_type', 'BaseSelectList',
            'signal_xy_color2ui', 'signal_set_shape_list_selected', 'signal_del_shape', 'signal_draw_selected_shape',
            'signal_open_label_window', 'signal_one_collection_done', 'BaseImgFrame', 'signal_move2new_folder',
            'signal_shape_info_update', 'signal_check_draw_enable', 'signal_show_plain_img', 'signal_show_label_img',

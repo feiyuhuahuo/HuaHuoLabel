@@ -1,9 +1,11 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-from PySide6.QtCore import Qt, QPoint
-from PySide6.QtWidgets import QLabel, QGroupBox, QMenu, QApplication
-from PySide6.QtGui import QPixmap, QAction, QCursor, QIcon
-from PySide6.QtCore import Qt
+import glob
+import pdb
+
+from PySide6.QtWidgets import QGroupBox, QMenu, QApplication
+from PySide6.QtGui import QAction, QCursor, QIcon
+from need.custom_widgets.window_select_list import BaseSelectList
 
 
 class VersionTrack(QGroupBox):
@@ -11,19 +13,22 @@ class VersionTrack(QGroupBox):
         super().__init__(parent)
         self.TrackImg = False
         self.menu = QMenu(self)
-        self.menu.setFixedWidth(100)
-        self.action = QAction(self.tr('记录图片'), self)
+        self.menu.setFixedWidth(115)
+        self.window_track_files = BaseSelectList(self, self.tr('配置记录文件'), self.tr('请选择需要记录的文件'))
+
+        self.action = QAction(QIcon('images/setting.png'), self.tr('配置记录文件'), self)
         self.menu.addAction(self.action)
-        self.action.triggered.connect(self.track_imgs)
+        self.action.triggered.connect(self.get_tracked_files)
         self.customContextMenuRequested.connect(self.show_menu)
 
-    def track_imgs(self):
-        if self.TrackImg:
-            self.action.setIcon(QIcon(''))
-            self.TrackImg = False
-        else:
-            self.action.setIcon(QPixmap('images/icon_11.png'))
-            self.TrackImg = True
+    def get_tracked_files(self):
+        files_stat = self.parent().parent().parent().get_track_files()
+        self.window_track_files.show(files_stat)
+
+        self.parent().parent().parent().update_tracked_files(self.window_track_files.select_stat)
+
+    def track_stat(self):
+        return self.window_track_files.select_stat
 
     def show_menu(self):
         self.menu.exec(QCursor.pos())

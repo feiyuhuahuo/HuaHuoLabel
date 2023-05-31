@@ -37,13 +37,14 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_obj_cate_add.clicked.connect(main_window.add_buttons)
     main_window.ui.pushButton_obj_tag_add.clicked.connect(main_window.add_buttons)
 
-    main_window.ui.pushButton_35.clicked.connect(main_window.undo_painting)
+    main_window.ui.pushButton_35.clicked.connect(main_window.ui.graphicsView.img_area.undo)
     main_window.ui.pushButton_36.clicked.connect(main_window.save_ann_img)
     main_window.ui.pushButton_40.clicked.connect(main_window.clear_painted_img)
     main_window.ui.pushButton_81.clicked.connect(lambda: main_window.img_rotate(do_paint=True))
     main_window.ui.pushButton_82.clicked.connect(lambda: main_window.img_flip(h_flip=True, do_paint=True))
     main_window.ui.pushButton_83.clicked.connect(lambda: main_window.img_flip(v_flip=True, do_paint=True))
     main_window.ui.pushButton_84.clicked.connect(main_window.img_enhance_reset)
+    main_window.ui.pushButton_add_version.clicked.connect(main_window.git_add)
     main_window.ui.pushButton_auto_infer.clicked.connect(main_window.auto_inference)
     # main_window.ui.pushButton_bg.pressed.connect(main_window.set_semantic_bg_when_press)
     main_window.ui.pushButton_bookmark.pressed.connect(main_window.show_bookmark)
@@ -68,6 +69,7 @@ def connect_all_other_signals(main_window):
     main_window.ui.pushButton_pen_color_2.clicked.connect(main_window.change_pen_color)
     # main_window.ui.pushButton_pin.clicked.connect(main_window.pin_unpin_image)
     main_window.ui.pushButton_stat.clicked.connect(main_window.show_class_statistic)
+
     # main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
     # main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
@@ -81,7 +83,7 @@ def connect_all_other_signals(main_window):
     main_window.ui.toolBox.currentChanged.connect(main_window.set_tool_mode)
 
     signal_auto_save.signal.connect(main_window.auto_save)
-    signal_check_draw_enable.signal.connect(main_window.check_draw_enable)
+    signal_check_draw_enable.signal.connect(lambda: main_window.check_warnings(['task', 'edit_mode', 'sem_bg']))
     signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
     signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
     signal_del_shape.signal.connect(main_window.del_shape)
@@ -143,7 +145,6 @@ def init_custom_widgets(main_window):
     main_window.window_img_edit = ImgEdit(main_window)
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
-    main_window.window_version_remind = CustomMessageBox('question', main_window.tr('版本提醒'))
     main_window.widget_read_edit = ReadEditInfo()
     main_window.marquees = Marquees(main_window)
     main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)

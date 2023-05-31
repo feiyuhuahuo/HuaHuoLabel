@@ -163,7 +163,7 @@ QToolBox::tab:selected {
              <attribute name="label">
               <string>        绘制标注</string>
              </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,20,1,1,0">
+             <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,20,1,1,1">
               <property name="spacing">
                <number>6</number>
               </property>
@@ -342,6 +342,9 @@ padding-right:4px;
                 </property>
                 <item>
                  <widget class="QPushButton" name="pushButton_cross_color">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -420,6 +423,9 @@ QCheckBox::indicator:unchecked {
                   </property>
                   <property name="text">
                    <string>十字线</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -635,7 +641,7 @@ padding-right:4px;
                <x>0</x>
                <y>0</y>
                <width>130</width>
-               <height>422</height>
+               <height>132</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1006,8 +1012,8 @@ padding-right:4px;
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>128</width>
-               <height>422</height>
+               <width>110</width>
+               <height>94</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1184,7 +1190,7 @@ border-radius: 5px;</string>
                   <string/>
                  </property>
                  <property name="placeholderText">
-                  <string>版本名称</string>
+                  <string>当前版本节点</string>
                  </property>
                 </widget>
                </item>
@@ -1192,64 +1198,6 @@ border-radius: 5px;</string>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_15">
-               <item>
-                <widget class="QPushButton" name="pushButton_version_note">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>32</width>
-                   <height>24</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>32</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="contextMenuPolicy">
-                  <enum>Qt::NoContextMenu</enum>
-                 </property>
-                 <property name="toolTip">
-                  <string>编辑版本说明</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{background-color: rgb(235, 235, 235);
-border: 1px solid gray;
-border-radius: 4px;
-}
- QPushButton:hover {
-            background-color:  rgb(225, 225, 225);
-}
-
- QPushButton:pressed {
-            background-color:  rgb(215, 215, 215);
-        }        
-</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset>
-                   <normaloff>images/note.png</normaloff>images/note.png</iconset>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>20</width>
-                   <height>16</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
                <item>
                 <widget class="QPushButton" name="pushButton_add_version">
                  <property name="enabled">
@@ -1361,6 +1309,64 @@ border-radius: 4px;
                  <property name="iconSize">
                   <size>
                    <width>16</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_version_diff">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>32</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>32</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>查看当前文件与上一次版本记录的差异</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{background-color: rgb(235, 235, 235);
+border: 1px solid gray;
+border-radius: 4px;
+}
+ QPushButton:hover {
+            background-color:  rgb(225, 225, 225);
+}
+
+ QPushButton:pressed {
+            background-color:  rgb(215, 215, 215);
+        }        
+</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normaloff>images/diff.png</normaloff>images/diff.png</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>20</width>
                    <height>16</height>
                   </size>
                  </property>
@@ -3452,7 +3458,7 @@ border-radius: 4px;
             </font>
            </property>
            <property name="toolTip">
-            <string>检查是否有多余的或未标注的标注文件</string>
+            <string>清理多余的图片或标注文件</string>
            </property>
            <property name="styleSheet">
             <string notr="true">QPushButton
@@ -3470,7 +3476,7 @@ border-radius: 4px;
 </string>
            </property>
            <property name="text">
-            <string>检查图库</string>
+            <string>清理图库</string>
            </property>
            <property name="icon">
             <iconset>
@@ -4264,7 +4270,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>333</x>
-      <y>127</y>
+      <y>128</y>
       <width>138</width>
       <height>94</height>
      </rect>
@@ -4294,7 +4300,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>269</x>
-      <y>127</y>
+      <y>128</y>
       <width>125</width>
       <height>94</height>
      </rect>

@@ -11,8 +11,8 @@ signal_select_window_close = BoolSignal()
 
 
 class SelectItem(QMainWindow):
-    def __init__(self, title='窗口', button_signal=None):
-        super().__init__()
+    def __init__(self, parent=None, title='窗口', button_signal=None):
+        super().__init__(parent)
         loader = QUiLoader()
         self.ui = loader.load('ui_files/label_window.ui')
         self.setCentralWidget(self.ui)
