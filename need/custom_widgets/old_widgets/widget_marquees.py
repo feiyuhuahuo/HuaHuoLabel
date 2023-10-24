@@ -2,11 +2,12 @@
 # -*- coding:utf-8 -*-
 import pdb
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
-from PySide6.QtGui import QPixmap
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtGui import QPixmap, QIcon
+from PySide6.QtCore import Qt, QSize
 
 from need.custom_signals import ListSignal
+from need.functions import get_rotated_qpixmap
 
 signal_show_plain_img = ListSignal()
 signal_show_label_img = ListSignal()
@@ -46,6 +47,18 @@ class Marquees(QWidget):
         layout = QHBoxLayout()
         layout.addStretch()
         self.setLayout(layout)
+        self.button = QPushButton(self)
+        self.button.setIconSize(QSize(14, 14))
+        self.button.setIcon(QIcon('images/full_screen.png'))
+        self.button.setStyleSheet('QPushButton {background-color: rgb(235, 235, 235); border: 1px solid gray;'
+                                  'border-radius: 4px;}'
+                                  'QPushButton:hover {background-color:  rgb(225, 225, 225);}'
+                                  'QPushButton:pressed {background-color:  rgb(215, 215, 215);}')
+
+        self.button.resize(20, 20)
+        self.button.move(500, 0)
+        self.button.setToolTip(self.tr('页面视图'))
+
         self.mar_i = -1
         self.marquee_num = 30  # 越大，占用内存越多
         self.marquee_size = 150
@@ -54,11 +67,14 @@ class Marquees(QWidget):
 
     def add_marquee(self, img_path):
         m_label = MarqueeLabel(img_path=img_path, stat='doing', parent=self)
-        m_label.set_pixmap(QPixmap(img_path).scaled(self.marquee_size, self.marquee_size, Qt.KeepAspectRatio))
+        no_exif_pixmap = get_rotated_qpixmap(img_path)
+        m_label.set_pixmap(no_exif_pixmap.scaled(self.marquee_size, self.marquee_size, Qt.KeepAspectRatio))
         self.layout().insertWidget(self.layout().count() - 1, m_label)
         self.mar_i += 1
 
         self.max_hbar()
+        self.button.raise_()
+
 
     def insert_marquee(self, img_path, first=False, last=True):
         m_label = MarqueeLabel(img_path=img_path, stat='doing', parent=self)
@@ -76,6 +92,8 @@ class Marquees(QWidget):
         while self.layout().count() > 1:
             self.del_marquee(0)
 
+        self.mar_i = -1
+
     def cur_is_marquee(self):
         if self.layout().itemAt(self.mar_i).widget():
             return True
@@ -90,7 +108,7 @@ class Marquees(QWidget):
         self.layout().takeAt(i)
         widget.deleteLater()
 
-    def max_hbar(self):
+    def max_hbar(self):  # todo: 解决这个水平滑动条位置的问题
         max_len = self.parent_area().horizontalScrollBar().maximum()
         self.parent_area().horizontalScrollBar().setValue(max_len)
 

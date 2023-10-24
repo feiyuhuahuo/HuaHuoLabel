@@ -6,7 +6,8 @@ import cv2
 from os import path as osp
 from PySide6.QtCore import QThread
 from PySide6.QtGui import QPixmap
-from need.utils import get_seg_mask, file_remove
+from need.functions import file_remove
+from need.algorithms import get_seg_mask
 from need.custom_signals import IntSignal, StrSignal
 
 signal_usp_progress_value = IntSignal()

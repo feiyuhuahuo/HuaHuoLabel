@@ -42,9 +42,6 @@ class WaitingLabel(QLabel):
         self.move(x1, y1)
         self.show()
 
-    # def pp(self):
-    #     print(self.fontMetrics().boundingRect('保存土拍中...').width())
-
 
 if __name__ == '__main__':
     app = QApplication()

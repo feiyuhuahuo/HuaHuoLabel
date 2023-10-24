@@ -4,10 +4,11 @@ import pdb
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor
 from PySide6.QtWidgets import QPushButton, QApplication, QWidget, QListWidget, QListWidgetItem, QSizePolicy, \
-    QVBoxLayout, QSpacerItem
+    QVBoxLayout, QSpacerItem, QCheckBox
 # from need.utils import palette
 from need.custom_signals import IntSignal, BoolSignal
 from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
+from need.functions import get_HHL_parent
 
 signal_update_num = IntSignal()
 signal_obj_list_folded = BoolSignal()
@@ -20,11 +21,12 @@ class ObjList(QWidget):
         font = self.font()
         font.setPointSize(10)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding))
-        self.title_button = QPushButton(self.tr('标注列表'), self)
+        self.title_button = QPushButton(self.tr('     标注列表'), self)
         self.title_button.setFont(font)
         self.title_button.setFixedWidth(118)
         self.title_button.setStyleSheet('QPushButton '
                                         '{background-color: rgb(210, 230, 245);'
+                                        'text-align: left;'
                                         'border-top: 1px solid gray;'
                                         'border-left: 1px solid gray;'
                                         'border-right: 1px solid gray;'
@@ -35,6 +37,14 @@ class ObjList(QWidget):
                                         'QPushButton:hover {background-color:  rgb(190, 210, 225);}'
                                         'QPushButton:pressed { background-color:  rgb(180, 200, 210);}')
         self.title_button.clicked.connect(self.fold_list)
+
+        self.edit_button = QCheckBox(self)
+        self.edit_button.move(78, -5)
+        self.edit_button.setStyleSheet('QCheckBox::indicator {padding-top: 1px; width: 40px; height: 26px;}'
+                                       'QCheckBox::indicator:unchecked {image: url(images/switch_off.png);}'
+                                       'QCheckBox::indicator:checked {image: url(images/switch_on.png);}')
+        self.edit_button.setToolTip(self.tr('修改标注'))
+        self.edit_button.setDisabled(True)
 
         self.obj_list = QListWidget(self)
         self.obj_list.setFixedWidth(118)
@@ -95,8 +105,6 @@ class ObjList(QWidget):
         layout.addWidget(self.obj_list)
         self.setLayout(layout)
 
-        for i in range(20):
-            self.add_item('sdsf')
 
     def add_item(self, item: QListWidgetItem):
         self.obj_list.addItem(item)

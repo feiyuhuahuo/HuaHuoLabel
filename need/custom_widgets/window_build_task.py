@@ -1,14 +1,14 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import os
-import pdb
+
 from os import path as osp
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from PySide6.QtWidgets import QMessageBox as QMB
-
 from need.custom_threads import CopyImgs, signal_copy_imgs_done
 from need.custom_widgets import WaitingLabel
+from need.functions import uniform_path
 
 
 class BuildTask(QMainWindow):
@@ -51,19 +51,21 @@ class BuildTask(QMainWindow):
                          self.tr('"{}"已存在，请选择其它保存路径。').format(dst_path))
         else:
             os.makedirs(dst_path, exist_ok=False)
-            method = 'cut' if self.btw.radioButton_cut.isChecked() else 'copy'
-            self.thread_copy_imgs = CopyImgs(self.imgs, dst_path, method)
+            self.thread_copy_imgs = CopyImgs(self.imgs, dst_path)
             self.thread_copy_imgs.start()
 
             self.waiting_label = WaitingLabel(self.btw, self.tr('准备图片中'))
             self.waiting_label.show_at(self.btw.frameGeometry())
 
-    def build_task_end(self):
+    def build_task_end(self, info):  # 建立任务结束，窗口关闭，控制权交还给主窗口
         self.waiting_label.stop()
         self.waiting_label.close()
 
-        self.parent().task_desc_edit(self.btw.textBrowser_des.toPlainText(), True)
+        if info:
+            QMB.information(self.btw, self.tr('任务提示'), info)
+
         self.parent().task_opened(self.root_path)
+        self.parent().task_desc_edit(self.btw.textBrowser_des.toPlainText(), from_build=True)
         self.btw.close()
 
     def get_save_path(self):
@@ -87,7 +89,7 @@ class BuildTask(QMainWindow):
 
             if paths:
                 self.btw.textBrowser_3.clear()
-                self.imgs = paths
+                self.imgs = uniform_path(paths)
 
                 jpg_num, png_num, bmp_num = 0, 0, 0
                 for one in self.imgs:

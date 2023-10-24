@@ -7,7 +7,8 @@ import numpy as np
 
 from os import path as osp
 from PySide6.QtCore import QThread
-from need.utils import get_seg_mask, file_remove
+from need.algorithms import get_seg_mask
+from need.functions import file_remove
 from need.custom_signals import BoolSignal
 
 signal_docl_done = BoolSignal()

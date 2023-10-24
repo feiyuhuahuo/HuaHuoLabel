@@ -8,8 +8,8 @@ from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QL
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QEvent
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
     QImageReader, QIcon
-from PySide6 import QtCore
-from need.utils import point_in_shape, AnnUndo, shape_type
+from need.algorithms import point_in_shape
+from need.utils import AnnUndo, INS_shape_type
 from need.custom_signals import *
 from need.custom_widgets import SelectItem, signal_select_window_close
 
@@ -199,7 +199,7 @@ class BaseImgFrame(QLabel):
     def show_menu(self):  # 在鼠标位置显示菜单
         self.img_menu.exec(QCursor.pos())
 
-    def widget_coor_to_img_coor(self, rel_pos: QtCore.QPointF):
+    def widget_coor_to_img_coor(self, rel_pos: QPointF):
         # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
         rel_x, rel_y = rel_pos.x(), rel_pos.y()
         img_w2real_w, img_h2real_h = self.get_widget_to_img_ratio()
@@ -382,8 +382,8 @@ class CenterImg(BaseImgFrame):
                 if QApplication.keyboardModifiers() == Qt.ControlModifier:
                     # if self.DetMode or self.SegMode:
                     #     self.update()
-                    if self.shape_type in shape_type('像素') and len(self.img_points):
-                        self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
+                    if len(self.img_points):
+                        self.add_widget_img_pair(self.cursor_in_widget)
                 else:
                     if self.ShapeEditMode:
                         if QApplication.keyboardModifiers() != Qt.ShiftModifier:
@@ -428,10 +428,7 @@ class CenterImg(BaseImgFrame):
                         self.shape_done_open_label_window()
                     else:
                         self.cursor_in_widget = e.position()
-                        if self.shape_type in shape_type('像素'):
-                            self.add_widget_img_pair(self.cursor_in_widget, fill_mode=True)
-                        else:
-                            self.add_widget_img_pair(self.cursor_in_widget)
+                        self.add_widget_img_pair(self.cursor_in_widget)
             else:
                 if e.button() == Qt.LeftButton:
                     self.LeftClick = True
@@ -458,7 +455,7 @@ class CenterImg(BaseImgFrame):
             self.setCursor(Qt.OpenHandCursor)
 
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
-            if self.shape_type in shape_type(['矩形', '椭圆形']):
+            if self.shape_type in INS_shape_type(['矩形', '椭圆形']):
                 point_br = e.position()
                 b_left, b_up, b_right, b_down = self.get_border_coor()
                 if b_left <= point_br.x() <= b_right and b_up <= point_br.y() <= b_down:
@@ -471,7 +468,7 @@ class CenterImg(BaseImgFrame):
                             signal_open_label_window.send(True)
                 else:
                     self.clear_widget_img_points()
-            elif self.shape_type in shape_type('像素'):
+            elif self.shape_type in INS_shape_type('像素'):
                 signal_open_label_window.send(True)
         elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
             self.erase_paint_pixel(self.polygon_editing_i)
@@ -499,7 +496,7 @@ class CenterImg(BaseImgFrame):
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
             if len(self.widget_points):
                 self.painter.setPen(QPen(self.seg_pen_color, self.seg_pen_size))
-                if self.shape_type in shape_type(['矩形', '椭圆形']):
+                if self.shape_type in INS_shape_type(['矩形', '椭圆形']):
                     if len(self.widget_points) in (0, 3):  # 一些误操作导致长度错误，直接清空重画
                         self.clear_widget_img_points()
                     else:
@@ -510,12 +507,12 @@ class CenterImg(BaseImgFrame):
                             x1, y1 = self.widget_points[0].toTuple()
                             x2, y2 = self.cursor_in_widget.toTuple()
 
-                        if self.shape_type in shape_type('矩形'):
+                        if self.shape_type in INS_shape_type('矩形'):
                             self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                        elif self.shape_type in shape_type('椭圆形'):
+                        elif self.shape_type in INS_shape_type('椭圆形'):
                             self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
 
-                elif self.shape_type in shape_type(['多边形', '环形']):
+                elif self.shape_type in INS_shape_type(['多边形', '带孔']):
                     if len(self.widget_points) >= 2:  # 画已完成的完整线段
                         for i in range(len(self.widget_points) - 1):
                             self.painter.drawLine(self.widget_points[i], self.widget_points[i + 1])
@@ -528,7 +525,7 @@ class CenterImg(BaseImgFrame):
                         if result:
                             self.PolygonLastPointDone = True
 
-                elif self.shape_type in shape_type('像素'):
+                elif self.shape_type in INS_shape_type('像素'):
                     self.fill_img_pixel(self.img_points, self.seg_pen_color)
 
         self.painter.end()
@@ -565,19 +562,21 @@ class CenterImg(BaseImgFrame):
 
         self.update()
 
-    def add_widget_img_pair(self, qpointf, fill_mode=False):
+    def add_widget_img_pair(self, qpointf):
         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(qpointf)
 
         if img_pixel_x is not None:
             img_p = [img_pixel_x, img_pixel_y]
 
-            if fill_mode:
-                if img_p not in self.img_points:
-                    self.img_points.append(img_p)
-                    self.widget_points.append(self.img_coor_to_widget_coor(img_p))
-            else:
+            if self.shape_type in INS_shape_type(['多边形', '矩形', '椭圆形']):
                 self.img_points.append(img_p)
                 self.widget_points.append(qpointf)
+            elif self.shape_type in INS_shape_type('像素'):
+                if img_p not in self.img_points:
+                    self.img_points.append(img_p)
+                    self.widget_points.append(self.img_coor_to_widget_coor(img_p))  # todo： 是否可以直接加入qpointf
+            elif self.shape_type in INS_shape_type(['带孔', '组合']):
+                pass
 
             self.update()
 
@@ -699,11 +698,11 @@ class CenterImg(BaseImgFrame):
         b_left, b_up, b_right, b_down = self.get_border_coor()
         polygon = self.__all_polygons[i]
 
-        if polygon['shape_type'] in shape_type('像素'):  # 像素标注不具备这个功能
+        if polygon['shape_type'] in INS_shape_type('像素'):  # 像素标注不具备这个功能
             return
 
         # 处理widget_points
-        if polygon['shape_type'] in shape_type('环形'):
+        if polygon['shape_type'] in INS_shape_type('带孔'):
             new_x, new_y = (polygon['widget_points'][j][k] + offset).toTuple()
             new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
 
@@ -731,11 +730,11 @@ class CenterImg(BaseImgFrame):
             polygon['widget_points'][j] = QPointF(new_x, new_y)
 
         # 处理对应的img_points
-        if polygon['shape_type'] in shape_type('多边形'):
+        if polygon['shape_type'] in INS_shape_type('多边形'):
             x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j])
             if x is not None:
                 polygon['img_points'][j] = (x, y)
-        elif polygon['shape_type'] in shape_type(['矩形', '椭圆形']):
+        elif polygon['shape_type'] in INS_shape_type(['矩形', '椭圆形']):
             if j == 0:
                 x1, y1 = polygon['widget_points'][j].toTuple()
                 x2, y2 = polygon['widget_points'][1].toTuple()
@@ -750,7 +749,7 @@ class CenterImg(BaseImgFrame):
                 x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k])
                 if x is not None:
                     polygon['img_points'][k] = (x, y)
-        elif polygon['shape_type'] in shape_type('环形'):
+        elif polygon['shape_type'] in INS_shape_type('带孔'):
             x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k])
             if x is not None:
                 polygon['img_points'][j][k] = (x, y)
@@ -763,17 +762,17 @@ class CenterImg(BaseImgFrame):
         corner_index = None
 
         for i, polygon in enumerate(self.__all_polygons):
-            if polygon['shape_type'] in shape_type('环形'):
+            if polygon['shape_type'] in INS_shape_type('带孔'):
                 for j, huan in enumerate(polygon['widget_points']):
                     for k, point in enumerate(huan):
                         if self.close_to_corner(point):
                             corner_index = (i, j, k)
                             return corner_index
-            elif polygon['shape_type'] in shape_type('像素'):
+            elif polygon['shape_type'] in INS_shape_type('像素'):
                 pass
             else:
                 for j, point in enumerate(polygon['widget_points']):
-                    if polygon['shape_type'] in shape_type('椭圆形'):
+                    if polygon['shape_type'] in INS_shape_type('椭圆形'):
                         p_i = self.close_to_corner(polygon['widget_points'], is_ellipse=True)
                         if type(p_i) == int:
                             corner_index = (i, p_i)
@@ -798,22 +797,22 @@ class CenterImg(BaseImgFrame):
             editing_poly = self.__all_polygons[self.polygon_editing_i]
 
             st = editing_poly['shape_type']
-            if st in shape_type(['矩形', '椭圆形']):
+            if st in INS_shape_type(['矩形', '椭圆形']):
                 x1, y1 = editing_poly['widget_points'][0].toTuple()
                 x2, y2 = editing_poly['widget_points'][1].toTuple()
-                if st in shape_type('矩形'):
+                if st in INS_shape_type('矩形'):
                     self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                elif st in shape_type('椭圆形'):
+                elif st in INS_shape_type('椭圆形'):
                     self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
-            elif st in shape_type('多边形'):
+            elif st in INS_shape_type('多边形'):
                 self.painter.drawPolygon(editing_poly['widget_points'])
-            elif st in shape_type('环形'):
+            elif st in INS_shape_type('带孔'):
                 polygon1 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][0]])
                 polygon2 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][1]])
                 self.r1, self.r2 = QRegion(polygon1), QRegion(polygon2)
                 self.painter.setClipRegion(self.r1 - self.r2)
                 self.painter.fillRect(self.r1.boundingRect(), QColor(0, 255, 0, 150))
-            elif st in shape_type('像素'):
+            elif st in INS_shape_type('像素'):
                 self.fill_img_pixel(editing_poly['img_points'], QColor(0, 255, 0, 150))
 
             signal_set_shape_list_selected.send(self.polygon_editing_i)
@@ -822,23 +821,23 @@ class CenterImg(BaseImgFrame):
         # note: 在ShapeEditMode时，鼠标移动时也在频繁触发，要关注绘制数量较大时，是否会造成系统负担
         for one in self.__all_polygons:
             self.painter.setPen(QPen(QColor(one['qcolor']), self.seg_pen_size))
-            if one['shape_type'] in shape_type('多边形'):
+            if one['shape_type'] in INS_shape_type('多边形'):
                 self.painter.drawPolygon(one['widget_points'])
-            elif one['shape_type'] in shape_type(['矩形', '椭圆形']):
+            elif one['shape_type'] in INS_shape_type(['矩形', '椭圆形']):
                 if len(one['widget_points']):
                     x1, y1 = one['widget_points'][0].toTuple()
                     x2, y2 = one['widget_points'][1].toTuple()
-                    if one['shape_type'] in shape_type('矩形'):
+                    if one['shape_type'] in INS_shape_type('矩形'):
                         self.painter.drawRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                    elif one['shape_type'] in shape_type('椭圆形'):
+                    elif one['shape_type'] in INS_shape_type('椭圆形'):
                         self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
-            elif one['shape_type'] in shape_type('环形'):
+            elif one['shape_type'] in INS_shape_type('带孔'):
                 for one_p in one['widget_points']:
                     self.painter.drawPolygon(one_p)
-            elif one['shape_type'] in shape_type('像素'):
+            elif one['shape_type'] in INS_shape_type('像素'):
                 self.fill_img_pixel(one['img_points'], QColor(one['qcolor']))
 
-        if self.shape_type in shape_type('环形') and len(self.widget_points_huan):
+        if self.shape_type in INS_shape_type('带孔') and len(self.widget_points_huan):
             self.painter.drawPolygon(self.widget_points_huan[0])
 
     def draw_selected_shape(self, i):
@@ -892,11 +891,11 @@ class CenterImg(BaseImgFrame):
             point = self.cursor_in_widget.toTuple()
             st = one['shape_type']
 
-            if st in shape_type('环形'):
+            if st in INS_shape_type('带孔'):
                 wp1 = [aa.toTuple() for aa in one['widget_points'][0]]
                 wp2 = [aa.toTuple() for aa in one['widget_points'][1]]
                 shape_points = [wp1, wp2]
-            elif st in shape_type('像素'):
+            elif st in INS_shape_type('像素'):
                 img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(self.cursor_in_widget)
                 point = (img_pixel_x, img_pixel_y)
                 shape_points = one['img_points']
@@ -923,7 +922,7 @@ class CenterImg(BaseImgFrame):
 
         if len(json_polygons):
             for one in json_polygons:
-                if one['shape_type'] in shape_type('环形'):
+                if one['shape_type'] in INS_shape_type('带孔'):
                     out_c, in_c = one['widget_points'][0], one['widget_points'][1]
                     widget_points = [[aa.toTuple() for aa in out_c], [aa.toTuple() for aa in in_c]]
                 else:
@@ -949,13 +948,13 @@ class CenterImg(BaseImgFrame):
 
         if img_w2real_w is not None:
             for one in polygons:
-                if one['shape_type'] in shape_type('环形'):
+                if one['shape_type'] in INS_shape_type('带孔'):
                     p1 = self.img_coor_to_widget_coor(one['img_points'][0])
                     p2 = self.img_coor_to_widget_coor(one['img_points'][1])
                     ps = [p1, p2]
-                elif one['shape_type'] in shape_type(['多边形', '像素']):
+                elif one['shape_type'] in INS_shape_type(['多边形', '像素']):
                     ps = self.img_coor_to_widget_coor(one['img_points'])
-                elif one['shape_type'] in shape_type(['矩形', '椭圆形']):
+                elif one['shape_type'] in INS_shape_type(['矩形', '椭圆形']):
                     p1 = [one['img_points'][0][0], one['img_points'][0][1]]
                     p2 = [one['img_points'][1][0], one['img_points'][1][1]]
                     ps = self.img_coor_to_widget_coor([p1, p2])
@@ -987,7 +986,7 @@ class CenterImg(BaseImgFrame):
         offset = None
         img_w, img_h = self.img.width(), self.img.height()
         if key_left:
-            if st in shape_type('像素'):
+            if st in INS_shape_type('像素'):
                 for i, one_point in enumerate(img_points):
                     one_point[0] -= 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -995,7 +994,7 @@ class CenterImg(BaseImgFrame):
             else:
                 offset = QPointF(-int(img_w / 300), 0)
         elif key_right:
-            if st in shape_type('像素'):
+            if st in INS_shape_type('像素'):
                 for i, one_point in enumerate(img_points):
                     one_point[0] += 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1003,7 +1002,7 @@ class CenterImg(BaseImgFrame):
             else:
                 offset = QPointF(int(img_w / 300), 0)
         elif key_up:
-            if st in shape_type('像素'):
+            if st in INS_shape_type('像素'):
                 for i, one_point in enumerate(img_points):
                     one_point[1] -= 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1011,7 +1010,7 @@ class CenterImg(BaseImgFrame):
             else:
                 offset = QPointF(0, -int(img_h / 300))
         elif key_down:
-            if st in shape_type('像素'):
+            if st in INS_shape_type('像素'):
                 for i, one_point in enumerate(img_points):
                     one_point[1] += 1
                     w_p = self.img_coor_to_widget_coor(one_point)
@@ -1023,7 +1022,7 @@ class CenterImg(BaseImgFrame):
             offset = self.cursor_in_widget - self.start_pos
 
         if offset is not None:
-            if st in shape_type('环形'):
+            if st in INS_shape_type('带孔'):
                 for i, one_wp in enumerate(widget_points):
                     for j, one_point in enumerate(one_wp):
                         one_point += offset
@@ -1058,7 +1057,7 @@ class CenterImg(BaseImgFrame):
         else:
             st = self.shape_type
 
-        if st in shape_type('环形'):
+        if st in INS_shape_type('带孔'):
             self.__all_polygons.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
                                         'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
             self.clear_widget_img_points_huan()
@@ -1103,7 +1102,7 @@ class CenterImg(BaseImgFrame):
             polygon = self.collected_shapes[text].copy()
             st = polygon['shape_type']
             self.FlagDrawCollection = st
-            if st in shape_type('环形'):
+            if st in INS_shape_type('带孔'):
                 self.widget_points_huan, self.img_points_huan = [], []
                 widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
                 self.widget_points_huan.append(widget_points_out)
@@ -1166,7 +1165,7 @@ class CenterImg(BaseImgFrame):
             self.clear_scaled_img(to_undo=False)
 
     def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
-        if self.shape_type in shape_type('环形'):
+        if self.shape_type in INS_shape_type('带孔'):
             self.widget_points_huan.append(self.widget_points.copy())
             self.img_points_huan.append(self.img_points.copy())
             if len(self.widget_points_huan) < 2:
@@ -1186,7 +1185,7 @@ class CenterImg(BaseImgFrame):
 
     def shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):  # 已标注图形的伸缩
         for one in self.__all_polygons:
-            if one['shape_type'] in shape_type('环形'):
+            if one['shape_type'] in INS_shape_type('带孔'):
                 wp1 = self.shape_scale_convert(one['widget_points'][0], old_img_tl, scale_factor)
                 wp2 = self.shape_scale_convert(one['widget_points'][1], old_img_tl, scale_factor)
                 one['widget_points'] = [wp1, wp2]
@@ -1219,7 +1218,7 @@ class CenterImg(BaseImgFrame):
             self.undo_stack.undo()
 
 
-class CenterImgView(QGraphicsView):
+class CenterImgView(QGraphicsView):  # 用于实现书签功能
     def __init__(self, parent=None):
         super().__init__(parent)
         self.img_area = CenterImg(self)
@@ -1237,7 +1236,8 @@ class CenterImgView(QGraphicsView):
     def keyPressEvent(self, event):
         self.img_area.keyPressEvent(event)
 
-    def adjust_area(self):  # 窗口大小改变时，图片大小也随着改变
+    def resizeEvent(self, event):  # 窗口大小改变时，图片大小也随着改变
+        super().resizeEvent(event)
         view_w, view_h = self.size().toTuple()
         self.scene.setSceneRect(0, 0, view_w, view_h)
         self.img_area.resize(view_w, view_h)

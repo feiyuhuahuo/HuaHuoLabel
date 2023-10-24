@@ -10,7 +10,6 @@ class ButtonWithHoverWindow(QPushButton):
     def __init__(self, parent=None):  # parent=None 必须要实现
         super().__init__(parent)
 
-
     def enterEvent(self, event):
         print('in')
 

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QMessageBox as QMB
 from .widget_progress_bar import ProgressWindow
 from need.custom_signals import BoolSignal
 from need.custom_threads.auto_inference import RunInference
-from need.utils import AllClasses
+from need.utils import INS_all_classes
 
 signal_request_imgs = BoolSignal()
 

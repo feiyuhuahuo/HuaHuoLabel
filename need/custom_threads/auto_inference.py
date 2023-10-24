@@ -7,7 +7,8 @@ import cv2
 from os import sep as os_sep
 import numpy as np
 from PySide6.QtCore import QThread
-from need.utils import douglas_peuker, AllClasses
+from need.algorithms import douglas_peuker
+from need.utils import INS_all_classes
 from need.custom_signals import StrSignal, IntSignal
 
 signal_ai_progress_text = StrSignal()

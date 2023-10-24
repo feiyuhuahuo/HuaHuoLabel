@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
-    <height>237</height>
+    <width>540</width>
+    <height>340</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>540</width>
+    <height>340</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>540</width>
+    <height>340</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -89,7 +101,7 @@ border-radius: 5px;</string>
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="0,0,1,0,0,0,3">
+     <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="0,0,40,0,0,0,0,45">
       <property name="spacing">
        <number>6</number>
       </property>
@@ -162,7 +174,7 @@ border-radius: 5px;</string>
          </font>
         </property>
         <property name="text">
-         <string>翻转</string>
+         <string>水平翻转</string>
         </property>
        </widget>
       </item>
@@ -210,6 +222,18 @@ QCheckBox::indicator:unchecked {
           <width>16</width>
           <height>16</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_51">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>垂直翻转</string>
         </property>
        </widget>
       </item>
@@ -277,7 +301,7 @@ QCheckBox::indicator:unchecked {
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_91" stretch="0,0,0,0,0,0,0,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_91" stretch="1,1,1,1,1,2,1,1,1">
       <property name="spacing">
        <number>6</number>
       </property>
@@ -545,6 +569,9 @@ QRadioButton::indicator:unchecked {
         <property name="text">
          <string>jpg</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item alignment="Qt::AlignHCenter">
@@ -599,12 +626,156 @@ QRadioButton::indicator:unchecked {
          <string>bmp</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="Line" name="line_5">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_83" stretch="10,10,10,10,30">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QLabel" name="label_52">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>图片深度</string>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QRadioButton" name="radioButton_d1">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string>灰度图像</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+}</string>
+        </property>
+        <property name="text">
+         <string>1 (灰度图)</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QRadioButton" name="radioButton_d3">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string>RGB彩色图像</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+}</string>
+        </property>
+        <property name="text">
+         <string>3 (RGB)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QRadioButton" name="radioButton_d4">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string>第4通道为透明度通道的RGB彩色图像</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+}</string>
+        </property>
+        <property name="text">
+         <string>4 (RGBA)</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_8">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -626,7 +797,64 @@ QRadioButton::indicator:unchecked {
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_82" stretch="0,0,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="maximumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>images/iqwc/Getinfo.ico</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextBrowser" name="textBrowser">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>90</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>90</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color:       rgb(240, 240, 240);
+color:       rgb(80, 80, 80);</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="html">
+         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Microsoft YaHei UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. 如果图片带有exif旋转信息，新保存的图片将按旋转信息旋转，同时exif中的旋转字段会被移除，这不会影响图片在大多数图片查看软件中的显示效果，同时可以使图片的数据结构和显示效果保持一致。&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. 目前仅支持加载灰度图、RGB、RGBA和索引颜色表示法模式的图片，其它模式的图片会被过滤。所有模式的图片将根据图片深度以灰度图、RGB或RGBA的模式保存。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_82" stretch="0,0,0">
       <property name="spacing">
        <number>6</number>
       </property>
@@ -695,64 +923,6 @@ border-radius: 5px;</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_save_cur">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>86</width>
-          <height>24</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="contextMenuPolicy">
-         <enum>Qt::NoContextMenu</enum>
-        </property>
-        <property name="toolTip">
-         <string>根据当前的设定保存当前图片</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton
-{background-color: rgb(235, 235, 235);
-border: 1px solid gray;
-border-radius: 4px;
-}
- QPushButton:hover {
-            background-color:  rgb(225, 225, 225);
-}
-
- QPushButton:pressed {
-            background-color:  rgb(215, 215, 215);
-        }        
-</string>
-        </property>
-        <property name="text">
-         <string> 保存当前</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>images/Save_black.svg</normaloff>images/Save_black.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>16</width>
-          <height>16</height>
-         </size>
-        </property>
-       </widget>
-      </item>
       <item alignment="Qt::AlignHCenter">
        <widget class="QPushButton" name="pushButton_save_all">
         <property name="enabled">
@@ -779,7 +949,7 @@ border-radius: 4px;
          <enum>Qt::NoContextMenu</enum>
         </property>
         <property name="toolTip">
-         <string>根据当前的设定遍历保存目录下的所有图片</string>
+         <string>根据当前设定保存导入的图片</string>
         </property>
         <property name="styleSheet">
          <string notr="true">QPushButton
@@ -797,7 +967,7 @@ border-radius: 4px;
 </string>
         </property>
         <property name="text">
-         <string> 保存所有</string>
+         <string> 保存</string>
         </property>
         <property name="icon">
          <iconset>
@@ -820,5 +990,6 @@ border-radius: 4px;
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>

@@ -9,7 +9,7 @@ from os import sep as os_sep
 from os import path as osp
 from PySide6.QtCore import QThread
 from need.custom_signals import ListSignal
-from need.utils import uniform_path
+from need.functions import uniform_path
 
 signal_stat_info = ListSignal()
 
@@ -115,7 +115,7 @@ class ClassStatistics(QThread):
         elif self.SeparateLabel:
             if self.WorkMode in ('单分类', 'Single Cls'):
                 files = glob.glob(f'{self.main_window.get_root("separate")}/*')
-                files = [uniform_path(one) for one in files]
+                files = uniform_path(files)
 
                 for one in files:
                     if not os.path.isdir(one):
