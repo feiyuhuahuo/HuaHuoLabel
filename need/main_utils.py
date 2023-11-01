@@ -10,17 +10,16 @@ from need.custom_threads import *
 
 
 def connect_all_other_signals(main_window):
+    main_window.ui.checkBox_hide_obj_info.toggled.connect(main_window.obj_info_show_set)
     main_window.ui.checkBox_hide_cross.clicked.connect(main_window.set_hide_cross)
     main_window.ui.checkBox_one_label.pressed.connect(main_window.raise_label_mode_conflict)
     main_window.ui.checkBox_one_label.toggled.connect(lambda: main_window.set_one_file_label(by_click=True))
     main_window.ui.checkBox_separate_label.pressed.connect(main_window.raise_label_mode_conflict)
     main_window.ui.checkBox_separate_label.toggled.connect(lambda: main_window.set_separate_label(by_click=True))
     main_window.ui.checkBox_sem_bg.toggled.connect(main_window.set_sem_bg)
-    main_window.ui.checkBox_hole.clicked.connect(main_window.hole_union_exclusive)
-    main_window.ui.checkBox_union.clicked.connect(main_window.hole_union_exclusive)
 
     main_window.ui.comboBox.currentIndexChanged.connect(main_window.set_scan_mode)
-    main_window.ui.comboBox_2.currentIndexChanged.connect(main_window.change_shape_type)
+    main_window.ui.comboBox_2.currentIndexChanged.connect(main_window.shape_type_change)
 
     main_window.ui.horizontalSlider.valueChanged.connect(main_window.img_enhance)
     main_window.ui.horizontalSlider_2.valueChanged.connect(main_window.img_enhance)
@@ -77,7 +76,7 @@ def connect_all_other_signals(main_window):
 
     # main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
-    # main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
+    main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
 
     # main_window.ui.spinBox.valueChanged.connect(main_window.change_pen_size)
     # main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
@@ -134,10 +133,10 @@ def init_menu(main_win):
 def init_custom_widgets(main_window):
     main_window.dialog_img_edit = ImgEdit(main_window)
     main_window.window_build_task = BuildTask(main_window)
+    main_window.window_shape_combo = ShapeCombo(main_window)
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
     main_window.widget_read_edit = ReadEditInfo()
-    # main_window.marquees = Marquees(main_window)
     main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)
     main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
     main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)

@@ -329,3 +329,63 @@ def remove_empty_cls_folder(self):
         for one in glob.glob(f'{v_img_path}/*'):
             if len(glob.glob(f'{one}/*')) == 0:
                 shutil.rmtree(one)
+
+
+def save_m_cls(self):
+    img_name = self.current_img_name()
+    if '图片已删除' in img_name:
+        return
+
+    lines = []
+    tv = self.current_tv()
+    button_layout = self.ui.groupBox_2.layout()
+    for i in range(button_layout.count()):
+        item = button_layout.itemAt(i)
+        for j in range(item.count()):
+            button = item.itemAt(j).widget()
+            if button.palette().button().color().name() == '#90ee90':
+                cls = button.text()
+                lines.append(f'{cls}\n')
+
+    if not lines and self.mcls_default_c != '':
+        default_c = self.mcls_default_c.replace('，', ',')
+        default_c = [one.strip() for one in default_c.split(',')]
+        default_c = [f'{one}\n' for one in default_c]
+        lines += default_c
+
+    if self.OneFileLabel:
+        if lines:
+            labels = [aa.strip() for aa in lines]
+            img_w, img_h = QPixmap(self.imgs[self.__cur_i]).size().toTuple()
+            one_label = {'img_height': img_h, 'img_width': img_w, 'tv': tv, 'class': labels}
+            self.label_file_dict['labels'][img_name] = one_label
+        else:
+            if self.label_file_dict['labels'].get(img_name):
+                self.label_file_dict['labels'].pop(img_name)
+
+    if self.SeparateLabel:
+        label_path = f'{self.get_root("separate")}'
+        os.makedirs(label_path, exist_ok=True)
+        txt_name = img_name[:-3] + 'txt'
+        txt_path = f'{label_path}/{txt_name}'
+        tv_img = f'{self.get_root("tv")}/imgs/{tv}/{img_name}'
+        tv_txt = f'{self.get_root("tv")}/labels/{tv}/{txt_name}'
+
+        if lines:
+            if not self.version_remind():
+                return
+
+            with open(txt_path, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
+
+            if osp.exists(tv_txt):
+                with open(tv_txt, 'w', encoding='utf-8') as f:
+                    f.writelines(lines)
+        else:
+            if osp.exists(tv_img):  # 若标注为空，则在训练集&验证集里剔除
+                if tv == 'train':
+                    self.mor_vars.train_num -= 1
+                elif tv == 'val':
+                    self.mor_vars.val_num -= 1
+
+            file_remove([tv_img, txt_path, tv_txt])

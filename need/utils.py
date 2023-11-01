@@ -144,8 +144,7 @@ class Palette:
 
 class ShapeType:
     def __init__(self):
-        self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '像素': 'Pixel',
-                           '带孔': 'Hole', '组合': 'Union'}
+        self.shape_type = {'多边形': 'Polygon', '矩形': 'Rectangle', '椭圆形': 'Ellipse', '像素': 'Pixel'}
 
     def __call__(self, name):
         if type(name) == str:
@@ -157,6 +156,37 @@ class ShapeType:
             result.append(self.shape_type[one])
 
         return result
+
+
+class MonitorVariable:
+    def __init__(self, parent):
+        self.parent = parent
+        self._train_num = 0
+        self._val_num = 0
+
+    @property
+    def train_num(self):
+        return self._train_num
+
+    @train_num.setter
+    def train_num(self, value):
+        self._train_num = value
+        self.set_tv_bar()
+
+    @property
+    def val_num(self):
+        return self._train_num
+
+    @val_num.setter
+    def val_num(self, value):
+        self._val_num = value
+        self.set_tv_bar()
+
+    def set_tv_bar(self):
+        total_num = self._train_num + self._val_num
+        if total_num:
+            self.parent.label_train.set_tv(self._train_num, self._val_num)
+            self.parent.label_val.set_tv(self._train_num, self._val_num)
 
 
 # INS开头表示全局对象

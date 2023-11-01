@@ -15,6 +15,7 @@ from need.custom_threads import *
 from need.custom_signals import StrSignal, ErrorSignal
 from need.algorithms import get_seg_mask
 from need.functions import *
+from need.utils import MonitorVariable
 
 signal_select_class_ok = StrSignal()
 signal_error2app = ErrorSignal()
@@ -56,10 +57,11 @@ class HHL_MainWindow(QMainWindow):
         self.task_cfg = {'one_file': True, 'separate_file': False, 'task_desc': '', 'img_classes': {},
                          'img_tags': {}, 'obj_classes': {}, 'obj_tags': {}, 'version_head': '',
                          'tracked_files': ['task_cfg.json', self.label_folder]}
-        self.scan_delay = 0
 
+        self.mor_vars = MonitorVariable(self.ui)
         self.reset_init_variables()
         init_menu(self)
+        self.obj_info_show_set()
         self.set_action_disabled()
         self.connect_signals()
         self.log_info('Application opened.', mark_line=True)
@@ -186,16 +188,16 @@ class HHL_MainWindow(QMainWindow):
             img_tv = self.label_file_dict['labels'][img_name]['tv']
 
             if img_tv == 'train' and dst_part == 'val':
-                self.train_num -= 1
-                self.val_num += 1
+                self.mor_vars.train_num -= 1
+                self.mor_vars.val_num += 1
             elif img_tv == 'val' and dst_part == 'train':
-                self.train_num += 1
-                self.val_num -= 1
+                self.mor_vars.train_num += 1
+                self.mor_vars.val_num -= 1
             elif img_tv == 'none':
                 if dst_part == 'train':
-                    self.train_num += 1
+                    self.mor_vars.train_num += 1
                 elif dst_part == 'val':
-                    self.val_num += 1
+                    self.mor_vars.val_num += 1
 
             self.label_file_dict['labels'][img_name]['tv'] = dst_part
 
@@ -213,21 +215,20 @@ class HHL_MainWindow(QMainWindow):
 
                 if not self.OneFileLabel:
                     if opp_part == 'train':
-                        self.train_num -= 1
+                        self.mor_vars.train_num -= 1
                     elif opp_part == 'val':
-                        self.val_num -= 1
+                        self.mor_vars.val_num -= 1
 
             shutil.copy(cur_path, tv_img_path)
             shutil.copy(self.get_separate_label(cur_path, 'json'), tv_label_path)
 
             if not self.OneFileLabel:
                 if dst_part == 'train':
-                    self.train_num += 1
+                    self.mor_vars.train_num += 1
                 elif dst_part == 'val':
-                    self.val_num += 1
+                    self.mor_vars.val_num += 1
 
         self.set_tv_label()
-        self.set_tv_bar()
 
     def auto_in(self):
         return
@@ -396,13 +397,15 @@ class HHL_MainWindow(QMainWindow):
         elif self.ui.toolBox.currentIndex() == 1:
             self.ui.graphicsView.img_area.change_pen(ann_pen_size=self.ui.spinBox_6.value())
 
-    def change_shape_type(self):
-        if self.ui.checkBox_hole.isChecked():
-            signal_shape_type.send(self.ui.checkBox_hole.text())
-        elif self.ui.checkBox_union.isChecked():
-            signal_shape_type.send(self.ui.checkBox_union.text())
-        else:
-            signal_shape_type.send(self.ui.comboBox_2.currentText())
+    def shape_type_change(self):
+        text = self.ui.comboBox_2.currentText()
+        signal_shape_type.send(text)
+
+        if text == self.tr('高级'):
+            self.window_shape_combo.show()
+
+    def shape_type_reset(self):
+        self.ui.comboBox_2.setCurrentIndex(0)
 
     def check_warnings(self, names):
         if type(names) == str:
@@ -522,60 +525,28 @@ class HHL_MainWindow(QMainWindow):
                 self.label_file_dict['labels'].pop(img_name)
 
         if self.SeparateLabel:
-            if self.WorkMode == self.AllModes[0]:
-                if self.ui.radioButton_write.isChecked():  # 复制模式
-                    file_remove(f'{self.get_root("img")}/{img_name}')
+            if file_remove(f'{self.get_root("tv")}/imgs/train/{img_name}'):
+                self.mor_vars.train_num -= 1
+            if file_remove(f'{self.get_root("tv")}/imgs/val/{img_name}'):
+                self.mor_vars.val_num -= 1
 
-                c_name = self.cls_has_classified()
-                if file_remove(f'{self.get_root("tv")}/imgs/train/{c_name}/{img_name}'):
-                    self.train_num -= 1
-                if file_remove(f'{self.get_root("tv")}/imgs/val/{c_name}/{img_name}'):
-                    self.val_num -= 1
+            path_del_label = f'{self.task_root}/deleted/{self.WorkMode}/{self.label_folder}'
+            os.makedirs(path_del_label, exist_ok=True)
 
-                self.remove_empty_cls_folder()
-            elif self.WorkMode in self.AllModes[(1, 2, 3, 4)]:
-                if file_remove(f'{self.get_root("tv")}/imgs/train/{img_name}'):
-                    self.train_num -= 1
-                if file_remove(f'{self.get_root("tv")}/imgs/val/{img_name}'):
-                    self.val_num -= 1
+            png_path = self.get_separate_label(img_path, 'png')
+            json_path = self.get_separate_label(img_path, 'json')
 
-                path_del_label = f'{self.task_root}/deleted/{self.WorkMode}/{self.label_folder}'
-                os.makedirs(path_del_label, exist_ok=True)
+            t_png_path = f'{self.get_root("tv")}/labels/train/{png_path.split("/")[-1]}'
+            v_png_path = f'{self.get_root("tv")}/labels/val/{png_path.split("/")[-1]}'
+            t_json_path = f'{self.get_root("tv")}/labels/train/{json_path.split("/")[-1]}'
+            v_json_path = f'{self.get_root("tv")}/labels/val/{json_path.split("/")[-1]}'
 
-                txt_path = self.get_separate_label(img_path, 'txt')
-                png_path = self.get_separate_label(img_path, 'png')
-                json_path = self.get_separate_label(img_path, 'json')
-                t_txt_path = f'{self.get_root("tv")}/labels/train/{txt_path.split("/")[-1]}'
-                v_txt_path = f'{self.get_root("tv")}/labels/val/{txt_path.split("/")[-1]}'
-                t_png_path = f'{self.get_root("tv")}/labels/train/{png_path.split("/")[-1]}'
-                v_png_path = f'{self.get_root("tv")}/labels/val/{png_path.split("/")[-1]}'
-                t_json_path = f'{self.get_root("tv")}/labels/train/{json_path.split("/")[-1]}'
-                v_json_path = f'{self.get_root("tv")}/labels/val/{json_path.split("/")[-1]}'
-
-                if self.WorkMode == self.AllModes[1]:
-                    if osp.exists(txt_path):
-                        self.file_move(txt_path, path_del_label)
-                        file_remove([t_txt_path, v_txt_path])
-                elif self.WorkMode == self.AllModes[2]:
-                    if osp.exists(png_path):
-                        self.file_move(png_path, path_del_label)
-                        file_remove([t_png_path, v_png_path])
-                    if osp.exists(json_path):
-                        self.file_move(json_path, path_del_label)
-                        file_remove([t_json_path, v_json_path])
-                elif self.WorkMode == self.AllModes[3]:
-                    if osp.exists(txt_path):
-                        self.file_move(txt_path, path_del_label)
-                        file_remove([t_txt_path, v_txt_path])
-                    if osp.exists(json_path):
-                        self.file_move(json_path, path_del_label)
-                        file_remove([t_json_path, v_json_path])
-                elif self.WorkMode == self.AllModes[4]:
-                    if osp.exists(json_path):
-                        self.file_move(json_path, path_del_label)
-                        file_remove([t_json_path, v_json_path])
-
-        self.set_tv_bar()
+            if osp.exists(png_path):
+                self.file_move(png_path, path_del_label)
+                file_remove([t_png_path, v_png_path])
+            if osp.exists(json_path):
+                self.file_move(json_path, path_del_label)
+                file_remove([t_json_path, v_json_path])
 
         self.imgs[self.__cur_i] = 'images/图片已删除.png'  # 将删除的图片替换为背景图片
         self.show_img_status_info()
@@ -708,26 +679,21 @@ class HHL_MainWindow(QMainWindow):
         if self.OneFileLabel:
             for k, v in self.label_file_dict['labels'].items():
                 if v['tv'] != 'val':
-                    if self.WorkMode == self.AllModes[0] and self.SeparateLabel:
-                        img_path = f'{self.get_root("img")}/{v["class"]}/{k}'
-                        assert osp.exists(img_path), f'Error, {img_path} does not exist.'
-                    else:
-                        img_path = f'{self.get_root("img")}/{k}'
+                    img_path = f'{self.get_root("img")}/{k}'
                     self.add_to_train_val('train', img_path, pass_separate_file=True)
 
         if self.SeparateLabel:
             choice = QMB.question(self.ui, self.tr('独立标注模式'), self.tr('训练集将被覆盖，继续吗？'))
             if choice == QMB.Yes:
                 if not self.OneFileLabel:
-                    self.train_num = 0
+                    self.mor_vars.train_num = 0
 
                 if osp.exists(f'{self.get_root("tv")}/imgs/train'):
                     shutil.rmtree(f'{self.get_root("tv")}/imgs/train')
-                if self.WorkMode in self.AllModes[(1, 2, 3, 4)]:
-                    if osp.exists(f'{self.get_root("tv")}/labels/train'):
-                        shutil.rmtree(f'{self.get_root("tv")}/labels/train')
+                if osp.exists(f'{self.get_root("tv")}/labels/train'):
+                    shutil.rmtree(f'{self.get_root("tv")}/labels/train')
 
-                val_img_list = glob_imgs(f'{self.get_root("tv")}/imgs/val', self.WorkMode == self.AllModes[0])
+                val_img_list = glob_imgs(f'{self.get_root("tv")}/imgs/val')
                 val_img_list = [one.split('/')[-1] for one in val_img_list]
                 for one in self.imgs:
                     if self.has_labeled(one) and one.split('/')[-1] not in val_img_list:
@@ -743,21 +709,12 @@ class HHL_MainWindow(QMainWindow):
             else:
                 return 'none'
         elif self.SeparateLabel:
-            if self.WorkMode == self.AllModes[0]:
-                c_name = self.cls_has_classified(img_path)
-                if osp.exists(f'{self.get_root("tv")}/imgs/train/{c_name}/{img_name}'):
-                    return 'train'
-                elif osp.exists(f'{self.get_root("tv")}/imgs/val/{c_name}/{img_name}'):
-                    return 'val'
-                else:
-                    return 'none'
-            elif self.WorkMode in self.AllModes[(1, 2, 3, 4)]:
-                if osp.exists(f'{self.get_root("tv")}/imgs/train/{img_name}'):
-                    return 'train'
-                elif osp.exists(f'{self.get_root("tv")}/imgs/val/{img_name}'):
-                    return 'val'
-                else:
-                    return 'none'
+            if osp.exists(f'{self.get_root("tv")}/imgs/train/{img_name}'):
+                return 'train'
+            elif osp.exists(f'{self.get_root("tv")}/imgs/val/{img_name}'):
+                return 'val'
+            else:
+                return 'none'
 
     def get_info_text(self, polygon):
         if self.WorkMode == self.AllModes[3]:
@@ -831,15 +788,15 @@ class HHL_MainWindow(QMainWindow):
 
     def get_tv_num(self):
         if self.OneFileLabel:
-            self.train_num, self.val_num = 0, 0
+            self.mor_vars.train_num, self.mor_vars.val_num = 0, 0
             for one in self.label_file_dict['labels'].values():
                 if one['tv'] == 'train':
-                    self.train_num += 1
+                    self.mor_vars.train_num += 1
                 elif one['tv'] == 'val':
-                    self.val_num += 1
+                    self.mor_vars.val_num += 1
         elif self.SeparateLabel:
-            self.train_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/train', self.WorkMode == self.AllModes[0]))
-            self.val_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/val', self.WorkMode == self.AllModes[0]))
+            self.mor_vars.train_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/train'))
+            self.mor_vars.val_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/val'))
 
     def graphics_reset(self):  # 清空所有任务相关的控件
         self.ui.obj_list.clear()
@@ -862,8 +819,9 @@ class HHL_MainWindow(QMainWindow):
         stat = self.ui.radioButton_read.isChecked()
         self.ui.obj_list.edit_button.setChecked(False)
         self.ui.obj_list.edit_button.setDisabled(stat)
-        self.set_action_disabled()
 
+        self.obj_info_show_set()
+        self.set_action_disabled()
         self.img_enhance_reset()
 
     def go_next_img(self):
@@ -897,13 +855,9 @@ class HHL_MainWindow(QMainWindow):
                 return True
             return False
         elif self.SeparateLabel:
-            if self.WorkMode in self.AllModes[(0, 1)]:
-                if self.cls_has_classified(img_path):
-                    return True
-            elif self.WorkMode in self.AllModes[(2, 3, 4)]:
-                json_path = self.get_separate_label(img_path, 'json')
-                if osp.exists(json_path):
-                    return True
+            json_path = self.get_separate_label(img_path, 'json')
+            if osp.exists(json_path):
+                return True
             return False
 
     def has_looking_classes(self, img_path):
@@ -930,12 +884,6 @@ class HHL_MainWindow(QMainWindow):
             if one['category'] in self.looking_classes:
                 return True
         return False
-
-    def hole_union_exclusive(self):
-        if self.ui.checkBox_hole.isChecked() and self.ui.checkBox_union.isChecked():
-            QMB.warning(self.ui, self.tr('形状冲突'), self.tr('"带孔"和"组合"无法同时启用！'))
-            self.ui.checkBox_hole.setChecked(True)
-            self.ui.checkBox_union.setChecked(False)
 
     def img_enhance(self):  # done -------------------
         self.ui.horizontalSlider_3.setValue(100)
@@ -1202,6 +1150,9 @@ class HHL_MainWindow(QMainWindow):
             self.window_compare.paint_img(get_rotated_qpixmap(path))
             self.window_compare.show()
 
+    def obj_info_show_set(self):
+        self.ui.listWidget_obj_info.setVisible(self.ui.checkBox_hide_obj_info.isChecked())
+
     def oc_shape_info(self):
         if self.action_oc_shape_info.text() == self.tr('禁用（提高切图速度）'):
             self.clear_shape_info()
@@ -1291,14 +1242,13 @@ class HHL_MainWindow(QMainWindow):
                                       self.get_root('tv')))
             if choice == QMB.Yes:
                 if not self.OneFileLabel:
-                    self.train_num, self.val_num = 0, 0
+                    self.mor_vars.train_num, self.mor_vars.val_num = 0, 0
 
                 tv_img_path, tv_label_path = f'{self.get_root("tv")}/imgs', f'{self.get_root("tv")}/labels'
                 if osp.exists(tv_img_path):
                     shutil.rmtree(tv_img_path)
-                if self.WorkMode in self.AllModes[(1, 2, 3, 4)]:
-                    if osp.exists(tv_label_path):
-                        shutil.rmtree(tv_label_path)
+                if osp.exists(tv_label_path):
+                    shutil.rmtree(tv_label_path)
 
         shuffled_imgs = self.imgs.copy()
         shuffled_imgs = [one for one in shuffled_imgs if self.has_labeled(one)]
@@ -1320,7 +1270,6 @@ class HHL_MainWindow(QMainWindow):
                         self.tr('共划分{}张图片至训练集，{}张图片至验证集。').format(t_num, v_num))
 
 
-
     def remove_redu_files(self, files: list, title: str, text: str):
         choice = QMB.question(self.ui, title, text)
         if choice == QMB.Yes:
@@ -1337,7 +1286,7 @@ class HHL_MainWindow(QMainWindow):
         self.__cur_i = 0
         self.imgs = []
         self.img_num = 0
-        self.train_num, self.val_num = 0, 0
+        self.mor_vars.train_num, self.mor_vars.val_num = 0, 0
         self.bookmark_list = []
         self.bottom_img_text = ''
         self.cv2_img = None
@@ -1346,6 +1295,7 @@ class HHL_MainWindow(QMainWindow):
         self.LookingAll = True
         self.looking_classes = []
         self.log_created_time = get_datetime().split(' ')[0]
+        self.scan_delay = 0
         self.sys_error_text = []
         self.dialog_tracked_files = None
         self.dialog_version_change = None
@@ -1397,14 +1347,11 @@ class HHL_MainWindow(QMainWindow):
 
             json_name = f'{img_name[:-4]}.json'
             png_name = f'{img_name[:-4]}.png'
-            txt_name = f'{img_name[:-4]}.txt'
             json_path = f'{label_path}/{json_name}'
             png_path = f'{label_path}/{png_name}'
-            txt_path = f'{label_path}/{txt_name}'
             tv_img = f'{self.get_root("tv")}/imgs/{tv}/{img_name}'
             tv_json = f'{self.get_root("tv")}/labels/{tv}/{json_name}'
             tv_png = f'{self.get_root("tv")}/labels/{tv}/{png_name}'
-            tv_txt = f'{self.get_root("tv")}/labels/{tv}/{txt_name}'
 
             if json_polygons:
                 if not self.version_remind():
@@ -1427,87 +1374,14 @@ class HHL_MainWindow(QMainWindow):
                         if osp.exists(tv_png):
                             cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
 
-                if self.WorkMode == self.AllModes[3]:
-                    with open(txt_path, 'w') as f:
-                        for one in json_polygons:
-                            c_name = one['category']
-                            [x1, y1], [x2, y2] = one['img_points']
-                            f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
-                    if osp.exists(tv_txt):
-                        with open(tv_txt, 'w') as f:
-                            for one in json_polygons:
-                                c_name = one['category']
-                                [x1, y1], [x2, y2] = one['img_points']
-                                f.writelines(f'{c_name} {x1} {y1} {x2} {y2}\n')
             else:  # 若标注为空，则在训练集&验证集里剔除
                 if osp.exists(tv_img):
                     if tv == 'train':
-                        self.train_num -= 1
+                        self.mor_vars.train_num -= 1
                     elif tv == 'val':
-                        self.val_num -= 1
-                    self.set_tv_bar()
+                        self.mor_vars.val_num -= 1
 
-                file_remove([tv_img, json_path, tv_json, png_path, tv_png, txt_path, tv_txt])
-
-    def save_m_cls(self):
-        img_name = self.current_img_name()
-        if '图片已删除' in img_name:
-            return
-
-        lines = []
-        tv = self.current_tv()
-        button_layout = self.ui.groupBox_2.layout()
-        for i in range(button_layout.count()):
-            item = button_layout.itemAt(i)
-            for j in range(item.count()):
-                button = item.itemAt(j).widget()
-                if button.palette().button().color().name() == '#90ee90':
-                    cls = button.text()
-                    lines.append(f'{cls}\n')
-
-        if not lines and self.mcls_default_c != '':
-            default_c = self.mcls_default_c.replace('，', ',')
-            default_c = [one.strip() for one in default_c.split(',')]
-            default_c = [f'{one}\n' for one in default_c]
-            lines += default_c
-
-        if self.OneFileLabel:
-            if lines:
-                labels = [aa.strip() for aa in lines]
-                img_w, img_h = QPixmap(self.imgs[self.__cur_i]).size().toTuple()
-                one_label = {'img_height': img_h, 'img_width': img_w, 'tv': tv, 'class': labels}
-                self.label_file_dict['labels'][img_name] = one_label
-            else:
-                if self.label_file_dict['labels'].get(img_name):
-                    self.label_file_dict['labels'].pop(img_name)
-
-        if self.SeparateLabel:
-            label_path = f'{self.get_root("separate")}'
-            os.makedirs(label_path, exist_ok=True)
-            txt_name = img_name[:-3] + 'txt'
-            txt_path = f'{label_path}/{txt_name}'
-            tv_img = f'{self.get_root("tv")}/imgs/{tv}/{img_name}'
-            tv_txt = f'{self.get_root("tv")}/labels/{tv}/{txt_name}'
-
-            if lines:
-                if not self.version_remind():
-                    return
-
-                with open(txt_path, 'w', encoding='utf-8') as f:
-                    f.writelines(lines)
-
-                if osp.exists(tv_txt):
-                    with open(tv_txt, 'w', encoding='utf-8') as f:
-                        f.writelines(lines)
-            else:
-                if osp.exists(tv_img):  # 若标注为空，则在训练集&验证集里剔除
-                    if tv == 'train':
-                        self.train_num -= 1
-                    elif tv == 'val':
-                        self.val_num -= 1
-                    self.set_tv_bar()
-
-                file_remove([tv_img, txt_path, tv_txt])
+                file_remove([tv_img, json_path, tv_json, png_path, tv_png])
 
     def save_one_file_json(self, check_version=True):
         if self.in_edit_mode() and self.OneFileLabel and self.label_file_dict:
@@ -1599,10 +1473,7 @@ class HHL_MainWindow(QMainWindow):
 
         if self.ui.radioButton_write.isChecked():
             self.save_label()
-            # if self.WorkMode == self.AllModes[1]:
-            #     self.save_m_cls()
-            # elif self.WorkMode in self.AllModes[(2, 3, 4)]:
-            #     self.save_det_seg()
+            # self.save_det_seg()
 
         if last and 0 < self.__cur_i <= self.img_num:
             for _ in range(count):
@@ -1643,14 +1514,11 @@ class HHL_MainWindow(QMainWindow):
             if '图片已删除' in self.imgs[i]:
                 continue
 
-            if self.WorkMode in self.AllModes[(0, 1)]:
-                result = self.cls_has_classified(self.imgs[i])
-            elif self.WorkMode in self.AllModes[(2, 3, 4)]:
-                if self.OneFileLabel:
-                    result = self.label_file_dict['labels'].get(self.imgs[i].split('/')[-1])
-                elif self.SeparateLabel:
-                    json_path = self.get_separate_label(self.imgs[i], 'json')
-                    result = osp.exists(json_path)
+            if self.OneFileLabel:
+                result = self.label_file_dict['labels'].get(self.imgs[i].split('/')[-1])
+            elif self.SeparateLabel:
+                json_path = self.get_separate_label(self.imgs[i], 'json')
+                result = osp.exists(json_path)
 
             if not result:
                 break
@@ -1784,19 +1652,19 @@ class HHL_MainWindow(QMainWindow):
             self.task_cfg_export()
 
     def set_read_mode(self):
-        if self.OneFileLabel:
-            if self.ui.radioButton_read.isChecked():
-                self.thread_auto_save.terminate()
-            else:
-                self.thread_auto_save.start()
-        else:
-            self.thread_auto_save.terminate()
+        # if self.OneFileLabel:
+        #     if self.ui.radioButton_read.isChecked():
+        #         self.thread_auto_save.terminate()
+        #     else:
+        #         self.thread_auto_save.start()
+        # else:
+        #     self.thread_auto_save.terminate()
+        read_mode = self.ui.radioButton_read.isChecked()
+        if read_mode:
+            self.ui.obj_list.edit_button.setChecked(not read_mode)
+            # self.ui.pushButton_bg.setDisabled(read_mode)
 
-        if self.ui.radioButton_read.isChecked():
-            self.ui.obj_list.edit_button.setChecked(False)
-            self.ui.pushButton_bg.setDisabled(True)
-
-        self.ui.obj_list.edit_button.setDisabled(self.ui.radioButton_read.isChecked())
+        self.ui.obj_list.edit_button.setDisabled(read_mode)
 
     def set_scan_delay(self):  # done -------------
         delay, is_ok = self.input_dlg.getInt(self.ui, self.tr('切图延时'), self.tr('单位：ms'), 0, 0, 9999, 100)
@@ -1839,12 +1707,6 @@ class HHL_MainWindow(QMainWindow):
 
         if self.ui.toolBox.currentIndex() == 1:
             self.paint_ann_img()
-
-    def set_tv_bar(self):
-        total_num = self.train_num + self.val_num
-        if total_num:
-            self.ui.label_train.set_tv(self.train_num, self.val_num)
-            self.ui.label_val.set_tv(self.train_num, self.val_num)
 
     def set_tv_label(self):
         img_name = self.current_img_name()
@@ -1933,9 +1795,7 @@ class HHL_MainWindow(QMainWindow):
     def show_label_to_ui(self):
         pass
 
-        # if self.WorkMode == self.AllModes[0]:
-        #     self.cls_to_button()
-        # elif self.WorkMode == self.AllModes[1]:
+        # if self.WorkMode == self.AllModes[1]:
         #     self.m_cls_to_button()
         # elif self.WorkMode in self.AllModes[(2, 3, 4)]:
         #     self.clear_shape_info()
@@ -1978,11 +1838,6 @@ class HHL_MainWindow(QMainWindow):
 
     def task_cfg_export(self):
         if self.task:
-            # self.task_cfg['img_classes'] = self.ui.img_cate_buttons.button_stat
-            # self.task_cfg['img_tags'] = self.ui.img_tag_buttons.button_stat
-            # self.task_cfg['obj_classes'] = self.ui.obj_cate_buttons.button_stat
-            # self.task_cfg['obj_tags'] = self.ui.obj_tag_buttons.button_stat
-
             with open(f'{self.task_root}/task_cfg.json', 'w', encoding='utf-8') as f:
                 json.dump(self.task_cfg, f, sort_keys=False, ensure_ascii=False, indent=4)
 
@@ -2047,7 +1902,6 @@ class HHL_MainWindow(QMainWindow):
             #     self.show_label_to_ui()
             #     self.set_tv_label()
             #     self.get_tv_num()
-            #     self.set_tv_bar()
             #
             # if self.OneFileLabel:
             #     self.thread_auto_save.start()
@@ -2058,7 +1912,6 @@ class HHL_MainWindow(QMainWindow):
                 self.repo = None
 
             self.log_info(f'task: {self.task}, one file: {self.OneFileLabel}, separate file: {self.SeparateLabel}')
-
 
     def update_button_num(self, info):
         name, num = info

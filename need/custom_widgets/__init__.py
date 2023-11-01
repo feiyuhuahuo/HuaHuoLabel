@@ -26,6 +26,7 @@ from .widget_imgs_flow import ImgsFlow, signal_show_plain_img, signal_show_label
 from .window_read_edit import ReadEditInfo
 from .dialog_select_list import BaseSelectList, SingleSelectList
 from .widget_task_desc_browser import TaskDescBrowser
+from .window_shape_combo import ShapeCombo
 
 __all__ = ['CenterImg', 'ClassStatWidget', 'SelectItem', 'ProgressWindow', 'BaseButtonGroup',
            'WaitingLabel', 'CustomMessageBox', 'ButtonWithHoverWindow', 'signal_shape_type', 'BaseSelectList',
@@ -35,4 +36,4 @@ __all__ = ['CenterImg', 'ClassStatWidget', 'SelectItem', 'ProgressWindow', 'Base
            'signal_select_window_close', 'BuildTask', 'ReadEditInfo', 'TaskDescBrowser', 'ImgsFlow',
            'signal_question_result', 'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar',
            'AutoInfer', 'signal_request_imgs', 'ImgTagList', 'ImgEdit', 'ScanButton', 'JumpToImg', 'CenterImgView',
-           'ObjList', 'IconSpin', 'signal_update_button_num', 'SingleSelectList']
+           'ObjList', 'IconSpin', 'signal_update_button_num', 'SingleSelectList', 'ShapeCombo']
