@@ -1,14 +1,17 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import pdb
+import random
+
 from collections import OrderedDict
 from PySide6.QtWidgets import QInputDialog, QMessageBox, QWidget, QApplication, QSizePolicy, QHBoxLayout, \
     QVBoxLayout, QSpacerItem, QLineEdit, QMenu
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QIcon, QAction, QCursor
+from PySide6.QtGui import QIcon, QAction, QCursor, QColor
 from need.custom_widgets.widget_cate_button import ImgCateButton, ImgTagButton, ObjCateButton, ObjTagButton
 from need.custom_signals import ListSignal
 from need.functions import get_HHL_parent
+from need.utils import COlOR_NAMEs
 
 signal_update_button_num = ListSignal()
 
@@ -18,14 +21,19 @@ class BaseButtonGroup(QWidget):
         super().__init__(parent)
         self.v_layout = QVBoxLayout(self)
         self.v_layout.setContentsMargins(0, 0, 0, 0)
-        self.v_layout.addLayout(self.new_h_layout())
+        self.v_layout.addLayout(self.__new_h_layout())
         self.setFixedWidth(350)
-        self.default_attrs = OrderedDict({'looking': True, 'is_default': False, 'ex_group': []})
+        self.default_attrs = OrderedDict({'looking': True, 'is_default': False, 'ex_group': [], 'color': ''})
         self.button_stat = OrderedDict()
+        self.color_names = COlOR_NAMEs.copy()
 
-    def add_button(self, cate='', looking=None, is_default=None, by_click=True):
+        self.color_codes = {}
+        for one in COlOR_NAMEs:
+            self.color_codes[QColor(one).name()] = one
+
+    def add_button(self, cate='', color='', looking=None, is_default=None, by_click=True):
         added = False
-        fake_parent = self.get_fake_prent()
+        fake_parent = self.__get_fake_prent()
 
         is_ok = True
         if not cate:
@@ -56,27 +64,32 @@ class BaseButtonGroup(QWidget):
 
                     if cur_width + button.width() < self.width():
                         h_layout.insertWidget(h_layout.count() - 1, button)
-                        self.add_name(cate, looking, is_default)
+                        self.__add_name(cate, color, looking, is_default)
                         added = True
                         break
 
                 if not added:
-                    new_line = self.new_h_layout()
+                    new_line = self.__new_h_layout()
                     new_line.insertWidget(0, button)
                     self.v_layout.addLayout(new_line)
-                    self.add_name(cate, looking, is_default)
+                    self.__add_name(cate, color, looking, is_default)
 
                 signal_update_button_num.send([self.objectName(), self.button_num()])
 
                 if by_click:
                     get_HHL_parent(self).cate_button_update(self.objectName())
 
-    def add_name(self, name, looking=None, is_default=None):
+    def __add_name(self, name, color='', looking=None, is_default=None):
         self.button_stat[name] = self.default_attrs.copy()
         if looking is not None:
             self.button_stat[name]['looking'] = looking
         if is_default is not None:
             self.button_stat[name]['is_default'] = is_default
+
+        if color:
+            self.button_stat[name]['color'] = color
+        else:
+            self.button_stat[name]['color'] = self.__new_color()
 
     def button_num(self):
         num = 0
@@ -90,7 +103,7 @@ class BaseButtonGroup(QWidget):
 
     def check_name_list(self, name):
         if name in self.button_stat.keys():
-            QMessageBox.critical(self.get_fake_prent(), self.tr('名称重复'), self.tr('"{}"已存在！').format(name))
+            QMessageBox.critical(self.__get_fake_prent(), self.tr('名称重复'), self.tr('"{}"已存在！').format(name))
             return False
         return True
 
@@ -108,6 +121,9 @@ class BaseButtonGroup(QWidget):
         self.button_stat = OrderedDict()
         signal_update_button_num.send([self.objectName(), 0])
 
+    def color(self, name):
+        return self.button_stat[name]['color']
+
     def del_button(self, name):
         for i in range(self.v_layout.count()):
             h_layout = self.v_layout.itemAt(i)
@@ -116,12 +132,12 @@ class BaseButtonGroup(QWidget):
                 if button.button_name() == name:
                     h_layout.takeAt(j)
                     button.deleteLater()
-                    self.del_name(name)
+                    self.__del_name(name)
                     signal_update_button_num.send([self.objectName(), self.button_num()])
                     get_HHL_parent(self).cate_button_update(self.objectName())
                     return
 
-    def del_name(self, name):
+    def __del_name(self, name):
         self.button_stat.pop(name)
 
     def edit_name(self, old_name, new_name):
@@ -135,7 +151,7 @@ class BaseButtonGroup(QWidget):
 
         self.button_stat = new_stat
 
-    def get_fake_prent(self):  # 用于设置QInputDialog().getText()等窗口的位置
+    def __get_fake_prent(self):  # 用于设置QInputDialog().getText()等窗口的位置
         fake_parent = QWidget()
         fake_parent.setWindowIcon(self.windowIcon())
         fake_parent.move(self.parent().mapToGlobal(QPoint(0, 0)) + QPoint(-450, 0))
@@ -162,9 +178,23 @@ class BaseButtonGroup(QWidget):
     def init_buttons(self, button_stat):
         self.clear_all_buttons()
         for name, stat in button_stat.items():
-            self.add_button(name, bool(stat['looking']), bool(stat['is_default']), by_click=False)
+            self.add_button(name, stat['color'], bool(stat['looking']), bool(stat['is_default']), by_click=False)
 
-    def new_h_layout(self):
+    @property
+    def names(self):
+        return list(self.button_stat.keys())
+
+    def __new_color(self):
+        random.shuffle(self.color_names)
+        existed_colors = list(self.button_stat.values())
+        color = self.color_names.pop()
+        while color in existed_colors:
+            if len(self.color_names) == 0:
+                self.color_names = COlOR_NAMEs.copy()
+            color = self.color_names.pop()
+        return color
+
+    def __new_h_layout(self):
         h_layout = QHBoxLayout(self)
         h_layout.setSpacing(6)
         h_layout.addItem(QSpacerItem(100, 22, QSizePolicy.Policy.Expanding))

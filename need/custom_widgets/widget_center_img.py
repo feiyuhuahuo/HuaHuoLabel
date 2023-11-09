@@ -3,8 +3,9 @@
 import pdb
 from typing import List, Union
 from copy import deepcopy
+from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel, QGraphicsView, \
-    QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QGraphicsPixmapItem
+    QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QGraphicsPixmapItem, QMainWindow
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QEvent
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
     QImageReader, QIcon
@@ -12,6 +13,7 @@ from need.algorithms import point_in_shape
 from need.utils import AnnUndo, INS_shape_type
 from need.custom_signals import *
 from need.custom_widgets import SelectItem, signal_select_window_close
+from need.functions import get_file_cmtime
 
 signal_check_draw_enable = BoolSignal()
 signal_del_shape = IntSignal()
@@ -23,7 +25,6 @@ signal_draw_selected_shape = IntSignal()
 signal_set_shape_list_selected = IntSignal()
 signal_shape_info_update = IntSignal()
 signal_shape_type = StrSignal()
-signal_xy_color2ui = ListSignal()
 
 
 class BaseImgFrame(QLabel):
@@ -37,7 +38,6 @@ class BaseImgFrame(QLabel):
         self.setWindowIcon(QIcon('images/icon.png'))
         self.setMouseTracking(True)
         self.resize(512, 512)
-        # todo: bug, 不知道为什么基类的menu右键的时候不显示
         self.img_menu = QMenu('img_menu', self)
         self.img_menu.setFixedWidth(135)
         self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
@@ -45,19 +45,30 @@ class BaseImgFrame(QLabel):
         self.action_nearest = QAction(self.tr('最近邻插值缩放'), self)
         self.action_nearest.setIcon(QPixmap('images/icon_11.png'))
         self.action_nearest.triggered.connect(lambda: self.set_interpolation(Qt.FastTransformation))
+        self.action_to_100 = QAction(self.tr('缩放至100%尺寸'), self)
+        self.action_to_100.triggered.connect(self.to_100_size)
+        self.action_color_cursor = QAction(self.tr('取色指针'), self)  # todo
         self.img_menu.addAction(self.action_nearest)
         self.img_menu.addAction(self.action_bilinear)
+        self.img_menu.addAction(self.action_to_100)
+        self.img_menu.addAction(self.action_color_cursor)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_menu)
 
         self.img, self.scaled_img = None, None
+        self.img_path = ''
         self.img_tl = QPointF(0., 0.)  # 图片左上角在控件坐标系的坐标
         self.start_pos = None
         self.bm_start = None
-        self.LeftClick = False  # 用于图片拖曳和标注拖曳功能中，判断左键是否按下
+        self.mouse_event_pos = None  # 记录鼠标在窗口坐标系的坐标
         self.interpolation = Qt.FastTransformation
 
+        self.LeftClick = False  # 用于图片拖曳和标注拖曳功能中，判断左键是否按下
         self.IsClosed = False
+
+        self.signal_xy_color2ui = ListSignal()
+        self.signal_img_size2ui = TupleSignal()
+        self.signal_img_time2ui = StrSignal()
 
     def contextMenuEvent(self, event):
         self.img_menu.exec(self.mapToGlobal(event.pos()))
@@ -67,9 +78,9 @@ class BaseImgFrame(QLabel):
         self.close()
 
     def mouseDoubleClickEvent(self, e):  # 同时触发mousePressEvent()
-        action_img = self.img
-        self.scaled_img = action_img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
+        self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
         self.center_point()
+        self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
         self.update()
 
     def mouseMoveEvent(self, e):
@@ -77,7 +88,7 @@ class BaseImgFrame(QLabel):
 
         img_pixel_x, img_pixel_y, qcolor = self.widget_coor_to_img_coor(self.cursor_in_widget)
         if img_pixel_x is not None:  # 实时显示坐标，像素值
-            signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
+            self.signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
 
         self.move_pix_img()
 
@@ -87,6 +98,8 @@ class BaseImgFrame(QLabel):
         if e.button() == Qt.LeftButton:
             self.LeftClick = True
             self.start_pos = e.position()
+        elif e.button() == Qt.RightButton:
+            self.mouse_event_pos = e.position()
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton:
@@ -100,30 +113,15 @@ class BaseImgFrame(QLabel):
         self.painter.end()
 
     def wheelEvent(self, e):
-        ex, ey = e.position().x(), e.position().y()
-        img_w, img_h = self.scaled_img.width(), self.scaled_img.height()
         scale_ratio = 0.95
-        old_x, old_y = self.img_tl.x(), self.img_tl.y()
-        cur_center_x, cur_center_y = old_x + img_w / 2, old_y + img_h / 2
-        offset_x, offset_y = (ex - cur_center_x) / img_w, (ey - cur_center_y) / img_h
-
-        action_img = self.img
         if e.angleDelta().y() < 0:  # 缩小
-            self.scaled_img = action_img.scaled(int(img_w * scale_ratio), int(img_h * scale_ratio),
-                                                Qt.KeepAspectRatio, self.interpolation)
+            pass
         elif e.angleDelta().y() > 0:  # 放大
-            self.scaled_img = action_img.scaled(int(img_w * (1 / scale_ratio)), int(img_h * (1 / scale_ratio)),
-                                                Qt.KeepAspectRatio, self.interpolation)
+            scale_ratio = 1 / scale_ratio
 
-        new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
+        self.scale_img(e.position(), scale_ratio)
 
-        new_img_x = (1 / 2 + offset_x) * (img_w - new_img_w) + old_x
-        new_img_y = (1 / 2 + offset_y) * (img_h - new_img_h) + old_y
-        self.img_tl = QPointF(new_img_x, new_img_y)
-
-        self.update()
-
-    def center_point(self):  # 图片居中显示
+    def center_point(self):  # 计算图片居中显示时的图片左上角坐标
         new_x = (self.size().width() - self.scaled_img.width()) / 2
         new_y = (self.size().height() - self.scaled_img.height()) / 2
         self.img_tl = QPointF(new_x, new_y)  # 图片的坐上角在控件坐标系的坐标
@@ -151,10 +149,16 @@ class BaseImgFrame(QLabel):
             self.start_pos = self.cursor_in_widget
         self.update()
 
-    def paint_img(self, img_path_or_pix_map, re_center=True):
+    def ori_img_size(self) -> tuple:
+        return self.img.size().toTuple()
+
+    def paint_img(self, img_path_or_pix_map, img_path='', re_center=True, img_info_update=True):
         if img_path_or_pix_map is None:  # 有时候是None，原因未知
             return
+        if img_info_update:
+            assert img_path, 'img_path is None.'
 
+        self.img_path = img_path
         self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图，
         # if self.img.isNull():  # 如果图片太大，QPixmap或QImage会打不开，用QImageReader
         #     QImageReader.setAllocationLimit(256)
@@ -170,10 +174,37 @@ class BaseImgFrame(QLabel):
                 self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             else:
                 self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)
+
             self.center_point()
         else:
             self.scaled_img = self.img.scaled(self.scaled_img.size(), Qt.KeepAspectRatio, self.interpolation)
 
+        self.update()
+
+        if img_info_update and 'images/bg.png' not in img_path:
+            self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
+            self.signal_img_time2ui.send(self.img_path)
+
+    def scale_img(self, mouse_event_pos, scale_ratio):
+        ex, ey = mouse_event_pos.x(), mouse_event_pos.y()
+        old_img_w, old_img_h = self.scaled_img.width(), self.scaled_img.height()
+        old_x, old_y = self.img_tl.x(), self.img_tl.y()
+        cur_center_x, cur_center_y = old_x + old_img_w / 2, old_y + old_img_h / 2
+        offset_x, offset_y = (ex - cur_center_x) / old_img_w, (ey - cur_center_y) / old_img_h
+
+        if scale_ratio == 1:
+            self.scaled_img = self.img
+        else:
+            self.scaled_img = self.img.scaled(int(old_img_w * scale_ratio), int(old_img_h * scale_ratio),
+                                              Qt.KeepAspectRatio, self.interpolation)
+
+        new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
+
+        new_img_x = (1 / 2 + offset_x) * (old_img_w - new_img_w) + old_x
+        new_img_y = (1 / 2 + offset_y) * (old_img_h - new_img_h) + old_y
+        self.img_tl = QPointF(new_img_x, new_img_y)
+
+        self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
         self.update()
 
     def set_interpolation(self, mode):
@@ -197,6 +228,9 @@ class BaseImgFrame(QLabel):
 
     def show_menu(self):  # 在鼠标位置显示菜单
         self.img_menu.exec(QCursor.pos())
+
+    def to_100_size(self):
+        self.scale_img(self.mouse_event_pos, 1)
 
     def widget_coor_to_img_coor(self, rel_pos: QPointF):
         # 获取鼠标位置在图片坐标系内的坐标, 输入为控件坐标系的坐标
@@ -231,6 +265,45 @@ class BaseImgFrame(QLabel):
             return widget_points
         else:
             return None
+
+
+class BaseImgWindow(QMainWindow):
+    def __init__(self, parent=None, title='base_frame'):
+        super().__init__(parent)
+        loader = QUiLoader()
+        loader.registerCustomWidget(BaseImgFrame)  # 先注册控件再加载ui文件
+        self.ui = loader.load('ui_files/base_img_window.ui')
+        self.setCentralWidget(self.ui)
+        self.setWindowTitle(title)
+
+        width = self.ui.img_area.width()  # 确保img_area能以512*512的大小展示，否则影响其坐标计算等
+        height = self.ui.img_area.height() + self.ui.label_xyrgb.height() + 6 + 4  # 6是layout spacing, 4是测出来的误差
+        self.resize(width, height)
+
+        self.ui.img_area.signal_xy_color2ui.signal.connect(self.img_xy_color_update)
+        self.ui.img_area.signal_img_time2ui.signal.connect(self.img_time_info_update)
+        self.ui.img_area.signal_img_size2ui.signal.connect(self.img_size_info_update)
+
+    def paint_img(self, img_path_or_pix_map, img_path, re_center=True, img_info_update=True):
+        self.ui.img_area.paint_img(img_path_or_pix_map, img_path, re_center, img_info_update)
+
+    def img_size_info_update(self, wh: tuple):
+        ori_w, ori_h = self.ui.img_area.ori_img_size()
+        text = self.tr(f'宽: {ori_w}, 高: {ori_h}')
+        scale = int(round(wh[0] / ori_w * 100))
+        text += f' ({wh[0]}, {wh[1]}, {scale}%)'
+        self.ui.label_size_info.setText(text)
+
+    def img_time_info_update(self, img_path):
+        c_time, m_time = get_file_cmtime(img_path)
+        self.ui.label_time_info.setText(self.tr(f'创建: {c_time}, 修改: {m_time}'))
+
+    def img_xy_color_update(self, info):
+        x, y, r, g, b = info
+        self.ui.label_xyrgb.setText(f'X: {x}, Y: {y} <br>'  # &nbsp; 加入空格
+                                    f'<font color=red> R: {r}, </font>'
+                                    f'<font color=green> G: {g}, </font>'
+                                    f'<font color=blue> B: {b} </font>')
 
 
 class CenterImg(BaseImgFrame):
@@ -348,6 +421,9 @@ class CenterImg(BaseImgFrame):
                 scale_factor = (self.scaled_img.width() / old_img_w, self.scaled_img.height() / old_img_h)
                 self.center_point()
                 self.shape_scale_move(old_img_tl, scale_factor)
+                if not show_bg:
+                    self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
+
                 self.update()
 
     def mouseMoveEvent(self, e):
@@ -359,7 +435,7 @@ class CenterImg(BaseImgFrame):
         else:
             img_pixel_x, img_pixel_y, qcolor = self.widget_coor_to_img_coor(self.cursor_in_widget)
             if img_pixel_x is not None:  # 实时显示坐标，像素值
-                signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
+                self.signal_xy_color2ui.send([img_pixel_x, img_pixel_y, qcolor.red(), qcolor.green(), qcolor.blue()])
 
             if self.AnnMode:
                 if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -372,7 +448,7 @@ class CenterImg(BaseImgFrame):
                 if QApplication.keyboardModifiers() == Qt.ControlModifier:
                     # if self.DetMode or self.SegMode:
                     #     self.update()
-                    if len(self.img_points):
+                    if self.shape_type in INS_shape_type('像素') and len(self.img_points):
                         self.add_widget_img_pair(self.cursor_in_widget)  # 添加像素点坐标
                 else:
                     if self.ShapeEditMode:
@@ -423,6 +499,8 @@ class CenterImg(BaseImgFrame):
                 if e.button() == Qt.LeftButton:
                     self.LeftClick = True
                     self.start_pos = e.position()
+                elif e.button() == Qt.RightButton:
+                    self.mouse_event_pos = e.position()
 
     def mouseReleaseEvent(self, e):
         if self.bm_start is not None:
@@ -502,7 +580,7 @@ class CenterImg(BaseImgFrame):
                         elif self.shape_type in INS_shape_type('椭圆形'):
                             self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
 
-                elif self.shape_type in INS_shape_type(['多边形', '带孔']):
+                elif self.shape_type in INS_shape_type(['多边形', '组合']):
                     if len(self.widget_points) >= 2:  # 画已完成的完整线段
                         for i in range(len(self.widget_points) - 1):
                             self.painter.drawLine(self.widget_points[i], self.widget_points[i + 1])
@@ -520,38 +598,6 @@ class CenterImg(BaseImgFrame):
 
         self.painter.end()
 
-    def wheelEvent(self, e):
-        if self.editing_shape_i is None:
-            ex, ey = e.position().x(), e.position().y()
-            img_w, img_h = self.scaled_img.width(), self.scaled_img.height()
-            scale_ratio = 0.95
-            old_x, old_y = self.img_tl.x(), self.img_tl.y()
-            cur_center_x, cur_center_y = old_x + img_w / 2, old_y + img_h / 2
-            offset_x, offset_y = (ex - cur_center_x) / img_w, (ey - cur_center_y) / img_h
-
-            if self.AnnMode and self.scaled_img_painted is not None:
-                action_img = self.scaled_img_painted
-            else:
-                action_img = self.img
-
-            if e.angleDelta().y() < 0:  # 缩小
-                self.scaled_img = action_img.scaled(int(img_w * scale_ratio), int(img_h * scale_ratio),
-                                                    Qt.KeepAspectRatio, self.interpolation)
-            elif e.angleDelta().y() > 0:  # 放大
-                self.scaled_img = action_img.scaled(int(img_w * (1 / scale_ratio)), int(img_h * (1 / scale_ratio)),
-                                                    Qt.KeepAspectRatio, self.interpolation)
-
-            new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
-
-            new_img_x = (1 / 2 + offset_x) * (img_w - new_img_w) + old_x
-            new_img_y = (1 / 2 + offset_y) * (img_h - new_img_h) + old_y
-            self.img_tl = QPointF(new_img_x, new_img_y)
-
-            scale_factor = (new_img_w / img_w, new_img_h / img_h)
-            self.shape_scale_move(QPointF(old_x, old_y), scale_factor)
-
-        self.update()
-
     def add_widget_img_pair(self, qpointf):
         img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(qpointf)
 
@@ -565,6 +611,8 @@ class CenterImg(BaseImgFrame):
                 if img_p not in self.img_points:
                     self.img_points.append(img_p)
                     self.widget_points.append(self.img_coor_to_widget_coor(img_p))  # todo： 是否可以直接加入qpointf
+            elif self.shape_type in INS_shape_type(['组合']):
+                pass
 
             self.update()
 
@@ -690,7 +738,7 @@ class CenterImg(BaseImgFrame):
             return
 
         # 处理widget_points
-        if polygon['shape_type'] in INS_shape_type('带孔'):
+        if polygon['shape_type'] in INS_shape_type('组合'):
             new_x, new_y = (polygon['widget_points'][j][k] + offset).toTuple()
             new_x, new_y = min(max(new_x, b_left), b_right), min(max(new_y, b_up), b_down)
 
@@ -737,7 +785,7 @@ class CenterImg(BaseImgFrame):
                 x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][k])
                 if x is not None:
                     polygon['img_points'][k] = (x, y)
-        elif polygon['shape_type'] in INS_shape_type('带孔'):
+        elif polygon['shape_type'] in INS_shape_type('组合'):
             x, y, _ = self.widget_coor_to_img_coor(polygon['widget_points'][j][k])
             if x is not None:
                 polygon['img_points'][j][k] = (x, y)
@@ -750,7 +798,7 @@ class CenterImg(BaseImgFrame):
         corner_index = None
 
         for i, polygon in enumerate(self.__all_shapes):
-            if polygon['shape_type'] in INS_shape_type('带孔'):
+            if polygon['shape_type'] in INS_shape_type('组合'):
                 for j, huan in enumerate(polygon['widget_points']):
                     for k, point in enumerate(huan):
                         if self.close_to_corner(point):
@@ -796,7 +844,7 @@ class CenterImg(BaseImgFrame):
                 self.painter.drawPolygon(editing_poly['widget_points'])
             elif st in INS_shape_type('像素'):
                 self.fill_img_pixel(editing_poly['img_points'], QColor(0, 255, 0, 150))
-            elif st in INS_shape_type('带孔'):
+            elif st in INS_shape_type('组合'):
                 polygon1 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][0]])
                 polygon2 = QPolygon([aa.toPoint() for aa in editing_poly['widget_points'][1]])
                 self.r1, self.r2 = QRegion(polygon1), QRegion(polygon2)
@@ -825,13 +873,13 @@ class CenterImg(BaseImgFrame):
 
             elif st in INS_shape_type('像素'):
                 self.fill_img_pixel(one['img_points'], QColor(one['qcolor']))
-            elif st in INS_shape_type('带孔'):
+            elif st in INS_shape_type('组合'):
                 for one_p in one['widget_points']:
                     self.painter.drawPolygon(one_p)
             elif st in INS_shape_type('组合'):
                 pass
 
-        if self.shape_type in INS_shape_type('带孔') and len(self.widget_points_huan):
+        if self.shape_type in INS_shape_type('组合') and len(self.widget_points_huan):
             self.painter.drawPolygon(self.widget_points_huan[0])
 
     def draw_selected_shape(self, i):
@@ -885,7 +933,7 @@ class CenterImg(BaseImgFrame):
             point = self.cursor_in_widget.toTuple()
             st = one['shape_type']
 
-            if st in INS_shape_type('带孔'):
+            if st in INS_shape_type('组合'):
                 wp1 = [aa.toTuple() for aa in one['widget_points'][0]]
                 wp2 = [aa.toTuple() for aa in one['widget_points'][1]]
                 shape_points = [wp1, wp2]
@@ -916,7 +964,7 @@ class CenterImg(BaseImgFrame):
 
         if len(json_polygons):
             for one in json_polygons:
-                if one['shape_type'] in INS_shape_type('带孔'):
+                if one['shape_type'] in INS_shape_type('组合'):
                     out_c, in_c = one['widget_points'][0], one['widget_points'][1]
                     widget_points = [[aa.toTuple() for aa in out_c], [aa.toTuple() for aa in in_c]]
                 else:
@@ -925,9 +973,6 @@ class CenterImg(BaseImgFrame):
                 one['widget_points'] = widget_points
 
         return json_polygons
-
-    def img_size(self):
-        return self.img.size().toTuple()
 
     def prepare_polygons(self, polygons, ori_h, ori_w):
         img_h, img_w = self.img.size().height(), self.img.size().width()
@@ -942,7 +987,7 @@ class CenterImg(BaseImgFrame):
 
         if img_w2real_w is not None:
             for one in polygons:
-                if one['shape_type'] in INS_shape_type('带孔'):
+                if one['shape_type'] in INS_shape_type('组合'):
                     p1 = self.img_coor_to_widget_coor(one['img_points'][0])
                     p2 = self.img_coor_to_widget_coor(one['img_points'][1])
                     ps = [p1, p2]
@@ -1016,7 +1061,7 @@ class CenterImg(BaseImgFrame):
             offset = self.cursor_in_widget - self.start_pos
 
         if offset is not None:
-            if st in INS_shape_type('带孔'):
+            if st in INS_shape_type('组合'):
                 for i, one_wp in enumerate(widget_points):
                     for j, one_point in enumerate(one_wp):
                         one_point += offset
@@ -1044,24 +1089,6 @@ class CenterImg(BaseImgFrame):
     def move_to_new_folder():
         signal_move2new_folder.send(True)
 
-    def one_polygon_done(self, qcolor, category):
-        if self.FlagDrawCollection:
-            st = self.FlagDrawCollection
-            self.FlagDrawCollection = False
-        else:
-            st = self.shape_type
-
-        if st in INS_shape_type('带孔'):
-            self.__all_shapes.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
-                                        'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
-            self.clear_widget_img_points_huan()
-        else:
-            self.__all_shapes.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
-                                        'widget_points': self.widget_points, 'img_points': self.img_points})
-            self.clear_widget_img_points()
-
-        self.update()
-
     def redo(self):
         pass
 
@@ -1073,6 +1100,55 @@ class CenterImg(BaseImgFrame):
 
     def reset_cursor(self):
         self.cursor_in_widget = QPointF(-10, -10)
+
+    def save_one_polygon(self, category, qcolor):
+        if self.FlagDrawCollection:
+            st = self.FlagDrawCollection
+            self.FlagDrawCollection = False
+        else:
+            st = self.shape_type
+
+        if st in INS_shape_type('组合'):
+            self.__all_shapes.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
+                                      'widget_points': self.widget_points_huan, 'img_points': self.img_points_huan})
+            self.clear_widget_img_points_huan()
+        else:
+            self.__all_shapes.append({'category': category, 'qcolor': qcolor, 'shape_type': st,
+                                      'widget_points': self.widget_points, 'img_points': self.img_points})
+            self.clear_widget_img_points()
+
+        self.update()
+
+    def scale_img(self, mouse_event_pos, scale_ratio):
+        if self.editing_shape_i is None:
+            ex, ey = mouse_event_pos.x(), mouse_event_pos.y()
+            old_img_w, old_img_h = self.scaled_img.width(), self.scaled_img.height()
+            old_x, old_y = self.img_tl.x(), self.img_tl.y()
+            cur_center_x, cur_center_y = old_x + old_img_w / 2, old_y + old_img_h / 2
+            offset_x, offset_y = (ex - cur_center_x) / old_img_w, (ey - cur_center_y) / old_img_h
+
+            if self.AnnMode and self.scaled_img_painted is not None:
+                action_img = self.scaled_img_painted
+            else:
+                action_img = self.img
+
+            if scale_ratio == 1:
+                self.scaled_img = action_img
+            else:
+                self.scaled_img = action_img.scaled(int(old_img_w * scale_ratio), int(old_img_h * scale_ratio),
+                                                    Qt.KeepAspectRatio, self.interpolation)
+
+            new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
+
+            new_img_x = (1 / 2 + offset_x) * (old_img_w - new_img_w) + old_x
+            new_img_y = (1 / 2 + offset_y) * (old_img_h - new_img_h) + old_y
+            self.img_tl = QPointF(new_img_x, new_img_y)
+
+            scale_factor = (new_img_w / old_img_w, new_img_h / old_img_h)
+            self.shape_scale_move(QPointF(old_x, old_y), scale_factor)
+            self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
+
+        self.update()
 
     def select_collection_ok(self, text):
         def compute_new_points(points, add_offset=QPointF(0, 0)):
@@ -1096,7 +1172,7 @@ class CenterImg(BaseImgFrame):
             polygon = self.collected_shapes[text].copy()
             st = polygon['shape_type']
             self.FlagDrawCollection = st
-            if st in INS_shape_type('带孔'):
+            if st in INS_shape_type('组合'):
                 self.widget_points_huan, self.img_points_huan = [], []
                 widget_points_out, img_points_out = compute_new_points(polygon['widget_points'][0])
                 self.widget_points_huan.append(widget_points_out)
@@ -1159,7 +1235,7 @@ class CenterImg(BaseImgFrame):
             self.clear_scaled_img(to_undo=False)
 
     def shape_done_open_label_window(self):  # 一个标注完成，打开类别列表窗口
-        if self.shape_type in INS_shape_type('带孔'):
+        if self.shape_type in INS_shape_type('组合'):
             self.widget_points_huan.append(self.widget_points.copy())
             self.img_points_huan.append(self.img_points.copy())
             if len(self.widget_points_huan) < 2:
@@ -1178,7 +1254,7 @@ class CenterImg(BaseImgFrame):
 
     def shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):  # 已标注图形的伸缩
         for one in self.__all_shapes:
-            if one['shape_type'] in INS_shape_type('带孔'):
+            if one['shape_type'] in INS_shape_type('组合'):
                 wp1 = self.shape_scale_convert(one['widget_points'][0], old_img_tl, scale_factor)
                 wp2 = self.shape_scale_convert(one['widget_points'][1], old_img_tl, scale_factor)
                 one['widget_points'] = [wp1, wp2]
@@ -1212,11 +1288,10 @@ class CenterImgView(QGraphicsView):  # 用于实现书签功能
     def __init__(self, parent=None):
         super().__init__(parent)
         self.img_area = CenterImg(self)
-        self.img_area.paint_img('images/bg.png')
-
+        self.img_area.paint_img('images/bg.png', img_path='images/bg.png')
         self.scene = QGraphicsScene(self)
         self.bookmark = QGraphicsPixmapItem()
-        self.bookmark.setPixmap(QPixmap('images/bookmark/bookmark_red.png').scaled(48, 48))
+        self.bookmark.setPixmap(QPixmap('images/bookmark/bookmark_red.png').scaled(40, 40))
         self.bookmark.setFlags(QGraphicsItem.ItemIsMovable)
         self.bookmark.setPos(0, -5)
         self.bookmark.setVisible(False)

@@ -1489,7 +1489,7 @@ QCheckBox::indicator:unchecked {
            </font>
           </property>
           <property name="text">
-           <string>H: , W: </string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -4069,8 +4069,8 @@ QRadioButton::indicator:unchecked {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_3"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>

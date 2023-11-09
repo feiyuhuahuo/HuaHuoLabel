@@ -50,6 +50,17 @@ class ListSignal(QObject):
         self.signal.emit(info)
 
 
+class TupleSignal(QObject):
+    signal = Signal(tuple)
+
+    def __init__(self, name=None):
+        super().__init__()
+        self.name = name
+
+    def send(self, info):
+        self.signal.emit(info)
+
+
 class ErrorSignal(QObject):
     signal = Signal(str)
 

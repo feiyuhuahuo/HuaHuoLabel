@@ -5,7 +5,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor
 from PySide6.QtWidgets import QPushButton, QApplication, QWidget, QListWidget, QListWidgetItem, QSizePolicy, \
     QVBoxLayout, QSpacerItem, QCheckBox
-# from need.utils import palette
 from need.custom_signals import IntSignal, BoolSignal
 from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
 from need.functions import get_HHL_parent
@@ -36,7 +35,7 @@ class ObjList(QWidget):
                                         'padding: 1px;}'
                                         'QPushButton:hover {background-color:  rgb(190, 210, 225);}'
                                         'QPushButton:pressed { background-color:  rgb(180, 200, 210);}')
-        self.title_button.clicked.connect(self.fold_list)
+        self.title_button.clicked.connect(self.__fold_list)
 
         self.edit_button = QCheckBox(self)
         self.edit_button.move(78, -5)
@@ -51,43 +50,43 @@ class ObjList(QWidget):
         self.obj_list.setFont(font)
         self.obj_list.setStyleSheet(
             """
-    QListWidget {
-        background-color: rgb(255, 255, 255);
-        alternate-background-color: rgb(242, 242, 242);
-        border: 1px solid rgb(180, 180, 180);
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        outline: none;
-    }
-    
-    QListWidget::item:selected {
-        background-color: rgb(0, 120, 215);
-        color: rgb(255, 255, 255);
-    }
-    
-    QListWidget::item:hover {
-        background-color: rgba(0, 0, 0, 10%);
-        color: rgb(0, 0, 0);
-    }
-    
-    QListWidget::item:disabled {
-        color: rgb(170, 170, 170);
-    }
-    
-    QListWidget::item:selected:!active {
-        background-color: rgb(0, 99, 177);
-        color: rgb(255, 255, 255);
-    }
-    
-    QListWidget::item:selected:active {
-        background-color: rgb(0, 120, 215);
-        color: rgb(255, 255, 255);
-    }
-    
-    QListWidget::item:selected:disabled {
-        background-color: rgba(0, 0, 0, 10%);
-        color: rgb(170, 170, 170);
-    }
+                QListWidget {
+                    background-color: rgb(255, 255, 255);
+                    alternate-background-color: rgb(242, 242, 242);
+                    border: 1px solid rgb(180, 180, 180);
+                    border-bottom-left-radius: 8px;
+                    border-bottom-right-radius: 8px;
+                    outline: none;
+                }
+                
+                QListWidget::item:selected {
+                    background-color: rgb(0, 120, 215);
+                    color: rgb(255, 255, 255);
+                }
+                
+                QListWidget::item:hover {
+                    background-color: rgba(0, 0, 0, 10%);
+                    color: rgb(0, 0, 0);
+                }
+                
+                QListWidget::item:disabled {
+                    color: rgb(170, 170, 170);
+                }
+                
+                QListWidget::item:selected:!active {
+                    background-color: rgb(0, 99, 177);
+                    color: rgb(255, 255, 255);
+                }
+                
+                QListWidget::item:selected:active {
+                    background-color: rgb(0, 120, 215);
+                    color: rgb(255, 255, 255);
+                }
+                
+                QListWidget::item:selected:disabled {
+                    background-color: rgba(0, 0, 0, 10%);
+                    color: rgb(170, 170, 170);
+                }
             """)
 
         self.icon_look = QIcon('images/look/look2.png')
@@ -105,8 +104,13 @@ class ObjList(QWidget):
         layout.addWidget(self.obj_list)
         self.setLayout(layout)
 
+    def wheelEvent(self, event):
+        if self.edit_button.isEnabled():
+            self.edit_button.setChecked(event.angleDelta().y() < 0)
 
-    def add_item(self, item: QListWidgetItem):
+    def add_item(self, text, color):
+        item = QListWidgetItem(text)
+        item.setForeground(QColor(color))
         self.obj_list.addItem(item)
         self.update_list_num()
 
@@ -118,27 +122,19 @@ class ObjList(QWidget):
         self.obj_list.takeItem(row)
         self.update_list_num()
 
-    def fold_list(self):
+    def __fold_list(self):
         self.obj_list.setVisible(not self.obj_list.isVisible())
         self.resize(self.sizeHint())
         if self.obj_list.isVisible():
-            self.parent().layout().setStretch(3, 20)
-            self.parent().layout().setStretch(6, 1)
+            self.parent().layout().setStretch(1, 20)
+            self.parent().layout().setStretch(2, 1)
         else:
-            self.parent().layout().setStretch(3, 1)
-            self.parent().layout().setStretch(6, 20)
+            self.parent().layout().setStretch(1, 1)
+            self.parent().layout().setStretch(2, 20)
 
     def modify_cur_c(self, new_c: str):
         item = self.obj_list.currentItem()
         item.setText(new_c)
-
-    @staticmethod
-    def new_class_item(new_c: str, color: str = 'none'):
-        item = QListWidgetItem(new_c)
-        if color == 'none':
-            color = palette.get_color()
-        item.setForeground(QColor(color))
-        return item, color
 
     def set_look(self, item: QListWidgetItem):
         item.setIcon(self.icon_look)

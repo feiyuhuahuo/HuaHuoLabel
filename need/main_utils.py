@@ -27,7 +27,7 @@ def connect_all_other_signals(main_window):
 
     main_window.ui.lineEdit_search.search_btn.clicked.connect(main_window.img_search)
 
-    # main_window.ui.shape_list.itemSelectionChanged.connect(main_window.set_info_widget_selected)
+    # main_window.ui.obj_list.itemSelectionChanged.connect(main_window.set_info_widget_selected)
 
     main_window.ui.pushButton_35.clicked.connect(main_window.ui.graphicsView.img_area.undo)
     main_window.ui.pushButton_36.clicked.connect(main_window.save_ann_img)
@@ -70,9 +70,7 @@ def connect_all_other_signals(main_window):
     main_window.ui.scan_buttons.pushButton_last.clicked.connect(lambda: main_window.scan_img(last=True))
     main_window.ui.scan_buttons.pushButton_next.clicked.connect(lambda: main_window.scan_img(next=True))
     main_window.ui.obj_list.edit_button.toggled.connect(main_window.set_shape_edit_mode)
-    # main_window.ui.pushButton_pin.clicked.connect(main_window.pin_unpin_image)
     # main_window.ui.pushButton_bg.pressed.connect(main_window.set_semantic_bg_when_press)
-    # main_window.ui.pushButton_cls_back.clicked.connect(main_window.cls_back)
 
     # main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
@@ -81,8 +79,6 @@ def connect_all_other_signals(main_window):
     # main_window.ui.spinBox.valueChanged.connect(main_window.change_pen_size)
     # main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
     # main_window.ui.spinBox_6.valueChanged.connect(main_window.change_pen_size)
-
-    # main_window.ui.tabWidget.currentChanged.connect(main_window.set_work_mode)
 
     main_window.ui.toolBox.currentChanged.connect(main_window.set_tool_mode)
 
@@ -98,23 +94,23 @@ def connect_all_other_signals(main_window):
     signal_show_label_img.signal.connect(main_window.flow_show)
     signal_show_plain_img.signal.connect(main_window.flow_show)
     signal_stat_info.signal.connect(main_window.show_class_statistic_done)
-    signal_xy_color2ui.signal.connect(main_window.show_xy_color)
     signal_request_imgs.signal.connect(main_window.send_auto_infer_imgs)
     signal_update_button_num.signal.connect(main_window.update_button_num)
 
 
 def init_menu(main_win):
     # main_win.menu_seg_annotation = QMenu(title='label_list_menu', parent=main_win)
-    # main_win.ui.shape_list.customContextMenuRequested.connect(
+    # main_win.ui.obj_list.customContextMenuRequested.connect(
     #     lambda: main_win.show_menu(main_win.menu_seg_annotation))
     # main_win.action_modify_one_shape_class = QAction(main_win.tr('修改类别'), main_win)
-    # main_win.action_modify_one_shape_class.triggered.connect(main_win.modify_shape_list_start)
+    # main_win.action_modify_one_shape_class.triggered.connect(main_win.modify_obj_list_start)
     # main_win.action_delete_one_shape = QAction(main_win.tr('删除标注'), main_win)
     # main_win.action_delete_one_shape.triggered.connect(lambda: main_win.del_all_shapes(False))
     # main_win.action_delete_all = QAction(main_win.tr('全部删除'), main_win)
     # main_win.action_delete_all.triggered.connect(lambda: main_win.del_all_shapes(True))
     # main_win.action_lock_shape = QAction(main_win.tr('锁定标注'), main_win)
     # main_win.action_lock_shape.triggered.connect(main_win.lock_shape)
+
     # main_win.menu_seg_annotation.addAction(main_win.action_modify_one_shape_class)
     # main_win.menu_seg_annotation.addAction(main_win.action_delete_one_shape)
     # main_win.menu_seg_annotation.addAction(main_win.action_delete_all)
@@ -137,13 +133,45 @@ def init_custom_widgets(main_window):
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
     main_window.widget_read_edit = ReadEditInfo()
+    main_window.dialog_tracked_files = None
+    main_window.dialog_version_change = None
+    main_window.window_new_img = None
+    main_window.window_flow_img = None
+    main_window.window_flow_label = None
+    # self.window_auto_infer_progress = None
+    # self.window_class_stat = None
+    # self.window_usp_progress = None
+    # self.window_auto_infer = None
+
+    main_window.ui.graphicsView.img_area.signal_xy_color2ui.signal.connect(main_window.img_xy_color_update)
+    main_window.ui.graphicsView.img_area.signal_img_time2ui.signal.connect(main_window.img_time_info_update)
+    main_window.ui.graphicsView.img_area.signal_img_size2ui.signal.connect(main_window.img_size_info_update)
+
     main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)
     main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
     main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)
 
 
+def close_sub_windows(main_window):
+    if main_window.window_build_task:
+        main_window.window_build_task.close()
+    if main_window.window_new_img:
+        main_window.window_new_img.close()
+    if main_window.window_flow_img:
+        main_window.window_flow_img.close()
+    if main_window.window_flow_label:
+        main_window.window_flow_label.close()
+    # if main_window.window_class_stat:
+    #     main_window.window_class_stat.close()
+    # if main_window.window_usp_progress:
+    #     main_window.window_usp_progress.close()
+    # if main_window.window_auto_infer:
+    #     main_window.window_auto_infer.close()
+    # if main_window.window_auto_infer_progress:
+    #     main_window.window_auto_infer_progress.close()
+
+
 def register_custom_widgets(loader):
-    loader.registerCustomWidget(ButtonWithHoverWindow)
     loader.registerCustomWidget(BaseButtonGroup)
     loader.registerCustomWidget(CenterImgView)
     loader.registerCustomWidget(LabelTrainVal)

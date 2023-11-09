@@ -57,6 +57,8 @@ def get_file_cmtime(path):
     c_time, m_time = c_time.split(' '), m_time.split(' ')
     c_time = f'{c_time[0][2:]} {c_time[1][:2]}h'
     m_time = f'{m_time[0][2:]} {m_time[1][:2]}h'
+    c_time = c_time.replace('-', '.')
+    m_time = m_time.replace('-', '.')
     return c_time, m_time
 
 
