@@ -19,6 +19,7 @@ class ImgLabel(QLabel):
         self.img_path = img_path
         self.fixed_size = 150
         self.setMargin(2)  # 往内缩进2
+        self.setAlignment(Qt.AlignCenter)
         self.IsDeleted = False
         self.set_stat(stat)
 
@@ -76,7 +77,7 @@ class ImgsFlow(QListWidget):
         self.img_i += 1
 
     def clear(self):
-        while self.count() > 1:
+        while self.count() > 0:
             self.takeItem(0)
 
         self.img_i = -1
@@ -91,7 +92,6 @@ class ImgsFlow(QListWidget):
                 item, img_label = self.new_img_item(img_path)
                 self.insertItem(0, item)
                 self.setItemWidget(item, img_label)
-                # self.scrollToItem(item)
         elif right:
             if self.img_i < self.count() - 1:
                 self.img_i += 1

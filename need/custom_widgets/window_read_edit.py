@@ -11,6 +11,7 @@ class ReadEditInfo(QLabel):  # 淡入淡出的窗口不能设parent
         self.setWindowOpacity(0)
         self.setWindowFlag(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFocusPolicy(Qt.NoFocus)
         self.setPixmap(QPixmap('images/switch_to_read.png'))
         self.setScaledContents(True)
         self.resize(350, 81)

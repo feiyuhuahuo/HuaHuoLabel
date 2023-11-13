@@ -6,14 +6,14 @@ from copy import deepcopy
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel, QGraphicsView, \
     QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QGraphicsPixmapItem, QMainWindow
-from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QEvent
+from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QObject
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QRegion, QPolygon, QAction, \
-    QImageReader, QIcon
+    QImageReader, QIcon, QImage
 from need.algorithms import point_in_shape
 from need.utils import AnnUndo, INS_shape_type
 from need.custom_signals import *
-from need.custom_widgets import SelectItem, signal_select_window_close
-from need.functions import get_file_cmtime
+from need.custom_widgets import SelectItem, signal_select_window_close, CustomMessageBox
+from need.functions import get_file_cmtime, get_HHL_parent
 
 signal_check_draw_enable = BoolSignal()
 signal_del_shape = IntSignal()
@@ -38,6 +38,7 @@ class BaseImgFrame(QLabel):
         self.setWindowIcon(QIcon('images/icon.png'))
         self.setMouseTracking(True)
         self.resize(512, 512)
+
         self.img_menu = QMenu('img_menu', self)
         self.img_menu.setFixedWidth(135)
         self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
@@ -159,7 +160,7 @@ class BaseImgFrame(QLabel):
             assert img_path, 'img_path is None.'
 
         self.img_path = img_path
-        self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图，
+        self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图
         # if self.img.isNull():  # 如果图片太大，QPixmap或QImage会打不开，用QImageReader
         #     QImageReader.setAllocationLimit(256)
         #     img = QImageReader(img_path_or_pix_map)
@@ -184,6 +185,10 @@ class BaseImgFrame(QLabel):
         if img_info_update and 'images/bg.png' not in img_path:
             self.signal_img_size2ui.send(self.scaled_img.size().toTuple())
             self.signal_img_time2ui.send(self.img_path)
+
+        width, height = self.img.size().toTuple()
+        # if width * height > 64000000:
+        #     INS_large_img_warn.show(self.tr('图片过大，请留意程序的内存占用'))
 
     def scale_img(self, mouse_event_pos, scale_ratio):
         ex, ey = mouse_event_pos.x(), mouse_event_pos.y()
@@ -275,6 +280,7 @@ class BaseImgWindow(QMainWindow):
         self.ui = loader.load('ui_files/base_img_window.ui')
         self.setCentralWidget(self.ui)
         self.setWindowTitle(title)
+        self.setWindowIcon(QIcon('images/icon.png'))
 
         width = self.ui.img_area.width()  # 确保img_area能以512*512的大小展示，否则影响其坐标计算等
         height = self.ui.img_area.height() + self.ui.label_xyrgb.height() + 6 + 4  # 6是layout spacing, 4是测出来的误差
@@ -283,6 +289,11 @@ class BaseImgWindow(QMainWindow):
         self.ui.img_area.signal_xy_color2ui.signal.connect(self.img_xy_color_update)
         self.ui.img_area.signal_img_time2ui.signal.connect(self.img_time_info_update)
         self.ui.img_area.signal_img_size2ui.signal.connect(self.img_size_info_update)
+
+    def closeEvent(self, event):
+        self.deleteLater()
+        self.ui.deleteLater()
+        event.accept()
 
     def paint_img(self, img_path_or_pix_map, img_path, re_center=True, img_info_update=True):
         self.ui.img_area.paint_img(img_path_or_pix_map, img_path, re_center, img_info_update)
@@ -309,6 +320,7 @@ class BaseImgWindow(QMainWindow):
 class CenterImg(BaseImgFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAcceptDrops(True)
         self.collection_window = SelectItem(title=self.tr('收藏标注'), button_signal=signal_select_collection_ok)
 
         self.cross_color = QColor(190, 0, 0)
@@ -376,6 +388,18 @@ class CenterImg(BaseImgFrame):
         signal_shape_type.signal.connect(self.change_shape_type)
         signal_select_window_close.signal.connect(self.clear_widget_img_points)
         signal_select_collection_ok.signal.connect(self.select_collection_ok)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+            if file_path.split('.')[-1] in ('jpg', 'jpeg', 'png', 'bmp'):
+                get_HHL_parent(self).new_img_window(file_path)
 
     def keyPressEvent(self, event):
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -541,6 +565,9 @@ class CenterImg(BaseImgFrame):
         elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
             self.erase_paint_pixel(self.editing_shape_i)
             signal_shape_info_update.send(self.editing_shape_i)
+
+        # if self.editing_shape_i is None:
+        #     get_HHL_parent(self).setFocus()  # 点击图片区域后，focus在CenterImgView上，主界面就不响应事件
 
     def paintEvent(self, e):  # 程序调用show()和update()之后就会调用此函数
         self.painter.begin(self)

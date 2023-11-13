@@ -73,6 +73,7 @@ class SelectObjCate(SelectItem):
             if one_c in self.item_names:
                 item = self.ui.listWidget.item(self.item_names.index(one_c))
                 item.setForeground(QColor(color))
+                item.setSelected(False)
             else:
                 self.add_item(one_c, color)
 

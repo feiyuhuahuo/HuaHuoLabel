@@ -14,7 +14,7 @@ class ShapeCombo(QMainWindow):
         super().__init__(parent)
         self.ui = QUiLoader().load('ui_files/obj_op.ui')
         self.setCentralWidget(self.ui)
-        self.setWindowTitle(self.tr('高级形状'))
+        self.setWindowTitle(self.tr('组合形状'))
 
     def closeEvent(self, event):
         self.parent().shape_type_reset()

@@ -17,11 +17,9 @@ from need.algorithms import get_seg_mask
 from need.functions import *
 from need.utils import MonitorVariable, INS_all_classes
 
-signal_select_class_ok = ListSignal()
-signal_error2app = ErrorSignal()
-
 
 # noinspection PyUnresolvedReferences
+# !!!控件若是通过触发再初始化创建，要注意控件对象被释放后，内存是否还占用的问题，若控件一开始就先初始化好就可以避免这个问题!!!
 class HHL_MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -36,13 +34,16 @@ class HHL_MainWindow(QMainWindow):
         self.SeparateLabel = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
 
+        self.signal_error2app = ErrorSignal()
+        self.signal_select_class_ok = ListSignal()
+
         self.loader = QUiLoader()
         register_custom_widgets(self.loader)
         self.ui = self.loader.load('main_window.ui')  # 主界面
         self.setCentralWidget(self.ui)
 
         init_custom_widgets(self)
-        self.window_select_class = SelectObjCate(self, title=self.tr('类别'), button_signal=signal_select_class_ok)
+        self.window_select_cate = SelectObjCate(self, title=self.tr('类别'), button_signal=self.signal_select_class_ok)
 
         self.setWindowTitle(self.tr('花火标注'))
         self.setWindowIcon(QIcon('images/icon.png'))
@@ -63,14 +64,8 @@ class HHL_MainWindow(QMainWindow):
         init_menu(self)
         self.obj_info_show_set()
         self.set_action_disabled()
-        self.connect_signals()
+        connect_signals(self)
         self.log_info('Application opened.', mark_line=True)
-
-    def connect_signals(self):
-        connect_all_other_signals(self)
-        signal_select_class_ok.signal.connect(self.save_one_shape)
-        sys.stderr = signal_error2app
-        sys.stderr.signal.connect(self.log_sys_error)
 
     def closeEvent(self, e):
         close_sub_windows(self)
@@ -602,15 +597,12 @@ class HHL_MainWindow(QMainWindow):
 
             qimg_png = self.get_qimg_png(img_path)
             if qimg_png:
-                self.window_flow_label = BaseImgWindow(title=self.tr('标注图片'))
-                self.window_flow_label.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.window_flow_label.show()  # 先show()使主窗口失活，确保图片信息不干扰主窗口，参看img_time_info_update()
                 self.window_flow_label.paint_img(qimg_png, img_path)
+                self.window_flow_label.show()
+
         else:
-            self.window_flow_img = BaseImgWindow(title=self.tr('原始图片'))
-            self.window_flow_img.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.window_flow_img.show()
             self.window_flow_img.paint_img(QPixmap(img_path), img_path)
+            self.window_flow_img.show()
 
     def flow_stat(self, path):  # 获取某个子图的处理状态  #todo-------------
         stat = 'undo'
@@ -781,12 +773,12 @@ class HHL_MainWindow(QMainWindow):
 
     def graphics_reset(self):  # 清空所有任务相关的控件
         self.ui.obj_list.clear()
-        self.window_select_class.clear()
+        self.window_select_cate.clear()
         self.ui.graphicsView.img_area.clear_all_polygons()
         self.ui.graphicsView.img_area.collection_window.ui.listWidget.clear()
         self.ui.graphicsView.img_area.reset_cursor()
         self.ui.graphicsView.img_area.set_shape_locked(False)
-
+        self.ui.listWidget_imgs_flow.clear()
         self.ui.label_train.setText(' train: 0')
         self.ui.label_train.setStyleSheet('border-top-left-radius: 4px;'
                                           'border-bottom-left-radius: 4px;'
@@ -1123,7 +1115,7 @@ class HHL_MainWindow(QMainWindow):
             name = text
             item, color = self.ui.class_list.new_class_item(name)
             color = QColor(color)
-            self.window_select_class.add_item(item.clone())
+            self.window_select_cate.add_item(item.clone())
             self.ui.class_list.set_look(item)
             self.ui.class_list.add_item(item)
             self.sem_class_modified_tip()
@@ -1142,17 +1134,22 @@ class HHL_MainWindow(QMainWindow):
             info_item.setText(new_text)
             info_item.setForeground(color)
 
-        self.window_select_class.close()
+        self.window_select_cate.close()
         self.ui.setFocus()
 
     # done ----------------
-    def new_img_window(self):
-        path = self.file_select_dlg.getOpenFileName(self, self.tr('选择图片'),
-                                                    filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
+    def new_img_window(self, path=''):
+        if not path:
+            path = self.file_select_dlg.getOpenFileName(self, self.tr('选择图片'),
+                                                        filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
         if path:
-            self.window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
-            self.window_new_img.show()  # 先show()使主窗口失活，确保图片信息显示不干扰主窗口，参看img_time_info_update()
-            self.window_new_img.paint_img(get_rotated_qpixmap(path), path)
+            # self.window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
+            # self.window_new_img.show()  # 先show()使主窗口失活，确保图片信息显示不干扰主窗口，参看img_time_info_update()
+            # self.window_new_img.paint_img(get_rotated_qpixmap(path), path)
+            window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
+            window_new_img.setAttribute(Qt.WA_DeleteOnClose)
+            window_new_img.paint_img(get_rotated_qpixmap(path), path)
+            window_new_img.show()
 
     def obj_info_show_set(self):
         self.ui.listWidget_obj_info.setVisible(self.ui.checkBox_hide_obj_info.isChecked())
@@ -1211,7 +1208,7 @@ class HHL_MainWindow(QMainWindow):
             self.show_shape_info(one)
 
             if cate not in INS_all_classes.classes():
-                self.window_select_class.add_item(item.clone())
+                self.window_select_cate.add_item(item.clone())
                 self.ui.class_list.set_look(item)
                 self.ui.class_list.add_item(item)
                 self.sem_class_modified_tip()
@@ -1417,7 +1414,7 @@ class HHL_MainWindow(QMainWindow):
                 self.ui.graphicsView.img_area.save_one_polygon(obj_name, color)
                 # self.show_shape_info(self.ui.graphicsView.img_area.get_one_polygon(-1))
 
-            self.window_select_class.close()
+            self.window_select_cate.close()
 
     def scan_img(self, last=False, next=False, count=1, from_jump=False):
         scan_start = time.time()
@@ -1724,7 +1721,7 @@ class HHL_MainWindow(QMainWindow):
         self.ui.graphicsView.show_bookmark()
 
     def show_class_selection_list(self):
-        self.window_select_class.show_at(self.frameGeometry())
+        self.window_select_cate.show_at(self.frameGeometry())
 
     def show_class_statistic(self):
         self.thread_cs = ClassStatistics(self.WorkMode, self.img_num, INS_all_classes.classes(), self.OneFileLabel,
@@ -1866,8 +1863,7 @@ class HHL_MainWindow(QMainWindow):
             if not self.img_num:
                 return
 
-            self.ui.listWidget_imgs_flow.clear()
-            self.ui.listWidget_imgs_flow.add_img(self.imgs[self.__cur_i])  # 打开任务后显示第一个子图
+            self.ui.listWidget_imgs_flow.add_img(self.imgs[self.__cur_i])  # 打开任务后显示第一个流水子图
             self.show_img_status_info()
 
             self.set_tool_mode()

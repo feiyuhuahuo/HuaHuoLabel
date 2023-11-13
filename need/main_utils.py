@@ -1,15 +1,16 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
 import pdb
+import sys
 
 # 超过50行的规则、重复代码可放在这里，减轻main.py的代码行数
 from PySide6.QtWidgets import QMenu
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QIcon, Qt
 from need.custom_widgets import *
 from need.custom_threads import *
 
 
-def connect_all_other_signals(main_window):
+def connect_signals(main_window):
     main_window.ui.checkBox_hide_obj_info.toggled.connect(main_window.obj_info_show_set)
     main_window.ui.checkBox_hide_cross.clicked.connect(main_window.set_hide_cross)
     main_window.ui.checkBox_one_label.pressed.connect(main_window.raise_label_mode_conflict)
@@ -82,6 +83,13 @@ def connect_all_other_signals(main_window):
 
     main_window.ui.toolBox.currentChanged.connect(main_window.set_tool_mode)
 
+    main_window.signal_select_class_ok.signal.connect(main_window.save_one_shape)
+    main_window.ui.graphicsView.img_area.signal_xy_color2ui.signal.connect(main_window.img_xy_color_update)
+    main_window.ui.graphicsView.img_area.signal_img_time2ui.signal.connect(main_window.img_time_info_update)
+    main_window.ui.graphicsView.img_area.signal_img_size2ui.signal.connect(main_window.img_size_info_update)
+    sys.stderr = main_window.signal_error2app
+    sys.stderr.signal.connect(main_window.log_sys_error)
+
     signal_auto_save.signal.connect(main_window.auto_save)
     signal_check_draw_enable.signal.connect(lambda: main_window.check_warnings(['task', 'edit_mode', 'sem_bg']))
     signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
@@ -132,35 +140,31 @@ def init_custom_widgets(main_window):
     main_window.window_shape_combo = ShapeCombo(main_window)
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
+    main_window.window_large_img_warn = CustomMessageBox('information', main_window.tr('图片过大'))
     main_window.widget_read_edit = ReadEditInfo()
+    main_window.window_flow_label = BaseImgWindow(title=main_window.tr('标注图片'))
+    main_window.window_flow_label.setWindowFlags(Qt.WindowStaysOnTopHint)
+    main_window.window_flow_img = BaseImgWindow(title=main_window.tr('原始图片'))
+    main_window.window_flow_img.setWindowFlags(Qt.WindowStaysOnTopHint)
     main_window.dialog_tracked_files = None
     main_window.dialog_version_change = None
-    main_window.window_new_img = None
-    main_window.window_flow_img = None
-    main_window.window_flow_label = None
+    # main_window.window_new_img = None
+
     # self.window_auto_infer_progress = None
     # self.window_class_stat = None
     # self.window_usp_progress = None
     # self.window_auto_infer = None
-
-    main_window.ui.graphicsView.img_area.signal_xy_color2ui.signal.connect(main_window.img_xy_color_update)
-    main_window.ui.graphicsView.img_area.signal_img_time2ui.signal.connect(main_window.img_time_info_update)
-    main_window.ui.graphicsView.img_area.signal_img_size2ui.signal.connect(main_window.img_size_info_update)
-
     main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)
     main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
     main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)
 
 
 def close_sub_windows(main_window):
-    if main_window.window_build_task:
-        main_window.window_build_task.close()
-    if main_window.window_new_img:
-        main_window.window_new_img.close()
-    if main_window.window_flow_img:
-        main_window.window_flow_img.close()
-    if main_window.window_flow_label:
-        main_window.window_flow_label.close()
+    main_window.window_build_task.close()
+    # if main_window.window_new_img:
+    #     main_window.window_new_img.close()
+    main_window.window_flow_img.close()
+    main_window.window_flow_label.close()
     # if main_window.window_class_stat:
     #     main_window.window_class_stat.close()
     # if main_window.window_usp_progress:

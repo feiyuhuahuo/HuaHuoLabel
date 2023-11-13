@@ -48,6 +48,9 @@
         </property>
         <item>
          <widget class="CenterImgView" name="graphicsView">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -1567,6 +1570,9 @@ border-radius: 4px;
       </item>
       <item>
        <widget class="ImgsFlow" name="listWidget_imgs_flow">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="layoutDirection">
          <enum>Qt::LeftToRight</enum>
         </property>

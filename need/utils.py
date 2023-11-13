@@ -3,6 +3,7 @@
 import random
 
 from PySide6.QtGui import QUndoCommand, QColor
+from need.custom_widgets import CustomMessageBox
 
 COlOR_Ms = [['青绿', (33, 90, 89), '凌霄橙', (237, 114, 63)], ['松绿', (61, 96, 54), '草黄', (177, 129, 81)],
             ['石榴红', (219, 8, 53), '桂黄', (237, 160, 31)], ['淡紫2', (165, 154, 202), '紫罗兰', (95, 71, 154)],
@@ -193,3 +194,4 @@ class MonitorVariable:
 INS_all_classes = ClassStatistic()
 INS_palette = Palette()
 INS_shape_type = ShapeType()
+# INS_large_img_warn = CustomMessageBox('information', 'HuaHuoLabel')

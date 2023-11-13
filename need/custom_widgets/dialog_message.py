@@ -83,6 +83,7 @@ class CustomMessageBox(QDialog):
         if text:
             self.ui.textBrowser.append(text)
 
+        print(self.DontShowAgain)
         if not self.DontShowAgain:
             doc = self.ui.textBrowser.document()
             doc.setTextWidth(360)  # 英文需要设置两遍才有效，令人费解 (ˉ▽ˉ；)...
