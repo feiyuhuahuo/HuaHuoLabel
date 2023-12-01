@@ -1,18 +1,18 @@
 import pdb
-import random, shutil, cv2, sys, os, json, time, glob, git
+import random, shutil, cv2, json, time, git
 
 from copy import deepcopy
-from PIL import Image, ImageEnhance
+from PIL import ImageEnhance
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QLineEdit, QWidget, \
-    QHBoxLayout, QColorDialog, QListWidgetItem, QApplication, QGroupBox, QPushButton
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QLineEdit, QColorDialog, QListWidgetItem, \
+    QApplication
 from PySide6.QtWidgets import QMessageBox as QMB
 from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import QCursor, QPixmap, QColor, QFontMetrics, QIcon
+from PySide6.QtGui import QCursor, QColor, QFontMetrics
 from need.main_utils import *
 from need.custom_widgets import *
 from need.custom_threads import *
-from need.custom_signals import StrSignal, ErrorSignal, ListSignal
+from need.custom_signals import ErrorSignal
 from need.algorithms import get_seg_mask
 from need.functions import *
 from need.utils import MonitorVariable, INS_all_classes
@@ -23,6 +23,15 @@ from need.utils import MonitorVariable, INS_all_classes
 class HHL_MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle(self.tr('花火标注'))
+        self.setWindowIcon(QIcon('images/icon.png'))
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.loader = QUiLoader()
+        register_custom_widgets(self.loader)
+        self.ui = self.loader.load('main_window.ui')  # 主界面
+        self.setCentralWidget(self.ui)
+        self.resize(1280, 920)
+
         with open('project.json', 'r', encoding='utf-8') as f:
             self.language = json.load(f)['language']
 
@@ -33,39 +42,27 @@ class HHL_MainWindow(QMainWindow):
         self.OneFileLabel = True
         self.SeparateLabel = False
         self.LabelUiCallByMo = False  # 用于区分self.label_ui是由新标注唤起还是由修改标注唤起
-
         self.signal_error2app = ErrorSignal()
-        self.signal_select_class_ok = ListSignal()
-
-        self.loader = QUiLoader()
-        register_custom_widgets(self.loader)
-        self.ui = self.loader.load('main_window.ui')  # 主界面
-        self.setCentralWidget(self.ui)
-
-        init_custom_widgets(self)
-        self.window_select_cate = SelectObjCate(self, title=self.tr('类别'), button_signal=self.signal_select_class_ok)
-
-        self.setWindowTitle(self.tr('花火标注'))
-        self.setWindowIcon(QIcon('images/icon.png'))
-        self.setFocusPolicy(Qt.StrongFocus)
-        self.resize(1280, 920)
-
-        self.thread_auto_save = AutoSave(5 * 60)  # 5min
-        self.file_select_dlg = QFileDialog(self)
-        self.input_dlg = QInputDialog(self)
-        self.color_dlg = QColorDialog(self)
-
         self.task_cfg = {'one_file': True, 'separate_file': False, 'task_desc': '', 'img_classes': {},
                          'img_tags': {}, 'obj_classes': {}, 'obj_tags': {}, 'version_head': '',
                          'tracked_files': ['task_cfg.json', self.label_folder]}
 
+        # self.thread_auto_save = AutoSave(5 * 60)  # 5min
+        self.file_select_dlg = QFileDialog(self)
+        self.input_dlg = QInputDialog(self)
+        self.color_dlg = QColorDialog(self)
+
         self.mor_vars = MonitorVariable(self.ui)
+        init_custom_widgets(self)
         self.reset_init_variables()
         init_menu(self)
         self.obj_info_show_set()
         self.set_action_disabled()
         connect_signals(self)
         self.log_info('Application opened.', mark_line=True)
+
+        self.installEventFilter(self)
+        self.ui.pushButton_cls_folder.installEventFilter(self)
 
     def closeEvent(self, e):
         close_sub_windows(self)
@@ -78,24 +75,39 @@ class HHL_MainWindow(QMainWindow):
         self.task_cfg_export()
         self.log_info('Application closed.', mark_line=True)
         self.close()
+        self.activateWindow()
 
     def keyPressEvent(self, event):
-        if QApplication.keyboardModifiers() == Qt.ControlModifier:
-            if event.key() == Qt.Key_S:
-                self.save_ann_img()
-            # elif event.key() == Qt.Key_Z:
-            #     if self.ui.toolBox.currentIndex() == 1:
-            #         self.undo_painting()
-            #     else:
-            #         self.ui.graphicsView.img_area.remove_widget_img_pair()
+        if event.key() == Qt.Key_Control:
+            cursor_pos = self.mapFromGlobal(QCursor.pos()).toTuple()
+            w, h = self.ui.graphicsView.width(), self.ui.graphicsView.height()
+            if (0 < cursor_pos[0] < w + 10) and (0 < cursor_pos[1] < h + 20):
+                if self.check_warnings('edit_mode'):
+                    self.ui.graphicsView.img_area.focus_set_img_area(ctrl_press=True)
         else:
             if event.key() == Qt.Key_A:
-                self.scan_img(last=True)
+                if self.check_warnings('selecting_cate_tag'):
+                    self.scan_img(last=True)
             elif event.key() == Qt.Key_D:
-                self.scan_img(next=True)
+                if self.check_warnings('selecting_cate_tag'):
+                    self.scan_img(next=True)
             elif event.key() == Qt.Key_Return:
                 if self.ui.jump_to.spinBox.hasFocus():
                     self.img_jump()
+
+    def eventFilter(self, watched, event):
+        print(watched) # 响应在标题栏的点击
+
+    # def moveEvent(self, event):
+    #     if self.window_shape_combo.isVisible():
+    #         self.window_shape_combo.move_to(self.pos() + self.shape_combo_self_offset)
+    #         # print(shape_combo_pos, self_pos)
+
+    def mousePressEvent(self, event):
+        print('asd')  # 不响应在标题栏的点击
+
+        # if self.window_shape_combo.isVisible():
+        #     self.shape_combo_self_offset = self.window_shape_combo.pos() - self.pos()
 
     def resizeEvent(self, event):
         font_metrics = QFontMetrics(self.ui.label_path.font())
@@ -122,14 +134,21 @@ class HHL_MainWindow(QMainWindow):
                 self.widget_read_edit.set_pixmap_pos('images/read_edit_info/switch_to_edit.png', pos)
 
             self.widget_read_edit.show()
+            self.activateWindow()
 
     @property
     def cur_i(self):
         return self.__cur_i
 
     def about_hhl(self):
-        self.hhl_info = hhl_info(self.language)
-        self.hhl_info.show(clear_old=False)
+        ui = CustomMessageBox('about', self.tr('关于花火标注'), hide_dsa=True)
+        ui.add_text(self.tr('版本1.0.0。\n'
+                            '\n'
+                            '花火标注是一款使用PySide6开发的多功能标注工具，支持包括单类别分类、多类别分类、语义分割、目标检测和实例分割在内的5种计算'
+                            '机视觉任务的数据标注。花火标注还支持自动标注、数据集管理、伪标注合成等多种功能，可以帮助您更加方便、高效得训练AI模型。\n'
+                            '\n'
+                            '花火标注采用GNU GPL许可证，您可以随意使用该工具。但在未取得作者许可的情况下，请勿使用该软件进行商业行为。\n'))
+        ui.show(clear_old=False)
 
     def add_buttons(self):
         widget = self.sender()
@@ -328,7 +347,7 @@ class HHL_MainWindow(QMainWindow):
             self.ui.graphicsView.img_area.change_font(ann_font_color=QColor(color.name()))
 
     def change_font_size(self):
-        self.ui.graphicsView.img_area.change_font(ann_font_size=self.ui.spinBox_5.value())
+        self.ui.graphicsView.img_area.change_font(ann_font_size=self.ui.spinBox_fontsize.value())
 
     def change_one_class_category(self):
         new_c, ok = self.input_dlg.getText(self.ui, self.tr('修改类别'), self.tr('请输入类别名称'),
@@ -372,21 +391,11 @@ class HHL_MainWindow(QMainWindow):
 
     def change_pen_size(self):
         if self.ui.toolBox.currentIndex() == 0:
-            self.ui.graphicsView.img_area.change_pen(seg_pen_size=self.ui.spinBox.value())
+            self.ui.graphicsView.img_area.change_pen(seg_pen_size=self.ui.spinBox_thickness.value())
         elif self.ui.toolBox.currentIndex() == 1:
-            self.ui.graphicsView.img_area.change_pen(ann_pen_size=self.ui.spinBox_6.value())
+            self.ui.graphicsView.img_area.change_pen(ann_pen_size=self.ui.spinBox_thickness2.value())
 
-    def shape_type_change(self):
-        text = self.ui.comboBox_2.currentText()
-        signal_shape_type.send(text)
-
-        if text == self.tr('组合'):
-            self.window_shape_combo.show()
-
-    def shape_type_reset(self):
-        self.ui.comboBox_2.setCurrentIndex(0)
-
-    def check_warnings(self, names):
+    def check_warnings(self, names: Union[list[str], str]):
         if type(names) == str:
             names = [names]
 
@@ -406,6 +415,15 @@ class HHL_MainWindow(QMainWindow):
             elif one == 'git':
                 if self.repo is None:
                     QMB.warning(self.ui, self.tr('Git初始化失败'), self.tr('Git初始化失败，请检查Git客户端是否已安装。'))
+                    return False
+            elif one == 'cate_selected':
+                if 'null' not in str(self.ui.pushButton_waiting_cate.icon()):  # 通过icon来判断是哪个实例调用了这个函数
+                    if not self.ui.obj_cate_buttons.selected_buttons():
+                        QMB.critical(self, self.tr('类别未选择！'), self.tr('请选择至少一个类别！'))
+                        return False
+            elif one == 'selecting_cate_tag':
+                if self.ui.pushButton_waiting_cate.isVisible() or self.ui.pushButton_waiting_tag.isVisible():
+                    QMB.warning(self, self.tr('标注未完成！'), self.tr('请先完成当前图形的标注。'))
                     return False
             else:
                 raise TypeError('Unsupported warning.')
@@ -510,17 +528,10 @@ class HHL_MainWindow(QMainWindow):
             path_del_label = f'{self.task_root}/deleted/{self.WorkMode}/{self.label_folder}'
             os.makedirs(path_del_label, exist_ok=True)
 
-            png_path = self.get_separate_label(img_path, 'png')
             json_path = self.get_separate_label(img_path, 'json')
-
-            t_png_path = f'{self.get_root("tv")}/labels/train/{png_path.split("/")[-1]}'
-            v_png_path = f'{self.get_root("tv")}/labels/val/{png_path.split("/")[-1]}'
             t_json_path = f'{self.get_root("tv")}/labels/train/{json_path.split("/")[-1]}'
             v_json_path = f'{self.get_root("tv")}/labels/val/{json_path.split("/")[-1]}'
 
-            if osp.exists(png_path):
-                self.file_move(png_path, path_del_label)
-                file_remove([t_png_path, v_png_path])
             if osp.exists(json_path):
                 self.file_move(json_path, path_del_label)
                 file_remove([t_json_path, v_json_path])
@@ -601,8 +612,9 @@ class HHL_MainWindow(QMainWindow):
                 self.window_flow_label.show()
 
         else:
-            self.window_flow_img.paint_img(QPixmap(img_path), img_path)
-            self.window_flow_img.show()
+            if (pixmap := img_path2_qpixmap(img_path)) is not None:
+                self.window_flow_img.paint_img(pixmap, img_path)
+                self.window_flow_img.show()
 
     def flow_stat(self, path):  # 获取某个子图的处理状态  #todo-------------
         stat = 'undo'
@@ -635,10 +647,12 @@ class HHL_MainWindow(QMainWindow):
             visible = self.ui.obj_cate_buttons.isVisible()
             self.ui.obj_cate_buttons.setVisible(not visible)
             self.ui.pushButton_obj_cate_add.setDisabled(visible)
+            self.ui.pushButton_waiting_cate.set_activated(not visible)
         elif widget.objectName() == 'pushButton_obj_tag':
             visible = self.ui.obj_tag_buttons.isVisible()
             self.ui.obj_tag_buttons.setVisible(not visible)
             self.ui.pushButton_obj_tag_add.setDisabled(visible)
+            self.ui.pushButton_waiting_tag.set_activated(not visible)
 
         if visible:
             widget.setIcon(QIcon('images/direction/down.png'))
@@ -773,7 +787,6 @@ class HHL_MainWindow(QMainWindow):
 
     def graphics_reset(self):  # 清空所有任务相关的控件
         self.ui.obj_list.clear()
-        self.window_select_cate.clear()
         self.ui.graphicsView.img_area.clear_all_polygons()
         self.ui.graphicsView.img_area.collection_window.ui.listWidget.clear()
         self.ui.graphicsView.img_area.reset_cursor()
@@ -818,9 +831,10 @@ class HHL_MainWindow(QMainWindow):
         if self.window_flow_label:
             qimg_png = self.get_qimg_png(img_path)
             if qimg_png:
-                self.window_flow_label.paint_img(qimg_png, img_path)  # todo: 会影响主窗口的图片信息显示
+                self.window_flow_label.paint_img(qimg_png, img_path)
         if self.window_flow_img:
-            self.window_flow_img.paint_img(QPixmap(img_path), img_path)
+            if (pixmap := img_path2_qpixmap(img_path)) is not None:
+                self.window_flow_img.paint_img(pixmap, img_path)
 
     def has_labeled(self, img_path):
         img_name = img_path.split('/')[-1]
@@ -973,7 +987,11 @@ class HHL_MainWindow(QMainWindow):
         self.ui.img_cate_buttons.init_buttons(self.task_cfg['img_classes'])
         self.ui.img_tag_buttons.init_buttons(self.task_cfg['img_tags'])
         self.ui.obj_cate_buttons.init_buttons(self.task_cfg['obj_classes'])
+        if self.ui.obj_cate_buttons.names():
+            self.ui.pushButton_waiting_cate.set_activated(True)
         self.ui.obj_tag_buttons.init_buttons(self.task_cfg['obj_tags'])
+        if self.ui.obj_tag_buttons.names():
+            self.ui.pushButton_waiting_tag.set_activated(True)
         self.ui.lineEdit_version.setText(self.task_cfg['version_head'])
 
     def load_one_file_dict(self):
@@ -1115,7 +1133,6 @@ class HHL_MainWindow(QMainWindow):
             name = text
             item, color = self.ui.class_list.new_class_item(name)
             color = QColor(color)
-            self.window_select_cate.add_item(item.clone())
             self.ui.class_list.set_look(item)
             self.ui.class_list.add_item(item)
             self.sem_class_modified_tip()
@@ -1134,7 +1151,6 @@ class HHL_MainWindow(QMainWindow):
             info_item.setText(new_text)
             info_item.setForeground(color)
 
-        self.window_select_cate.close()
         self.ui.setFocus()
 
     # done ----------------
@@ -1143,12 +1159,15 @@ class HHL_MainWindow(QMainWindow):
             path = self.file_select_dlg.getOpenFileName(self, self.tr('选择图片'),
                                                         filter=self.tr('图片类型 (*.png *.jpg *.bmp)'))[0]
         if path:
-            # self.window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
-            # self.window_new_img.show()  # 先show()使主窗口失活，确保图片信息显示不干扰主窗口，参看img_time_info_update()
-            # self.window_new_img.paint_img(get_rotated_qpixmap(path), path)
+            # if (pixmap := img_path2_qpixmap(path)) is not None:
+            #     window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
+            #     window_new_img.setAttribute(Qt.WA_DeleteOnClose)
+            #     window_new_img.paint_img(pixmap, path)
+            #     window_new_img.show()
+
             window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
             window_new_img.setAttribute(Qt.WA_DeleteOnClose)
-            window_new_img.paint_img(get_rotated_qpixmap(path), path)
+            window_new_img.paint_img(path, path)
             window_new_img.show()
 
     def obj_info_show_set(self):
@@ -1208,7 +1227,6 @@ class HHL_MainWindow(QMainWindow):
             self.show_shape_info(one)
 
             if cate not in INS_all_classes.classes():
-                self.window_select_cate.add_item(item.clone())
                 self.ui.class_list.set_look(item)
                 self.ui.class_list.add_item(item)
                 self.sem_class_modified_tip()
@@ -1397,25 +1415,6 @@ class HHL_MainWindow(QMainWindow):
                 self.ui.label_path.setText(self.tr('"{}"已保存。').format(json_path))
                 self.log_info('"labels.json" has been saved.')
 
-    def save_one_shape(self, classes: list[str]):
-        if self.LabelUiCallByMo:
-            self.modify_obj_list_end(text)
-            self.LabelUiCallByMo = False
-        else:
-            if self.ui.radioButton_write.isChecked() and classes:
-                for one_c in classes:
-                    if one_c not in self.ui.obj_cate_buttons.names:
-                        self.ui.obj_cate_buttons.add_button(one_c)
-                        self.sem_class_modified_tip()
-
-                color = self.ui.obj_cate_buttons.color(classes[0])
-                obj_name = ', '.join(classes)
-                self.ui.obj_list.add_item(obj_name, color)
-                self.ui.graphicsView.img_area.save_one_polygon(obj_name, color)
-                # self.show_shape_info(self.ui.graphicsView.img_area.get_one_polygon(-1))
-
-            self.window_select_cate.close()
-
     def scan_img(self, last=False, next=False, count=1, from_jump=False):
         scan_start = time.time()
 
@@ -1456,7 +1455,8 @@ class HHL_MainWindow(QMainWindow):
         #         count = self.scan_train_val_imgs(split='val', last=last, next=next)
 
         if self.ui.radioButton_write.isChecked():
-            self.save_label()
+            pass
+            # self.save_label()
             # self.save_det_seg()
 
         if last and 0 < self.__cur_i <= self.img_num:
@@ -1576,6 +1576,36 @@ class HHL_MainWindow(QMainWindow):
         count = abs(i - self.__cur_i)
         return count
 
+    def select_cate_tag_after(self):
+        if self.LabelUiCallByMo:
+            self.modify_obj_list_end(text)
+            self.LabelUiCallByMo = False
+        else:
+            if self.ui.radioButton_write.isChecked():
+                obj_done, tag_done = False, False
+                assert self.ui.obj_cate_buttons.isVisible(), 'obj_cate_buttons must be visible after one shape drawed.'
+                if self.ui.pushButton_waiting_cate.has_confirmed():
+                    obj_done = True
+                if ((self.ui.obj_tag_buttons.isVisible() and self.ui.pushButton_waiting_tag.has_confirmed())
+                        or not self.ui.obj_tag_buttons.isVisible()):
+                    tag_done = True
+
+                if obj_done and tag_done:
+                    cates = self.ui.obj_cate_buttons.selected_buttons()
+                    color = self.ui.obj_cate_buttons.color(cates[0])
+                    self.ui.obj_list.add_item(', '.join(cates), color)
+                    tags = self.ui.obj_tag_buttons.selected_buttons()
+                    self.ui.graphicsView.img_area.save_one_shape(cates, tags, color)
+                    self.ui.comboBox_2.setDisabled(False)
+                    # self.show_shape_info(self.ui.graphicsView.img_area.get_one_polygon(-1))
+
+    def select_cate_tag_before(self):
+        self.ui.comboBox_2.setDisabled(True)
+        self.ui.obj_cate_buttons.set_none_default_not_selected()
+        self.ui.obj_tag_buttons.set_none_default_not_selected()
+        if not self.ui.obj_cate_buttons.isVisible():
+            self.ui.pushButton_obj_cate.click()
+
     def sem_class_modified_tip(self):
         if self.SeparateLabel and self.ui.radioButton_write.isChecked():
             if not self.window_sem_class_changed.DontShowAgain:
@@ -1595,8 +1625,7 @@ class HHL_MainWindow(QMainWindow):
         # self.action_delete_all.setDisabled(stat)
         # self.action_lock_shape.setDisabled(stat)
 
-    # done ---------------------------------------
-    def set_hide_cross(self):
+    def set_hide_cross(self):  # done ---------------------------------------
         hide = not self.ui.checkBox_hide_cross.isChecked()
         self.ui.graphicsView.img_area.set_hide_cross(hide)
         self.ui.pushButton_cross_color.setDisabled(hide)
@@ -1712,6 +1741,17 @@ class HHL_MainWindow(QMainWindow):
             else:
                 self.ui.label_train_val.set_none()
 
+    def shape_type_change(self):
+        text = self.ui.comboBox_2.currentText()
+        signal_shape_type.send(text)
+
+        if text == self.tr('组合'):
+            pos = self.ui.textBrowser_task_desc.mapToGlobal(QPoint(0, 0))
+            self.window_shape_combo.show_at(pos)
+
+    def shape_type_reset(self):
+        self.ui.comboBox_2.setCurrentIndex(0)
+
     def show_bookmark(self):
         if 0 <= self.__cur_i < self.img_num:
             if self.__cur_i in self.bookmark_list:
@@ -1720,8 +1760,8 @@ class HHL_MainWindow(QMainWindow):
                 self.bookmark_list.append(self.__cur_i)
         self.ui.graphicsView.show_bookmark()
 
-    def show_class_selection_list(self):
-        self.window_select_cate.show_at(self.frameGeometry())
+    # def show_class_selection_list(self):
+    #     self.window_select_cate.show_at(self.frameGeometry())
 
     def show_class_statistic(self):
         self.thread_cs = ClassStatistics(self.WorkMode, self.img_num, INS_all_classes.classes(), self.OneFileLabel,
@@ -1737,12 +1777,13 @@ class HHL_MainWindow(QMainWindow):
         self.window_class_stat.show()
 
     def show_img_status_info(self):
-        path = self.imgs[self.__cur_i]
-        if path == 'images/图片已删除.png':
+        if (path := self.imgs[self.__cur_i]) == 'images/图片已删除.png':
             self.ui.label_path.setText(self.tr('图片已删除。'))
         else:
-            self.cv2_img = cv2.imdecode(np.fromfile(path, dtype='uint8'), cv2.IMREAD_COLOR)
-            self.cv2_img = cv2.cvtColor(self.cv2_img, cv2.COLOR_BGR2RGB)
+            if (img_array := get_rotated_img_array(path)) is None:
+                return
+
+            self.cv2_img = img_array
             self.cv2_img_changed = self.cv2_img
 
             br_v = self.ui.horizontalSlider.value()
@@ -1907,13 +1948,21 @@ class HHL_MainWindow(QMainWindow):
         self.window_usp_progress.show()
 
     def update_shape_info_text(self, i):
-        if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
-            return
-
-        text = self.get_info_text(self.ui.graphicsView.img_area.get_one_polygon(i))
-        self.ui.listWidget_obj_info.item(i).setText(text)
+        pass
+        # if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
+        #     return
+        #
+        # text = self.get_info_text(self.ui.graphicsView.img_area.get_one_polygon(i))
+        # self.ui.listWidget_obj_info.item(i).setText(text)
 
     def version_add(self):
+        # x, y = self.ui.line_9.pos().toTuple()
+        # x = x + self.ui.line_9.width() - 70
+        # y = y - 10
+        #
+        # self.bu.show_at(self.ui.line_9.parent().mapToGlobal(QPoint(x, y)))
+        # return
+
         if not self.check_warnings(['task', 'git']):
             return
 
@@ -2046,6 +2095,7 @@ class HHL_MainWindow(QMainWindow):
 # todo: 伪标注合成全功能    金字塔融合(https://blog.csdn.net/qq_45717425/article/details/122638358)
 # todo：导出coco、voc等格式的数据结构
 # todo: 版本记录，切换有点慢，是否需要加入请等待窗口
+# todo: 超大图片的显示需要支持吗
 # todo: 新架构-----------------------------------------
 
 # todo: log自动清理

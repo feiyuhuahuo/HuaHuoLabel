@@ -6,8 +6,8 @@ from PySide6.QtGui import QPixmap
 
 
 class ReadEditInfo(QLabel):  # 淡入淡出的窗口不能设parent
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowOpacity(0)
         self.setWindowFlag(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -18,18 +18,18 @@ class ReadEditInfo(QLabel):  # 淡入淡出的窗口不能设parent
 
         start_opa = 0.7
         self.ani1 = QPropertyAnimation(self, b'windowOpacity')
-        self.ani1.setDuration(500)
+        self.ani1.setDuration(300)
         self.ani1.setStartValue(start_opa)
         self.ani1.setEndValue(start_opa)
 
         self.ani2 = QPropertyAnimation(self, b'windowOpacity')
-        self.ani2.setDuration(600)
+        self.ani2.setDuration(500)
         self.ani2.setStartValue(start_opa)
         self.ani2.setEndValue(0)
 
         self.ani_group = QSequentialAnimationGroup(self)
         self.ani_group.addAnimation(self.ani1)
-        self.ani_group.addPause(500)
+        self.ani_group.addPause(300)
         self.ani_group.addAnimation(self.ani2)
         self.ani_group.finished.connect(self.close)
 
@@ -42,3 +42,4 @@ class ReadEditInfo(QLabel):  # 淡入淡出的窗口不能设parent
         timer = QTimer()
         timer.singleShot(200, self.ani_group.start)
         super().show()
+

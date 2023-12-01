@@ -4,6 +4,7 @@ import json
 
 from need.main import HHL_MainWindow
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtCore import QProcess, QTranslator
 
 # QProcess 用py文件调试时无法实现重启，用这个方法代替调试
@@ -15,6 +16,8 @@ from PySide6.QtCore import QProcess, QTranslator
 
 if __name__ == '__main__':
     app = QApplication()
+    QFontDatabase.addApplicationFont('fonts/fontawesome-webfont.ttf')
+
     with open('project.json', 'r') as f:
         language = json.load(f)['language']
 

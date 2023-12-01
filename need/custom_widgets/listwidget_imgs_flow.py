@@ -2,12 +2,11 @@
 # -*- coding:utf-8 -*-
 import pdb
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QLabel, QPushButton, QListWidget, QListWidgetItem
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt, QSize
-
 from need.custom_signals import ListSignal
-from need.functions import get_rotated_qpixmap
+from need.functions import img_path2_qpixmap
 
 signal_show_plain_img = ListSignal()
 signal_show_label_img = ListSignal()
@@ -23,9 +22,10 @@ class ImgLabel(QLabel):
         self.IsDeleted = False
         self.set_stat(stat)
 
-        no_exif_pixmap = get_rotated_qpixmap(img_path)
-        self.setPixmap(no_exif_pixmap.scaled(self.fixed_size, self.fixed_size, Qt.KeepAspectRatio,
-                                             mode=Qt.SmoothTransformation))
+        # todo: 优化，pixmap是原尺寸的QPixmap，图很大的话会很占内存,需要在img_path2_qpixmap里实现KeepAspectRatio的resize
+        if (pixmap := img_path2_qpixmap(img_path)) is not None:
+            self.setPixmap(pixmap.scaled(self.fixed_size, self.fixed_size, Qt.KeepAspectRatio,
+                                         mode=Qt.SmoothTransformation))
 
     def mousePressEvent(self, e):
         if e.buttons() == Qt.LeftButton:
@@ -37,7 +37,7 @@ class ImgLabel(QLabel):
 
     def set_as_deleted(self):
         self.setPixmap(QPixmap('images/图片已删除.png').scaled(self.fixed_size, self.fixed_size, Qt.KeepAspectRatio,
-                                                             mode=Qt.SmoothTransformation))
+                                                               mode=Qt.SmoothTransformation))
         self.IsDeleted = True
 
     def set_stat(self, stat):

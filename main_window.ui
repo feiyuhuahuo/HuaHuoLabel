@@ -1655,7 +1655,7 @@ border-radius: 4px;
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
           <property name="spacing">
-           <number>0</number>
+           <number>1</number>
           </property>
           <item alignment="Qt::AlignBottom">
            <widget class="QLabel" name="label_size_info">
@@ -2392,7 +2392,7 @@ padding-right:4px;
           <widget class="BaseButtonGroup" name="img_tag_buttons" native="true"/>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="0,10,0">
+          <layout class="QHBoxLayout" name="horizontalLayout_35" stretch="0,0,10,0">
            <item>
             <widget class="QPushButton" name="pushButton_obj_cate">
              <property name="minimumSize">
@@ -2432,6 +2432,42 @@ border:none;
                <width>14</width>
                <height>14</height>
               </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="PushButtonWaiting" name="pushButton_waiting_cate">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton
+{background-color: rgb(235, 235, 235);
+border: 1px solid gray;
+border-radius: 4px;
+padding-left:4px;
+padding-right:4px;
+}
+ QPushButton:hover {
+            background-color:  rgb(225, 225, 225);
+}
+
+ QPushButton:pressed {
+            background-color:  rgb(215, 215, 215);
+        }        
+</string>
+             </property>
+             <property name="text">
+              <string/>
              </property>
             </widget>
            </item>
@@ -2502,7 +2538,7 @@ padding-right:4px;
           <widget class="BaseButtonGroup" name="obj_cate_buttons" native="true"/>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_38" stretch="0,10,0">
+          <layout class="QHBoxLayout" name="horizontalLayout_38" stretch="0,0,10,0">
            <item>
             <widget class="QPushButton" name="pushButton_obj_tag">
              <property name="minimumSize">
@@ -2542,6 +2578,42 @@ border:none;
                <width>14</width>
                <height>14</height>
               </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="PushButtonWaiting" name="pushButton_waiting_tag">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton
+{background-color: rgb(235, 235, 235);
+border: 1px solid gray;
+border-radius: 4px;
+padding-left:4px;
+padding-right:4px;
+}
+ QPushButton:hover {
+            background-color:  rgb(225, 225, 225);
+}
+
+ QPushButton:pressed {
+            background-color:  rgb(215, 215, 215);
+        }        
+</string>
+             </property>
+             <property name="text">
+              <string/>
              </property>
             </widget>
            </item>
@@ -2758,6 +2830,44 @@ QCheckBox::indicator:unchecked {
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_16">
            <item>
+            <widget class="QCheckBox" name="checkBox_save_labeled_img">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>保存带有标记的图片</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+
+}
+</string>
+             </property>
+             <property name="text">
+              <string>保存带标记图</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushButton_sem_png">
              <property name="enabled">
               <bool>true</bool>
@@ -2856,19 +2966,6 @@ padding-right:4px;
               <string>按图片类别存放</string>
              </property>
             </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </item>
@@ -4307,6 +4404,11 @@ border-radius: 4px;
    <class>ImgsFlow</class>
    <extends>QListWidget</extends>
    <header>imgsflow.h</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButtonWaiting</class>
+   <extends>QPushButton</extends>
+   <header>pushbuttonwaiting.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

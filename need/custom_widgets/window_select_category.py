@@ -62,19 +62,23 @@ class SelectItem(QMainWindow):
         self.show()
 
 
-class SelectObjCate(SelectItem):
-    def __init__(self, parent=None, title='窗口', button_signal=None):
-        super().__init__(parent, title, button_signal)
-
-    def show_at(self, geometry):
-        all_c = get_HHL_parent(self).ui.obj_cate_buttons.names
-        for one_c in all_c:
-            color = get_HHL_parent(self).ui.obj_cate_buttons.color(one_c)
-            if one_c in self.item_names:
-                item = self.ui.listWidget.item(self.item_names.index(one_c))
-                item.setForeground(QColor(color))
-                item.setSelected(False)
-            else:
-                self.add_item(one_c, color)
-
-        super().show_at(geometry)
+# class SelectObjCate(SelectItem): # 老的选择类别的弹出窗口
+#     def __init__(self, parent=None, title='窗口', button_signal=None):
+#         super().__init__(parent, title, button_signal)
+#
+#     def closeEvent(self, event):
+#         self.parent().ui.graphicsView.img_area.focus_set_img_area(ctrl_release=True)
+#         self.parent().ui.graphicsView.img_area.clear_widget_img_points()
+#
+#     def show_at(self, geometry):
+#         all_c = get_HHL_parent(self).ui.obj_cate_buttons.names()
+#         for one_c in all_c:
+#             color = get_HHL_parent(self).ui.obj_cate_buttons.color(one_c)
+#             if one_c in self.item_names:
+#                 item = self.ui.listWidget.item(self.item_names.index(one_c))
+#                 item.setForeground(QColor(color))
+#                 item.setSelected(False)
+#             else:
+#                 self.add_item(one_c, color)
+#
+#         super().show_at(geometry)

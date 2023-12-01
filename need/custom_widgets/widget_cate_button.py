@@ -24,7 +24,7 @@ class BaseButton(QWidget):
         self.menu = QMenu(self)
         self.menu.setFixedWidth(110)
 
-        self.action_edit = QAction(QIcon('images/图片14.png'), self.tr('编辑'), self)
+        self.action_edit = QAction(QIcon('images/note.png'), self.tr('编辑'), self)
         self.action_edit.triggered.connect(self.edit_class)
         self.action_default = QAction(QIcon('images/favorite2.ico'), self.tr('设为默认'), self)
         self.action_default.triggered.connect(lambda: self.set_as_default(None))
@@ -60,7 +60,7 @@ class BaseButton(QWidget):
         font = self.font()
         font.setPointSize(10)
         self.class_button.setFont(font)
-        self.class_button.clicked.connect(self.set_selected)
+        self.class_button.clicked.connect(self.set_selected_or_not)
         self.set_cate(cate)
 
         if cate != 'as_sem_bg':
@@ -133,7 +133,7 @@ class BaseButton(QWidget):
         clicked_signal = self.class_button.metaObject().method(37)  # 37为信号clicked的索引
         if connect:
             if not self.class_button.isSignalConnected(clicked_signal):
-                self.class_button.clicked.connect(self.set_selected)
+                self.class_button.clicked.connect(self.set_selected_or_not)
         else:
             if self.class_button.isSignalConnected(clicked_signal):
                 self.class_button.clicked.disconnect()
@@ -145,11 +145,11 @@ class BaseButton(QWidget):
     def set_exclusive_group(self):  # todo
         pass
 
-    def set_selected(self):
+    def set_selected_or_not(self):
         ori_ss = self.class_button.styleSheet()
         ss_default = self.get_ss(['default']) if self.get_ss(['default']) in ori_ss else ''
-        ss_selected = self.get_ss(['not_selected']) if self.get_ss(['selected']) in ori_ss else self.get_ss(
-            ['selected'])
+        ss_selected = self.get_ss(['not_selected']) if self.get_ss(['selected']) in ori_ss \
+            else self.get_ss(['selected'])
         self.class_button.setStyleSheet(self.get_ss(['base']) + ss_default + ss_selected)
 
     def set_looking(self, assigned_looking=None):
@@ -187,13 +187,13 @@ class ImgTagButton(BaseButton):
 
 class ObjCateButton(BaseButton):
     def __init__(self, parent=None, cate='', looking=None, is_default=None):
-        self.ss_dict = {'base': 'QPushButton {border: 1px solid gray; border-top-right-radius: 4px; '
-                                'border-bottom-right-radius: 4px;padding-left:5px; padding-right:5px;}',
-                        'selected': 'QPushButton {background-color: rgb(154, 202, 144);}',
-                        'not_selected': 'QPushButton {background-color: rgb(235, 235, 235);}',
-                        'default': 'QPushButton {border-bottom: 3px solid rgb(195, 39, 43);}'}
+        # self.ss_dict = {'base': 'QPushButton {border: 1px solid gray; border-top-right-radius: 4px; '
+        #                         'border-bottom-right-radius: 4px;padding-left:5px; padding-right:5px;}',
+        #                 'selected': 'QPushButton {background-color: rgb(154, 202, 144);}',
+        #                 'not_selected': 'QPushButton {background-color: rgb(235, 235, 235);}',
+        #                 'default': 'QPushButton {border-bottom: 3px solid rgb(195, 39, 43);}'}
         super().__init__(parent, cate, looking, is_default)
-        self.set_button_connect(False)
+        # self.set_button_connect(False)
 
 
 class ObjTagButton(BaseButton):

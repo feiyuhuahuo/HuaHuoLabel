@@ -31,6 +31,43 @@ class BaseButtonGroup(QWidget):
         for one in COlOR_NAMEs:
             self.color_codes[QColor(one).name()] = one
 
+    def __add_name(self, name, color='', looking=None, is_default=None):
+        self.button_stat[name] = self.default_attrs.copy()
+        if looking is not None:
+            self.button_stat[name]['looking'] = looking
+        if is_default is not None:
+            self.button_stat[name]['is_default'] = is_default
+
+        if color:
+            self.button_stat[name]['color'] = color
+        else:
+            self.button_stat[name]['color'] = self.__new_color()
+
+    def __del_name(self, name):
+        self.button_stat.pop(name)
+
+    def __get_fake_prent(self):  # 用于设置QInputDialog().getText()等窗口的位置
+        fake_parent = QWidget()
+        fake_parent.setWindowIcon(self.windowIcon())
+        fake_parent.move(self.parent().mapToGlobal(QPoint(0, 0)) + QPoint(-450, 0))
+        return fake_parent
+
+    def __new_color(self):
+        random.shuffle(self.color_names)
+        existed_colors = list(self.button_stat.values())
+        color = self.color_names.pop()
+        while color in existed_colors:
+            if len(self.color_names) == 0:
+                self.color_names = COlOR_NAMEs.copy()
+            color = self.color_names.pop()
+        return color
+
+    def __new_h_layout(self):
+        h_layout = QHBoxLayout(self)
+        h_layout.setSpacing(6)
+        h_layout.addItem(QSpacerItem(100, 22, QSizePolicy.Policy.Expanding))
+        return h_layout
+
     def add_button(self, cate='', color='', looking=None, is_default=None, by_click=True):
         added = False
         fake_parent = self.__get_fake_prent()
@@ -79,18 +116,6 @@ class BaseButtonGroup(QWidget):
                 if by_click:
                     get_HHL_parent(self).cate_button_update(self.objectName())
 
-    def __add_name(self, name, color='', looking=None, is_default=None):
-        self.button_stat[name] = self.default_attrs.copy()
-        if looking is not None:
-            self.button_stat[name]['looking'] = looking
-        if is_default is not None:
-            self.button_stat[name]['is_default'] = is_default
-
-        if color:
-            self.button_stat[name]['color'] = color
-        else:
-            self.button_stat[name]['color'] = self.__new_color()
-
     def button_num(self):
         num = 0
         for i in range(self.v_layout.count()):
@@ -137,9 +162,6 @@ class BaseButtonGroup(QWidget):
                     get_HHL_parent(self).cate_button_update(self.objectName())
                     return
 
-    def __del_name(self, name):
-        self.button_stat.pop(name)
-
     def edit_name(self, old_name, new_name):
         new_stat = OrderedDict()  # 新建一个字典来保证键的顺序
 
@@ -150,12 +172,6 @@ class BaseButtonGroup(QWidget):
                 new_stat[name] = stat
 
         self.button_stat = new_stat
-
-    def __get_fake_prent(self):  # 用于设置QInputDialog().getText()等窗口的位置
-        fake_parent = QWidget()
-        fake_parent.setWindowIcon(self.windowIcon())
-        fake_parent.move(self.parent().mapToGlobal(QPoint(0, 0)) + QPoint(-450, 0))
-        return fake_parent
 
     def get_button(self, name):
         for i in range(self.v_layout.count()):
@@ -180,25 +196,19 @@ class BaseButtonGroup(QWidget):
         for name, stat in button_stat.items():
             self.add_button(name, stat['color'], bool(stat['looking']), bool(stat['is_default']), by_click=False)
 
-    @property
     def names(self):
         return list(self.button_stat.keys())
 
-    def __new_color(self):
-        random.shuffle(self.color_names)
-        existed_colors = list(self.button_stat.values())
-        color = self.color_names.pop()
-        while color in existed_colors:
-            if len(self.color_names) == 0:
-                self.color_names = COlOR_NAMEs.copy()
-            color = self.color_names.pop()
-        return color
+    def selected_buttons(self) -> list[str]:
+        names = []
+        for i in range(self.v_layout.count()):
+            h_layout = self.v_layout.itemAt(i)
+            for j in range(h_layout.count() - 1):
+                button = h_layout.itemAt(j).widget()
+                if button.is_selected():
+                    names.append(button.button_name())
 
-    def __new_h_layout(self):
-        h_layout = QHBoxLayout(self)
-        h_layout.setSpacing(6)
-        h_layout.addItem(QSpacerItem(100, 22, QSizePolicy.Policy.Expanding))
-        return h_layout
+        return names
 
     def set_button_looking(self, name, looking):
         self.button_stat[name]['looking'] = looking
@@ -208,6 +218,15 @@ class BaseButtonGroup(QWidget):
 
     def set_button_ex_group(self, name, ex_group):
         pass
+
+    def set_none_default_not_selected(self):
+        for i in range(self.v_layout.count()):
+            h_layout = self.v_layout.itemAt(i)
+            for j in range(h_layout.count() - 1):
+                button = h_layout.itemAt(j).widget()
+                if button.is_selected():
+                    if not button.is_default():
+                        button.set_selected_or_not()
 
 
 if __name__ == '__main__':

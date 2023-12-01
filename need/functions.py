@@ -4,15 +4,20 @@ import os
 import glob
 import copy
 import datetime
+import pdb
+
 import numpy as np
 
 from typing import Union, List
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ExifTags
 from os import path as osp
 from datetime import datetime
 from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QWidget
 from need.custom_widgets import CustomMessageBox
+
+Image.MAX_IMAGE_PIXELS = None
 
 
 def array_to_qimg(array: np.ndarray):
@@ -31,6 +36,7 @@ def array_to_qimg(array: np.ndarray):
     else:
         raise ValueError(f'Unsupport array depth: "{depth}"!')
 
+    # 不指定bytesPerLine，图片打开容易错乱、程序崩溃，原因未知
     return QImage(array.astype('uint8').data, width, height, width * depth, format)
 
 
@@ -72,9 +78,42 @@ def get_HHL_parent(widget: QWidget):
     return widget.parent()
 
 
-def get_rotated_qpixmap(img_path):
-    img = ImageOps.exif_transpose(Image.open(img_path))
-    return QPixmap(array_to_qimg(np.array(img)))
+def get_rotated_img_array(img_path: str, size: tuple = ()):
+    limit_area = 100000000
+
+    def limit_warn():
+        size_info = CustomMessageBox('question', QObject.tr('图片尺寸过大'), hide_dsa=False)
+        size_info.show(QObject.tr(f'图片尺寸过大(总面积需<{limit_area}像素），程序将占用较多内存，'
+                                  f'图片的显示也会较为耗时，请留意。要解除尺寸限制请点击"确定"。'))
+        return size_info.question_result
+
+    img = Image.open(img_path)  # 不会加载相机旋转信息
+    img = img.convert('RGB')  # 始终以RGB模式显示
+    if size:
+        r_w, r_h = size
+        if r_w * r_h <= limit_area:
+            img = img_exif_orientation(img)
+            img = img.resize(size, Image.BILINEAR)
+        else:
+            if limit_warn():
+                img = img_exif_orientation(img)
+                img = img.resize(size, Image.BILINEAR)
+            else:
+                img = None
+    else:
+        w, h = img.size
+        if w * h > limit_area:
+            if limit_warn():
+                img = img_exif_orientation(img)
+            else:
+                img = None
+        else:
+            img = img_exif_orientation(img)
+
+    if img is not None:
+        return np.array(img)
+    else:
+        return None
 
 
 def glob_imgs(path, recursive=False):
@@ -105,31 +144,39 @@ def has_ch(text):
     return False
 
 
-def hhl_info(language):
-    if language == 'CN':
-        ui = CustomMessageBox('about', '关于花火标注', hide_dsa=True)
-        ui.add_text('版本1.0.0。\n'
-                    '\n'
-                    '花火标注是一款使用PySide6开发的多功能标注工具，支持包括单类别分类、多类别分类、语义分割、目标检测和实例分割在内的5种计算'
-                    '机视觉任务的数据标注。花火标注还支持自动标注、数据集管理、伪标注合成等多种功能，可以帮助您更加方便、高效得训练AI模型。\n'
-                    '\n'
-                    '花火标注采用GNU GPL许可证，您可以随意使用该工具。但在未取得作者许可的情况下，请勿使用该软件进行商业行为。\n')
-    elif language == 'EN':
-        ui = CustomMessageBox('about', 'About HuaHuoLabel', hide_dsa=True)
-        ui.add_text('Version 1.0.0.\n'
-                    '\n'
-                    'HuaHuoLabel is a multifunctional label tool developed with PySide6. It can help label data for '
-                    'five computer vision tasks including single category classification, multiple category '
-                    'classification, semantic segmentation, object detection and instance segmentation. HuaHuoLabel '
-                    'also supports auto-labeling, dataset management and pseudo label generation. With the help of '
-                    'HuaHuoLabel, you can train your AI model more conveniently and efficiently.\n'
-                    '\n'
-                    'HuaHuoLabel uses GNU GPL license. You can use this tool at will. However, do not use it for '
-                    'commercial activities without the permission of the author.\n')
-    else:
-        raise ValueError(f'Unsupport language: "{language}"!')
+def img_exif_orientation(img):
+    exif = img.getexif()
+    if exif is None:
+        return img
 
-    return ui
+    exif = {ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS}
+    orientation = exif.get('Orientation', None)
+
+    if orientation == 1:
+        return img
+    elif orientation == 2:
+        return ImageOps.mirror(img)
+    elif orientation == 3:
+        return img.transpose(Image.ROTATE_180)
+    elif orientation == 4:
+        return ImageOps.flip(img)
+    elif orientation == 5:
+        return ImageOps.mirror(img.transpose(Image.ROTATE_270))
+    elif orientation == 6:
+        return img.transpose(Image.ROTATE_270)
+    elif orientation == 7:
+        return ImageOps.mirror(img.transpose(Image.ROTATE_90))
+    elif orientation == 8:
+        return img.transpose(Image.ROTATE_90)
+    else:
+        return img
+
+
+def img_path2_qpixmap(img_path):
+    if (img_array := get_rotated_img_array(img_path)) is None:
+        return None
+    else:
+        return QPixmap(array_to_qimg(img_array))
 
 
 def img_pure_name(path):  # todo: 接受一个路径list统一处理，减少函数调用开销

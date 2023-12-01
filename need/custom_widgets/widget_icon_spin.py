@@ -34,10 +34,13 @@ class IconSpin(QWidget):
         self.setFixedSize(64, 24)
         self.spinBox.move(24, 0)
 
+    def value(self):
+        return self.spinBox.value()
+
     def set_default(self, icon_img: str, minimum: int, maximum: int, value: int, step: int = 1, padding_icon: int = 4):
         self.icon_label.setPixmap(QPixmap(icon_img))
         self.spinBox.setMinimum(minimum)
-        self.spinBox.setMinimum(maximum)
+        self.spinBox.setMaximum(maximum)
         self.spinBox.setValue(value)
         self.spinBox.setSingleStep(step)
         base_ss = self.icon_label.styleSheet()

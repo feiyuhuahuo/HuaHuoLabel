@@ -10,6 +10,12 @@ from need.custom_widgets import *
 from need.custom_threads import *
 
 
+# -----------------------------每个自定义控件都要留意其内存占用情况，留意其内存是否需要自动回收-----------------------------
+# 1.使用QUiLoader加载的自定义控件，在关闭后有可能造成内存泄露的问题, 时刻注意哪些控件是非初始化、临时的、有可能多个出现的，
+# 此类控件要测试在关闭后其内存释放情况。
+# 2.使用lambda作为槽函数也会造成控件无法被自动垃圾回收，从而内存泄露
+# https://forum.qt.io/topic/152101/memory-can-not-release-correctly-because-of-using-lambda-as-slot/12
+# 3.QPixmap在图片很大时，会极其占用内存
 def connect_signals(main_window):
     main_window.ui.checkBox_hide_obj_info.toggled.connect(main_window.obj_info_show_set)
     main_window.ui.checkBox_hide_cross.clicked.connect(main_window.set_hide_cross)
@@ -77,13 +83,12 @@ def connect_signals(main_window):
 
     main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
 
-    # main_window.ui.spinBox.valueChanged.connect(main_window.change_pen_size)
-    # main_window.ui.spinBox_5.valueChanged.connect(main_window.change_font_size)
-    # main_window.ui.spinBox_6.valueChanged.connect(main_window.change_pen_size)
+    main_window.ui.spinBox_thickness.spinBox.valueChanged.connect(main_window.change_pen_size)
+    main_window.ui.spinBox_fontsize.spinBox.valueChanged.connect(main_window.change_font_size)
+    main_window.ui.spinBox_thickness2.spinBox.valueChanged.connect(main_window.change_pen_size)
 
     main_window.ui.toolBox.currentChanged.connect(main_window.set_tool_mode)
 
-    main_window.signal_select_class_ok.signal.connect(main_window.save_one_shape)
     main_window.ui.graphicsView.img_area.signal_xy_color2ui.signal.connect(main_window.img_xy_color_update)
     main_window.ui.graphicsView.img_area.signal_img_time2ui.signal.connect(main_window.img_time_info_update)
     main_window.ui.graphicsView.img_area.signal_img_size2ui.signal.connect(main_window.img_size_info_update)
@@ -91,13 +96,12 @@ def connect_signals(main_window):
     sys.stderr.signal.connect(main_window.log_sys_error)
 
     signal_auto_save.signal.connect(main_window.auto_save)
-    signal_check_draw_enable.signal.connect(lambda: main_window.check_warnings(['task', 'edit_mode', 'sem_bg']))
     signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
     signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
     signal_del_shape.signal.connect(main_window.del_shape)
     signal_move2new_folder.signal.connect(main_window.move_to_new_folder)
-    signal_one_collection_done.signal.connect(main_window.save_one_shape)
-    signal_open_label_window.signal.connect(main_window.show_class_selection_list)
+    # signal_one_collection_done.signal.connect(main_window.select_cate_tag)
+    signal_button_selected_done.signal.connect(main_window.select_cate_tag_after)
     signal_shape_info_update.signal.connect(main_window.update_shape_info_text)
     signal_show_label_img.signal.connect(main_window.flow_show)
     signal_show_plain_img.signal.connect(main_window.flow_show)
@@ -138,6 +142,7 @@ def init_custom_widgets(main_window):
     main_window.dialog_img_edit = ImgEdit(main_window)
     main_window.window_build_task = BuildTask(main_window)
     main_window.window_shape_combo = ShapeCombo(main_window)
+    main_window.pushbutton_waiting = PushButtonWaiting(main_window)
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
     main_window.window_large_img_warn = CustomMessageBox('information', main_window.tr('图片过大'))
@@ -148,13 +153,12 @@ def init_custom_widgets(main_window):
     main_window.window_flow_img.setWindowFlags(Qt.WindowStaysOnTopHint)
     main_window.dialog_tracked_files = None
     main_window.dialog_version_change = None
-    # main_window.window_new_img = None
 
     # self.window_auto_infer_progress = None
     # self.window_class_stat = None
     # self.window_usp_progress = None
     # self.window_auto_infer = None
-    main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 1)
+    main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 2)
     main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
     main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)
 
@@ -186,6 +190,7 @@ def register_custom_widgets(loader):
     loader.registerCustomWidget(ImgTagList)
     loader.registerCustomWidget(JumpToImg)
     loader.registerCustomWidget(ObjList)
+    loader.registerCustomWidget(PushButtonWaiting)
     loader.registerCustomWidget(SearchBox)
     loader.registerCustomWidget(ScanButton)
     loader.registerCustomWidget(TaskDescBrowser)
