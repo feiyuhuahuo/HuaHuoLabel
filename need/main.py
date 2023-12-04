@@ -7,7 +7,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QLineEdit, QColorDialog, QListWidgetItem, \
     QApplication
 from PySide6.QtWidgets import QMessageBox as QMB
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtGui import QCursor, QColor, QFontMetrics
 from need.main_utils import *
 from need.custom_widgets import *
@@ -54,15 +54,13 @@ class HHL_MainWindow(QMainWindow):
 
         self.mor_vars = MonitorVariable(self.ui)
         init_custom_widgets(self)
+        self.init_variables()
         self.reset_init_variables()
         init_menu(self)
         self.obj_info_show_set()
         self.set_action_disabled()
         connect_signals(self)
         self.log_info('Application opened.', mark_line=True)
-
-        self.installEventFilter(self)
-        self.ui.pushButton_cls_folder.installEventFilter(self)
 
     def closeEvent(self, e):
         close_sub_windows(self)
@@ -95,19 +93,9 @@ class HHL_MainWindow(QMainWindow):
                 if self.ui.jump_to.spinBox.hasFocus():
                     self.img_jump()
 
-    def eventFilter(self, watched, event):
-        print(watched) # 响应在标题栏的点击
-
-    # def moveEvent(self, event):
-    #     if self.window_shape_combo.isVisible():
-    #         self.window_shape_combo.move_to(self.pos() + self.shape_combo_self_offset)
-    #         # print(shape_combo_pos, self_pos)
-
-    def mousePressEvent(self, event):
-        print('asd')  # 不响应在标题栏的点击
-
-        # if self.window_shape_combo.isVisible():
-        #     self.shape_combo_self_offset = self.window_shape_combo.pos() - self.pos()
+    def moveEvent(self, event):
+        if self.window_shape_combo.isVisible():
+            self.window_shape_combo.move_to(self.pos() + self.shape_combo_offset)
 
     def resizeEvent(self, event):
         font_metrics = QFontMetrics(self.ui.label_path.font())
@@ -994,6 +982,10 @@ class HHL_MainWindow(QMainWindow):
             self.ui.pushButton_waiting_tag.set_activated(True)
         self.ui.lineEdit_version.setText(self.task_cfg['version_head'])
 
+    def init_variables(self):  # 程序运行后仅初始化一次的变量
+        self.shape_combo_offset = QPoint(0, 0)
+        self.scan_delay = 0
+
     def load_one_file_dict(self):
         if not self.OneFileLabel:
             return True
@@ -1121,7 +1113,6 @@ class HHL_MainWindow(QMainWindow):
     def modify_obj_list_start(self):
         if self.ui.obj_list.edit_button.isChecked():
             self.LabelUiCallByMo = True
-            self.show_class_selection_list()
 
     def modify_obj_list_end(self, text):
         i = self.ui.obj_list.currentRow()
@@ -1298,7 +1289,7 @@ class HHL_MainWindow(QMainWindow):
             return True
         return False
 
-    def reset_init_variables(self):  # 在程序运行时或打开新的任务时初始化或重置相关的变量
+    def reset_init_variables(self):  # 在程序运行时或打开新的任务时需要重置的变量
         self.task_root = ''  # 图片根目录
         self.task = ''
         self.__cur_i = 0
@@ -1313,7 +1304,6 @@ class HHL_MainWindow(QMainWindow):
         self.LookingAll = True
         self.looking_classes = []
         self.log_created_time = get_datetime().split(' ')[0]
-        self.scan_delay = 0
         self.sys_error_text = []
 
     def save_ann_img(self):
@@ -1679,7 +1669,8 @@ class HHL_MainWindow(QMainWindow):
         self.ui.obj_list.edit_button.setDisabled(read_mode)
 
     def set_scan_delay(self):  # done -------------
-        delay, is_ok = self.input_dlg.getInt(self.ui, self.tr('切图延时'), self.tr('单位：ms'), 0, 0, 9999, 100)
+        delay, is_ok = self.input_dlg.getInt(self.ui, self.tr('切图延时'), self.tr('单位：ms'),
+                                             self.scan_delay, 0, 9999, 100)
         if is_ok:
             self.scan_delay = delay
 
@@ -1746,7 +1737,8 @@ class HHL_MainWindow(QMainWindow):
         signal_shape_type.send(text)
 
         if text == self.tr('组合'):
-            pos = self.ui.textBrowser_task_desc.mapToGlobal(QPoint(0, 0))
+            pos = self.ui.line_9.mapToGlobal(QPoint(0, 0)) + QPoint(0, 10)
+            self.shape_combo_offset = pos - self.pos()
             self.window_shape_combo.show_at(pos)
 
     def shape_type_reset(self):
@@ -1760,13 +1752,9 @@ class HHL_MainWindow(QMainWindow):
                 self.bookmark_list.append(self.__cur_i)
         self.ui.graphicsView.show_bookmark()
 
-    # def show_class_selection_list(self):
-    #     self.window_select_cate.show_at(self.frameGeometry())
-
     def show_class_statistic(self):
         self.thread_cs = ClassStatistics(self.WorkMode, self.img_num, INS_all_classes.classes(), self.OneFileLabel,
                                          deepcopy(self.label_file_dict), self.SeparateLabel, self, self.language)
-
         self.thread_cs.start()
         self.show_waiting_label()
 

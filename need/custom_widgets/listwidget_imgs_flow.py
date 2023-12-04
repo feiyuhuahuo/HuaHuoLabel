@@ -54,7 +54,7 @@ class ImgsFlow(QListWidget):
         super().__init__(parent)
         self.button_full = QPushButton(self)
         self.button_full.setIconSize(QSize(14, 14))
-        self.button_full.setIcon(QIcon('images/full_screen.png'))
+        self.button_full.setIcon(QIcon('images/full_screen_black.png'))
         self.button_full.setStyleSheet('QPushButton {background-color: rgb(235, 235, 235, 0.7); '
                                        'border: 1px solid gray; border-radius: 4px;}'
                                        'QPushButton:hover {background-color:  rgb(225, 225, 225);}'

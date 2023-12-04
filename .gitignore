@@ -3,13 +3,11 @@ images/png_icons
 images/svg_icons
 images/company
 out
-待分类图片
 *__pycache__*
 .idea
 consult.py
 log_files
 log
-ttt.py
+ttt*
 docs/图标制作.pptx
 desktop.ini
-det_测试

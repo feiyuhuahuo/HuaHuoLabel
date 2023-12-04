@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>217</width>
-    <height>425</height>
+    <width>196</width>
+    <height>366</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -98,6 +98,60 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="pushButton_new">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>40</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>新建一个目标</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{background-color: rgb(235, 235, 235);
+border: 1px solid gray;
+border-radius: 4px;
+padding-left:4px;
+padding-right:4px;
+
+
+}
+ QPushButton:hover {
+            background-color:  rgb(225, 225, 225);
+}
+
+ QPushButton:pressed {
+            background-color:  rgb(215, 215, 215);
+        }        
+
+</string>
+       </property>
+       <property name="text">
+        <string>NEW</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>13</width>
+         <height>15</height>
+        </size>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="pushButton_union">
        <property name="minimumSize">

@@ -36,18 +36,20 @@ class BaseImgFrame(QLabel):
         self.setMouseTracking(True)
         self.resize(512, 512)
 
+        pixel_cursor = QPixmap('images/color_cursor.png').scaled(16, 16, mode=Qt.SmoothTransformation)
+        self.pixel_cursor = QCursor(pixel_cursor, 0, pixel_cursor.height())
+
         self.img_menu = QMenu('img_menu', self)
         self.img_menu.setFixedWidth(135)
         self.action_bilinear = QAction(self.tr('双线性插值缩放'), self)
         self.action_bilinear.triggered.connect(self.set_interpolation)
-        self.action_nearest = QAction(self.tr('最近邻插值缩放'), self)
-        self.action_nearest.setIcon(QPixmap('images/icon_11.png'))
+        self.action_nearest = QAction(QIcon('images/icon_11.png'), self.tr('最近邻插值缩放'), self)
         self.action_nearest.triggered.connect(self.set_interpolation)
-        self.action_to_100 = QAction(self.tr('缩放至100%尺寸'), self)
+        self.action_to_100 = QAction(QIcon('images/to_100.png'), self.tr('缩放至100%尺寸'), self)
         self.action_to_100.triggered.connect(self.to_100_size)
         self.action_pixel_cursor = QAction(self.tr('像素指针'), self)
         self.action_pixel_cursor.triggered.connect(self.set_pixel_cursor)
-        self.action_to_file_path = QAction(self.tr('打开图片所在路径'), self)
+        self.action_to_file_path = QAction(QIcon('images/file_folder/open_file.png'), self.tr('打开图片所在路径'), self)
         self.action_to_file_path.triggered.connect(self.open_file_path)
         self.img_menu.addAction(self.action_nearest)
         self.img_menu.addAction(self.action_bilinear)
@@ -67,11 +69,7 @@ class BaseImgFrame(QLabel):
         self.interpolation = Qt.FastTransformation
         self.setCursor(Qt.OpenHandCursor)
 
-        pixel_cursor = QPixmap('images/color_cursor.png').scaled(16, 16, mode=Qt.SmoothTransformation)
-        self.pixel_cursor = QCursor(pixel_cursor, 0, pixel_cursor.height())
-
         self.LeftClick = False  # 用于图片拖曳和标注拖曳功能中，判断左键是否按下
-        self.IsClosed = False
 
         self.signal_xy_color2ui = ListSignal()
         self.signal_img_size2ui = TupleSignal()
@@ -79,10 +77,6 @@ class BaseImgFrame(QLabel):
 
     def contextMenuEvent(self, event):
         self.img_menu.exec(self.mapToGlobal(event.pos()))
-
-    def closeEvent(self, event):
-        self.IsClosed = True
-        self.close()
 
     def mouseDoubleClickEvent(self, e):  # 同时触发mousePressEvent()
         self.scaled_img = self.img.scaled(self.size(), Qt.KeepAspectRatio, self.interpolation)

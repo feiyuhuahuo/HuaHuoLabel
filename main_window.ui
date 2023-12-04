@@ -259,7 +259,7 @@ QComboBox::down-arrow {
                  </property>
                  <property name="icon">
                   <iconset>
-                   <normaloff>images/favorite2.ico</normaloff>images/favorite2.ico</iconset>
+                   <normaloff>images/hot2.png</normaloff>images/hot2.png</iconset>
                  </property>
                 </item>
                </widget>
