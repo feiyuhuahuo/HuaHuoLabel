@@ -5,7 +5,7 @@ import random
 
 from collections import OrderedDict
 from PySide6.QtWidgets import QInputDialog, QMessageBox, QWidget, QApplication, QSizePolicy, QHBoxLayout, \
-    QVBoxLayout, QSpacerItem, QLineEdit, QMenu
+    QVBoxLayout, QSpacerItem, QLineEdit, QMenu, QPushButton
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QIcon, QAction, QCursor, QColor
 from need.custom_widgets.widget_cate_button import ImgCateButton, ImgTagButton, ObjCateButton, ObjTagButton
@@ -68,7 +68,7 @@ class BaseButtonGroup(QWidget):
         h_layout.addItem(QSpacerItem(100, 22, QSizePolicy.Policy.Expanding))
         return h_layout
 
-    def add_button(self, cate='', color='', looking=None, is_default=None, by_click=True):
+    def add_button(self, cate='', color='', looking=None, is_default=None, is_enable=False, by_click=True):
         added = False
         fake_parent = self.__get_fake_prent()
 
@@ -85,9 +85,9 @@ class BaseButtonGroup(QWidget):
         if is_ok and cate:
             if self.check_name_list(cate):
                 if self.objectName() == 'img_cate_buttons':
-                    button = ImgCateButton(self, cate, looking, is_default)
+                    button = ImgCateButton(self, cate, looking, is_default, is_enable)
                 elif self.objectName() == 'img_tag_buttons':
-                    button = ImgTagButton(self, cate, looking, is_default)
+                    button = ImgTagButton(self, cate, looking, is_default, is_enable)
                 elif self.objectName() == 'obj_cate_buttons':
                     button = ObjCateButton(self, cate, looking, is_default)
                 elif self.objectName() == 'obj_tag_buttons':
@@ -199,6 +199,23 @@ class BaseButtonGroup(QWidget):
     def names(self):
         return list(self.button_stat.keys())
 
+    def reset_img_select_enable(self, enable: bool):
+        for i in range(self.v_layout.count()):
+            h_layout = self.v_layout.itemAt(i)
+            for j in range(h_layout.count() - 1):
+                button = h_layout.itemAt(j).widget()
+                if not button.is_default():
+                    button.set_click_valid(enable)
+
+    def reset_img_select_stat(self):
+        for i in range(self.v_layout.count()):
+            h_layout = self.v_layout.itemAt(i)
+            for j in range(h_layout.count() - 1):
+                button = h_layout.itemAt(j).widget()
+                if button.is_selected():
+                    if not button.is_default():
+                        button.set_selected_or_not()
+
     def selected_buttons(self) -> list[str]:
         names = []
         for i in range(self.v_layout.count()):
@@ -210,23 +227,30 @@ class BaseButtonGroup(QWidget):
 
         return names
 
-    def set_button_looking(self, name, looking):
+    def track_is_looking(self, name, looking):
         self.button_stat[name]['looking'] = looking
 
-    def set_button_default(self, name, is_default):
+    def track_is_default(self, name, is_default):
         self.button_stat[name]['is_default'] = is_default
 
     def set_button_ex_group(self, name, ex_group):
         pass
 
-    def set_none_default_not_selected(self):
+    def set_obj_select_stat(self, before_select: bool):
         for i in range(self.v_layout.count()):
             h_layout = self.v_layout.itemAt(i)
             for j in range(h_layout.count() - 1):
                 button = h_layout.itemAt(j).widget()
-                if button.is_selected():
+
+                if before_select:
                     if not button.is_default():
-                        button.set_selected_or_not()
+                        button.set_click_valid(True)
+                    if button.is_selected():
+                        if not button.is_default():
+                            button.set_selected_or_not()
+                else:
+                    if not button.is_default():
+                        button.set_click_valid(False)
 
 
 if __name__ == '__main__':

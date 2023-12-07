@@ -283,6 +283,9 @@ QComboBox::down-arrow {
                   <pointsize>10</pointsize>
                  </font>
                 </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
                </widget>
               </item>
               <item>
@@ -2406,6 +2409,9 @@ padding-right:4px;
                <pointsize>10</pointsize>
               </font>
              </property>
+             <property name="accessibleName">
+              <string/>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton
 {background-color: rgb(240, 240, 240);
@@ -2448,6 +2454,12 @@ border:none;
                <width>20</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string/>
+             </property>
+             <property name="accessibleName">
+              <string/>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton

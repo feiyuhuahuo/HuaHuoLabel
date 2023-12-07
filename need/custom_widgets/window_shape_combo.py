@@ -1,12 +1,12 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-import os
 import pdb
 
-from os import path as osp
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6.QtCore import QPoint
+
+from need.SharedWidgetStatFlags import stat_flags
 
 
 class ShapeCombo(QMainWindow):
@@ -18,6 +18,7 @@ class ShapeCombo(QMainWindow):
         self.resize(220, 400)
 
     def closeEvent(self, event):
+        stat_flags.ShapeCombo_IsOpened = False
         self.parent().shape_type_reset()
 
     def move_to(self, pos: QPoint):
@@ -25,6 +26,7 @@ class ShapeCombo(QMainWindow):
 
     def show_at(self, pos: QPoint):
         self.move(pos)
+        stat_flags.ShapeCombo_IsOpened = True
         self.show()
 
 

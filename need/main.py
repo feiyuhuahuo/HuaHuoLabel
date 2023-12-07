@@ -62,6 +62,8 @@ class HHL_MainWindow(QMainWindow):
         connect_signals(self)
         self.log_info('Application opened.', mark_line=True)
 
+        self.center_img = self.ui.graphicsView.img_area
+
     def closeEvent(self, e):
         close_sub_windows(self)
         # self.save_one_file_json()
@@ -81,7 +83,7 @@ class HHL_MainWindow(QMainWindow):
             w, h = self.ui.graphicsView.width(), self.ui.graphicsView.height()
             if (0 < cursor_pos[0] < w + 10) and (0 < cursor_pos[1] < h + 20):
                 if self.check_warnings('edit_mode'):
-                    self.ui.graphicsView.img_area.focus_set_img_area(ctrl_press=True)
+                    self.center_img.focus_set_img_area(ctrl_press=True)
         else:
             if event.key() == Qt.Key_A:
                 if self.check_warnings('selecting_cate_tag'):
@@ -107,22 +109,23 @@ class HHL_MainWindow(QMainWindow):
             self.ui.label_path.setText(elideNote)
 
     def wheelEvent(self, event):
-        e_x, e_y = event.position().toTuple()
-        tl_x, tl_y = self.ui.groupBox.pos().toTuple()
-        bl_x, bl_y = self.ui.groupBox_2.pos().toTuple()
+        if self.check_warnings('selecting_cate_tag'):
+            e_x, e_y = event.position().toTuple()
+            tl_x, tl_y = self.ui.groupBox.pos().toTuple()
+            bl_x, bl_y = self.ui.groupBox_2.pos().toTuple()
 
-        if e_x > tl_x + 10 and (tl_y + 20 < e_y < bl_y - 10):
-            pos = self.ui.mapToGlobal(self.ui.groupBox_2.pos() + QPoint(10, -70))
+            if e_x > tl_x + 10 and (tl_y + 20 < e_y < bl_y - 10):
+                pos = self.ui.mapToGlobal(self.ui.groupBox_2.pos() + QPoint(10, -70))
 
-            if event.angleDelta().y() > 0:
-                self.ui.radioButton_read.setChecked(True)
-                self.widget_read_edit.set_pixmap_pos('images/read_edit_info/switch_to_read.png', pos)
-            else:
-                self.ui.radioButton_write.setChecked(True)
-                self.widget_read_edit.set_pixmap_pos('images/read_edit_info/switch_to_edit.png', pos)
+                if event.angleDelta().y() > 0:
+                    self.ui.radioButton_read.setChecked(True)
+                    self.widget_read_edit.set_pixmap_pos('images/read_edit_info/switch_to_read.png', pos)
+                else:
+                    self.ui.radioButton_write.setChecked(True)
+                    self.widget_read_edit.set_pixmap_pos('images/read_edit_info/switch_to_edit.png', pos)
 
-            self.widget_read_edit.show()
-            self.activateWindow()
+                self.widget_read_edit.show()
+                self.activateWindow()
 
     @property
     def cur_i(self):
@@ -142,9 +145,9 @@ class HHL_MainWindow(QMainWindow):
         widget = self.sender()
 
         if widget.objectName() == 'pushButton_img_cate_add':
-            self.ui.img_cate_buttons.add_button()
+            self.ui.img_cate_buttons.add_button(is_enable=self.in_edit_mode())
         elif widget.objectName() == 'pushButton_img_tag_add':
-            self.ui.img_tag_buttons.add_button()
+            self.ui.img_tag_buttons.add_button(is_enable=self.in_edit_mode())
         elif widget.objectName() == 'pushButton_obj_cate_add':
             self.ui.obj_cate_buttons.add_button()
         elif widget.objectName() == 'pushButton_obj_tag_add':
@@ -326,16 +329,16 @@ class HHL_MainWindow(QMainWindow):
             mask = np.repeat(mask[:, :, None], 4, axis=2)
             new_color *= mask
             self.ui.pushButton_cross_color.setIcon(QIcon(QPixmap(array_to_qimg(new_color))))
-            self.ui.graphicsView.img_area.change_pen(det_cross_color=QColor(color.name()))
+            self.center_img.change_pen(det_cross_color=QColor(color.name()))
 
     def change_font_color(self):
         if self.color_dlg.exec() == QColorDialog.Accepted:
             color = self.color_dlg.selectedColor()
             self.ui.pushButton_font_color.setStyleSheet('QPushButton { color: %s }' % color.name())
-            self.ui.graphicsView.img_area.change_font(ann_font_color=QColor(color.name()))
+            self.center_img.change_font(ann_font_color=QColor(color.name()))
 
     def change_font_size(self):
-        self.ui.graphicsView.img_area.change_font(ann_font_size=self.ui.spinBox_fontsize.value())
+        self.center_img.change_font(ann_font_size=self.ui.spinBox_fontsize.value())
 
     def change_one_class_category(self):
         new_c, ok = self.input_dlg.getText(self.ui, self.tr('修改类别'), self.tr('请输入类别名称'),
@@ -373,15 +376,15 @@ class HHL_MainWindow(QMainWindow):
         color = QColorDialog.getColor()
         if color.isValid():
             if self.ui.toolBox.currentIndex() == 0:
-                self.ui.graphicsView.img_area.change_pen(seg_pen_color=QColor(color.name()))
+                self.center_img.change_pen(seg_pen_color=QColor(color.name()))
             elif self.ui.toolBox.currentIndex() == 1:
-                self.ui.graphicsView.img_area.change_pen(ann_pen_color=QColor(color.name()))
+                self.center_img.change_pen(ann_pen_color=QColor(color.name()))
 
     def change_pen_size(self):
         if self.ui.toolBox.currentIndex() == 0:
-            self.ui.graphicsView.img_area.change_pen(seg_pen_size=self.ui.spinBox_thickness.value())
+            self.center_img.change_pen(seg_pen_size=self.ui.spinBox_thickness.value())
         elif self.ui.toolBox.currentIndex() == 1:
-            self.ui.graphicsView.img_area.change_pen(ann_pen_size=self.ui.spinBox_thickness2.value())
+            self.center_img.change_pen(ann_pen_size=self.ui.spinBox_thickness2.value())
 
     def check_warnings(self, names: Union[list[str], str]):
         if type(names) == str:
@@ -418,7 +421,7 @@ class HHL_MainWindow(QMainWindow):
         return True
 
     def clear_painted_img(self):
-        self.ui.graphicsView.img_area.clear_scaled_img(to_undo=True)
+        self.center_img.clear_scaled_img(to_undo=True)
 
     def cls_to_button(self):
         self.buttons_clear()
@@ -465,10 +468,10 @@ class HHL_MainWindow(QMainWindow):
 
     def del_all_shapes(self, del_all=True):
         if del_all:
-            self.ui.graphicsView.img_area.clear_all_polygons()
+            self.center_img.clear_all_polygons()
             self.ui.obj_list.clear()
         else:
-            self.ui.graphicsView.img_area.del_polygons()
+            self.center_img.del_polygons()
 
         self.ui.setFocus()
 
@@ -487,8 +490,7 @@ class HHL_MainWindow(QMainWindow):
             return True
 
     def del_img(self, dst_path=None):
-        if not (0 <= self.__cur_i < len(self.imgs)):
-            return
+        assert 0 <= self.__cur_i < len(self.imgs), 'Error, 0 <= self.__cur_i < len(self.imgs) not satisfied.'
 
         img_path = self.imgs[self.__cur_i]
         img_name = img_path.split('/')[-1]
@@ -775,10 +777,10 @@ class HHL_MainWindow(QMainWindow):
 
     def graphics_reset(self):  # 清空所有任务相关的控件
         self.ui.obj_list.clear()
-        self.ui.graphicsView.img_area.clear_all_polygons()
-        self.ui.graphicsView.img_area.collection_window.ui.listWidget.clear()
-        self.ui.graphicsView.img_area.reset_cursor()
-        self.ui.graphicsView.img_area.set_shape_locked(False)
+        self.center_img.clear_all_polygons()
+        self.center_img.collection_window.ui.listWidget.clear()
+        self.center_img.reset_cursor()
+        self.center_img.set_shape_locked(False)
         self.ui.listWidget_imgs_flow.clear()
         self.ui.label_train.setText(' train: 0')
         self.ui.label_train.setStyleSheet('border-top-left-radius: 4px;'
@@ -790,9 +792,8 @@ class HHL_MainWindow(QMainWindow):
                                         'background-color: rgb(200, 200, 200);')
 
         self.ui.radioButton_read.setChecked(True)
-        stat = self.ui.radioButton_read.isChecked()
         self.ui.obj_list.edit_button.setChecked(False)
-        self.ui.obj_list.edit_button.setDisabled(stat)
+        self.ui.obj_list.edit_button.setDisabled(not self.in_edit_mode())
 
         self.obj_info_show_set()
         self.set_action_disabled()
@@ -872,7 +873,7 @@ class HHL_MainWindow(QMainWindow):
         if len(self.imgs):
             self.cv2_img_changed = (self.cv2_img.astype('float32') + brightness_v) * contrast_v
             self.cv2_img_changed = np.clip(self.cv2_img_changed, a_min=0., a_max=255.)
-            self.ui.graphicsView.img_area.paint_img(array_to_qimg(self.cv2_img_changed),
+            self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                     re_center=False, img_info_update=False)
 
     def img_enhance_reset(self):  # done -------------------
@@ -892,7 +893,7 @@ class HHL_MainWindow(QMainWindow):
                 self.cv2_img_changed = cv2.flip(self.cv2_img_changed, 0)
 
             if do_paint:
-                self.ui.graphicsView.img_area.paint_img(array_to_qimg(self.cv2_img_changed),
+                self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                         re_center=False, img_info_update=False)
 
     def img_jump(self, i=None):
@@ -922,7 +923,7 @@ class HHL_MainWindow(QMainWindow):
             contrast_enhancer = ImageEnhance.Contrast(img)
             contrast_img = contrast_enhancer.enhance(value)
             self.cv2_img_changed = np.array(contrast_img)
-            self.ui.graphicsView.img_area.paint_img(array_to_qimg(self.cv2_img_changed),
+            self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                     re_center=False, img_info_update=False)
 
     def img_rotate(self, do_paint=True):  # done------------
@@ -933,7 +934,7 @@ class HHL_MainWindow(QMainWindow):
                 new_degree = f' {(old_degree + 90) % 360}°'
                 self.ui.pushButton_81.setText(new_degree)
                 self.ui.pushButton_81.setChecked(new_degree != ' 0°')
-                self.ui.graphicsView.img_area.paint_img(array_to_qimg(self.cv2_img_changed),
+                self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                         re_center=False, img_info_update=False)
             else:
                 for i in range(old_degree // 90):
@@ -967,6 +968,9 @@ class HHL_MainWindow(QMainWindow):
 
         QMB.information(self.ui, self.tr('无搜索结果'), self.tr('未找到相关图片。'))
         self.ui.setFocus()
+
+    def in_edit_mode(self):
+        return not self.ui.radioButton_read.isChecked()
 
     def init_widgets_wrt_task(self):
         self.ui.checkBox_one_label.setChecked(self.task_cfg['one_file'])
@@ -1027,10 +1031,10 @@ class HHL_MainWindow(QMainWindow):
                 self.ui.obj_list.set_shape_unlocked(item)
 
             self.ui.obj_list.set_shape_locked(cur_item)
-            self.ui.graphicsView.img_area.set_shape_locked(True)
+            self.center_img.set_shape_locked(True)
         else:
             self.ui.obj_list.set_shape_unlocked(cur_item)
-            self.ui.graphicsView.img_area.set_shape_locked(False)
+            self.center_img.set_shape_locked(False)
 
         self.ui.setFocus()
 
@@ -1128,7 +1132,7 @@ class HHL_MainWindow(QMainWindow):
             self.ui.class_list.add_item(item)
             self.sem_class_modified_tip()
 
-        self.ui.graphicsView.img_area.modify_polygon_class(i, name, color.name())
+        self.center_img.modify_polygon_class(i, name, color.name())
         old_item = self.ui.obj_list.currentItem()
         old_class = old_item.text()
         old_item.setText(name)
@@ -1177,10 +1181,10 @@ class HHL_MainWindow(QMainWindow):
             img_name = self.current_img_name()
             ann_jpg = f'{self.get_root("ann")}/{img_name[:-4]}.jpg'
             if osp.exists(ann_jpg):
-                self.ui.graphicsView.img_area.set_ann_painted_img(ann_jpg)
+                self.center_img.set_ann_painted_img(ann_jpg)
 
     def polygons_to_img(self):
-        self.ui.graphicsView.img_area.clear_all_polygons()
+        self.center_img.clear_all_polygons()
         self.ui.obj_list.clear()
 
         img_path = self.imgs[self.__cur_i]
@@ -1223,7 +1227,7 @@ class HHL_MainWindow(QMainWindow):
                 self.sem_class_modified_tip()
 
         # polygons的嵌套的数据结构导致数据容易发生原位修改，哪怕使用了.get()方法和函数传参也一样，具体原理未知
-        self.ui.graphicsView.img_area.prepare_polygons(deepcopy(polygons), img_h, img_w)
+        self.center_img.prepare_polygons(deepcopy(polygons), img_h, img_w)
 
     def raise_label_mode_conflict(self):  # done----------------------------
         if self.task_root:
@@ -1309,7 +1313,7 @@ class HHL_MainWindow(QMainWindow):
     def save_ann_img(self):
         folder = f'{self.get_root("ann")}'
         os.makedirs(folder, exist_ok=True)
-        img = self.ui.graphicsView.img_area.get_ann_img()
+        img = self.center_img.get_ann_img()
         img_array = qimage_to_array(img)
         img_name = self.current_img_name()[:-4]
         save_path = f'{folder}/{img_name}.jpg'
@@ -1325,7 +1329,7 @@ class HHL_MainWindow(QMainWindow):
         img_name = img_path.split('/')[-1]
         tv = self.current_tv()
 
-        json_polygons = self.ui.graphicsView.img_area.get_tuple_polygons()
+        json_polygons = self.center_img.get_tuple_polygons()
 
         if self.WorkMode == self.AllModes[2] and self.ui.pushButton_bg.objectName() == 'bg':
             assert not json_polygons, 'json_polygons should be empty when label is bg!'
@@ -1460,7 +1464,7 @@ class HHL_MainWindow(QMainWindow):
                 self.__cur_i += 1
 
         if 0 <= self.__cur_i < self.img_num:
-            # self.ui.graphicsView.img_area.set_shape_locked(False)
+            # self.center_img.set_shape_locked(False)
             self.show_img_status_info()
             self.show_label_to_ui()
             # self.set_tv_label()
@@ -1576,23 +1580,26 @@ class HHL_MainWindow(QMainWindow):
                 assert self.ui.obj_cate_buttons.isVisible(), 'obj_cate_buttons must be visible after one shape drawed.'
                 if self.ui.pushButton_waiting_cate.has_confirmed():
                     obj_done = True
+                    self.ui.obj_cate_buttons.set_obj_select_stat(before_select=False)
                 if ((self.ui.obj_tag_buttons.isVisible() and self.ui.pushButton_waiting_tag.has_confirmed())
                         or not self.ui.obj_tag_buttons.isVisible()):
                     tag_done = True
+                    self.ui.obj_tag_buttons.set_obj_select_stat(before_select=False)
 
                 if obj_done and tag_done:
                     cates = self.ui.obj_cate_buttons.selected_buttons()
                     color = self.ui.obj_cate_buttons.color(cates[0])
                     self.ui.obj_list.add_item(', '.join(cates), color)
                     tags = self.ui.obj_tag_buttons.selected_buttons()
-                    self.ui.graphicsView.img_area.save_one_shape(cates, tags, color)
+                    self.center_img.save_one_shape(cates, tags, color)
                     self.ui.comboBox_2.setDisabled(False)
-                    # self.show_shape_info(self.ui.graphicsView.img_area.get_one_polygon(-1))
+                    # self.show_shape_info(self.center_img.get_one_polygon(-1))
 
     def select_cate_tag_before(self):
         self.ui.comboBox_2.setDisabled(True)
-        self.ui.obj_cate_buttons.set_none_default_not_selected()
-        self.ui.obj_tag_buttons.set_none_default_not_selected()
+
+        self.ui.obj_cate_buttons.set_obj_select_stat(before_select=True)
+        self.ui.obj_tag_buttons.set_obj_select_stat(before_select=True)
         if not self.ui.obj_cate_buttons.isVisible():
             self.ui.pushButton_obj_cate.click()
 
@@ -1617,7 +1624,7 @@ class HHL_MainWindow(QMainWindow):
 
     def set_hide_cross(self):  # done ---------------------------------------
         hide = not self.ui.checkBox_hide_cross.isChecked()
-        self.ui.graphicsView.img_area.set_hide_cross(hide)
+        self.center_img.set_hide_cross(hide)
         self.ui.pushButton_cross_color.setDisabled(hide)
 
     def set_info_widget_selected(self):
@@ -1653,7 +1660,7 @@ class HHL_MainWindow(QMainWindow):
             self.task_cfg['one_file'] = self.OneFileLabel
             self.task_cfg_export()
 
-    def set_read_mode(self):
+    def set_edit_mode(self):
         # if self.OneFileLabel:
         #     if self.ui.radioButton_read.isChecked():
         #         self.thread_auto_save.terminate()
@@ -1661,12 +1668,16 @@ class HHL_MainWindow(QMainWindow):
         #         self.thread_auto_save.start()
         # else:
         #     self.thread_auto_save.terminate()
-        read_mode = self.ui.radioButton_read.isChecked()
-        if read_mode:
-            self.ui.obj_list.edit_button.setChecked(not read_mode)
+
+        edit_mode = self.in_edit_mode()
+        if not edit_mode:
+            self.ui.obj_list.edit_button.setChecked(edit_mode)
+
             # self.ui.pushButton_bg.setDisabled(read_mode)
 
-        self.ui.obj_list.edit_button.setDisabled(read_mode)
+        self.ui.obj_list.edit_button.setDisabled(not edit_mode)
+        self.ui.img_cate_buttons.reset_img_select_enable(edit_mode)
+        self.ui.img_tag_buttons.reset_img_select_enable(edit_mode)
 
     def set_scan_delay(self):  # done -------------
         delay, is_ok = self.input_dlg.getInt(self.ui, self.tr('切图延时'), self.tr('单位：ms'),
@@ -1697,16 +1708,16 @@ class HHL_MainWindow(QMainWindow):
 
     def set_shape_edit_mode(self):
         stat = self.ui.obj_list.edit_button.isChecked()
-        self.ui.graphicsView.img_area.set_tool_mode(shape_edit=stat)
+        self.center_img.set_tool_mode(shape_edit=stat)
         self.set_action_disabled()
 
     def set_tool_mode(self):
-        self.ui.graphicsView.img_area.clear_scaled_img(to_undo=False)
-        self.ui.graphicsView.img_area.clear_all_polygons()
+        self.center_img.clear_scaled_img(to_undo=False)
+        self.center_img.clear_all_polygons()
         draw = self.task_root and self.ui.toolBox.currentIndex() == 0
         shape_edit = draw and self.ui.obj_list.edit_button.isChecked()
         ann = self.task_root and self.ui.toolBox.currentIndex() == 1
-        self.ui.graphicsView.img_area.set_tool_mode(draw, shape_edit, ann)
+        self.center_img.set_tool_mode(draw, shape_edit, ann)
 
         if self.ui.toolBox.currentIndex() == 1:
             self.paint_ann_img()
@@ -1734,7 +1745,7 @@ class HHL_MainWindow(QMainWindow):
 
     def shape_type_change(self):
         text = self.ui.comboBox_2.currentText()
-        signal_shape_type.send(text)
+        self.center_img.change_shape_type(text)
 
         if text == self.tr('组合'):
             pos = self.ui.line_9.mapToGlobal(QPoint(0, 0)) + QPoint(0, 10)
@@ -1742,7 +1753,8 @@ class HHL_MainWindow(QMainWindow):
             self.window_shape_combo.show_at(pos)
 
     def shape_type_reset(self):
-        self.ui.comboBox_2.setCurrentIndex(0)
+        if self.ui.comboBox_2.currentIndex() == 4:
+            self.ui.comboBox_2.setCurrentIndex(0)
 
     def show_bookmark(self):
         if 0 <= self.__cur_i < self.img_num:
@@ -1792,7 +1804,7 @@ class HHL_MainWindow(QMainWindow):
             h_flip, v_flip = self.ui.pushButton_82.isChecked(), self.ui.pushButton_83.isChecked()
             self.img_flip(h_flip=h_flip, v_flip=v_flip, do_paint=False)
             self.img_rotate(do_paint=False)
-            self.ui.graphicsView.img_area.paint_img(array_to_qimg(self.cv2_img_changed), path)
+            self.center_img.paint_img(array_to_qimg(self.cv2_img_changed), path)
 
             self.ui.label_index.setText(f'<font color=violet>{self.__cur_i + 1}</font>/{self.img_num}')
             self.bottom_img_text = path
@@ -1940,7 +1952,7 @@ class HHL_MainWindow(QMainWindow):
         # if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
         #     return
         #
-        # text = self.get_info_text(self.ui.graphicsView.img_area.get_one_polygon(i))
+        # text = self.get_info_text(self.center_img.get_one_polygon(i))
         # self.ui.listWidget_obj_info.item(i).setText(text)
 
     def version_add(self):

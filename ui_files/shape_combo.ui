@@ -39,21 +39,6 @@
      <property name="selectionMode">
       <enum>QAbstractItemView::MultiSelection</enum>
      </property>
-     <item>
-      <property name="text">
-       <string>矩形: 1</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>多边形: 2</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>椭圆形: 3</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item alignment="Qt::AlignLeft">
@@ -75,6 +60,9 @@
        <pointsize>10</pointsize>
       </font>
      </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::DefaultContextMenu</enum>
+     </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>
      </property>
@@ -84,16 +72,6 @@
      <property name="selectionRectVisible">
       <bool>false</bool>
      </property>
-     <item>
-      <property name="text">
-       <string>划伤: 1+2</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>黑板: 1+2, 3-, +8</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item>

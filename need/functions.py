@@ -68,7 +68,7 @@ def get_file_cmtime(path):
     return c_time, m_time
 
 
-def get_HHL_parent(widget: QWidget):
+def get_HHL_parent(widget: QWidget):  # 返回后，只允许调用HHL_MainWindow的方法，不允许调用其子控件，否则用信号
     assert widget.parent() is not None, f'"{widget}" has no parent.'
 
     while 'HHL_MainWindow' not in str(widget.parent()):

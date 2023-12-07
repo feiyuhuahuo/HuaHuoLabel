@@ -2,9 +2,9 @@
 # -*- coding:utf-8 -*-
 import pdb
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QColor
+from PySide6.QtGui import QIcon, QColor, QCursor, QAction, QPixmap
 from PySide6.QtWidgets import QPushButton, QApplication, QWidget, QListWidget, QListWidgetItem, QSizePolicy, \
-    QVBoxLayout, QSpacerItem, QCheckBox
+    QVBoxLayout, QSpacerItem, QCheckBox, QMenu
 from need.custom_signals import IntSignal, BoolSignal
 from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
 from need.functions import get_HHL_parent
@@ -20,7 +20,7 @@ class ObjList(QWidget):
         font = self.font()
         font.setPointSize(10)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding))
-        self.title_button = QPushButton(self.tr('     标注列表'), self)
+        self.title_button = QPushButton(self.tr('   标注列表') + f'(0)', self)
         self.title_button.setFont(font)
         self.title_button.setFixedWidth(118)
         self.title_button.setStyleSheet('QPushButton '
@@ -38,11 +38,12 @@ class ObjList(QWidget):
         self.title_button.clicked.connect(self.__fold_list)
 
         self.edit_button = QCheckBox(self)
-        self.edit_button.move(78, -5)
+        self.edit_button.move(80, -5)
         self.edit_button.setStyleSheet('QCheckBox::indicator {padding-top: 1px; width: 40px; height: 26px;}'
                                        'QCheckBox::indicator:unchecked {image: url(images/switch_off.png);}'
                                        'QCheckBox::indicator:checked {image: url(images/switch_on.png);}')
         self.edit_button.setToolTip(self.tr('修改标注'))
+        self.edit_button.toggled.connect(self.__set_shape_edit_mode)
         self.edit_button.setDisabled(True)
 
         self.obj_list = QListWidget(self)
@@ -104,23 +105,27 @@ class ObjList(QWidget):
         layout.addWidget(self.obj_list)
         self.setLayout(layout)
 
+        self.menu = QMenu(title='label_list_menu', parent=self)
+        self.customContextMenuRequested.connect(self.show_menu)
+        self.action_modify_cate = QAction(QIcon('images/note.png'), self.tr('修改类别'), self)
+
+        # self.action_modify_cate.triggered.connect(self.modify_obj_list_start)
+        self.action_shape = QAction(QIcon('images/icon_43.png'), self.tr('删除标注'), self)
+        # self.action_delete_one_shape.triggered.connect(lambda: self.del_all_shapes(False))
+        self.action_delete_all = QAction(QIcon('images/no_no.png'), self.tr('全部删除'), self)
+        # self.action_delete_all.triggered.connect(lambda: self.del_all_shapes(True))
+        self.action_lock_shape = QAction(QIcon('images/locked.png'), self.tr('锁定标注'), self)
+        # self.action_lock_shape.triggered.connect(self.lock_shape)
+
+        self.menu.addAction(self.action_modify_cate)
+        self.menu.addAction(self.action_shape)
+        self.menu.addAction(self.action_delete_all)
+        self.menu.addAction(self.action_lock_shape)
+        self.menu.setDisabled(True)
+
     def wheelEvent(self, event):
         if self.edit_button.isEnabled():
             self.edit_button.setChecked(event.angleDelta().y() < 0)
-
-    def add_item(self, text, color):
-        item = QListWidgetItem(text)
-        item.setForeground(QColor(color))
-        self.obj_list.addItem(item)
-        self.update_list_num()
-
-    def clear(self):
-        self.obj_list.clear()
-        self.update_list_num()
-
-    def del_row(self, row: int):
-        self.obj_list.takeItem(row)
-        self.update_list_num()
 
     def __fold_list(self):
         self.obj_list.setVisible(not self.obj_list.isVisible())
@@ -132,55 +137,30 @@ class ObjList(QWidget):
             self.parent().layout().setStretch(1, 1)
             self.parent().layout().setStretch(2, 20)
 
+    def __set_shape_edit_mode(self):
+        self.menu.setDisabled(not self.edit_button.isChecked())
+
+    def __update_list_num(self):
+        count = self.obj_list.count()
+        self.title_button.setText(self.tr('   标注列表') + f'({count})')
+
+    def add_item(self, text, color):
+        item = QListWidgetItem(text)
+        item.setForeground(QColor(color))
+        self.obj_list.addItem(item)
+        self.__update_list_num()
+
+    def clear(self):
+        self.obj_list.clear()
+        self.__update_list_num()
+
+    def del_row(self, row: int):
+        self.obj_list.takeItem(row)
+        self.__update_list_num()
+
     def modify_cur_c(self, new_c: str):
         item = self.obj_list.currentItem()
         item.setText(new_c)
-
-    def set_look(self, item: QListWidgetItem):
-        item.setIcon(self.icon_look)
-
-    def set_unlook(self, item: QListWidgetItem):
-        item.setIcon(self.icon_unlook)
-
-    def set_looking(self, double_click=False):
-        item = self.obj_list.currentItem()
-
-        if double_click:
-            item.setIcon(self.icon_look)
-            row = self.obj_list.currentRow()
-            count = self.obj_list.count()
-            for i in range(count):
-                if i != row:
-                    self.obj_list.item(i).setIcon(self.icon_unlook)
-        else:
-            if item.icon().cacheKey() == self.icon_look_key:
-                item.setIcon(self.icon_unlook)
-            elif item.icon().cacheKey() == self.icon_unlook_key:
-                item.setIcon(self.icon_look)
-
-    def looking_all(self):
-        for i in range(self.obj_list.count()):
-            item = self.obj_list.item(i)
-            if item.icon().cacheKey() == self.icon_unlook_key:
-                return False
-        return True
-
-    def looking_classes(self):
-        classes = []
-        for i in range(self.obj_list.count()):
-            item = self.obj_list.item(i)
-            if item.icon().cacheKey() == self.icon_look_key:
-                classes.append(item.text())
-
-        return classes
-
-    def set_name(self, name):
-        self.name = name
-
-    def update_list_num(self):
-        pass
-        # signal_update_num.set_name(self.name)
-        # signal_update_num.send(self.obj_list.count())
 
     def has_locked_shape(self):
         for i in range(self.obj_list.count()):
@@ -207,6 +187,9 @@ class ObjList(QWidget):
         item = self.obj_list.item(i)
         self.obj_list.setCurrentItem(item)
         item.setSelected(True)
+
+    def show_menu(self):  # 在鼠标位置显示菜单
+        self.menu.exec(QCursor.pos())
 
 
 if __name__ == '__main__':

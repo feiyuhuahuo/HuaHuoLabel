@@ -36,7 +36,7 @@ def connect_signals(main_window):
 
     # main_window.ui.obj_list.itemSelectionChanged.connect(main_window.set_info_widget_selected)
 
-    main_window.ui.pushButton_35.clicked.connect(main_window.ui.graphicsView.img_area.undo)
+    # main_window.ui.pushButton_35.clicked.connect(main_window.ui.graphicsView.img_area.undo)
     main_window.ui.pushButton_36.clicked.connect(main_window.save_ann_img)
     main_window.ui.pushButton_40.clicked.connect(main_window.clear_painted_img)
     main_window.ui.pushButton_81.clicked.connect(lambda: main_window.img_rotate(do_paint=True))
@@ -81,7 +81,7 @@ def connect_signals(main_window):
 
     # main_window.ui.pushButton_update_png.clicked.connect(main_window.update_sem_pngs)
 
-    main_window.ui.radioButton_read.toggled.connect(main_window.set_read_mode)
+    main_window.ui.radioButton_read.toggled.connect(main_window.set_edit_mode)
 
     main_window.ui.spinBox_thickness.spinBox.valueChanged.connect(main_window.change_pen_size)
     main_window.ui.spinBox_fontsize.spinBox.valueChanged.connect(main_window.change_font_size)
@@ -98,8 +98,6 @@ def connect_signals(main_window):
     signal_auto_save.signal.connect(main_window.auto_save)
     signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
     signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
-    signal_del_shape.signal.connect(main_window.del_shape)
-    signal_move2new_folder.signal.connect(main_window.move_to_new_folder)
     # signal_one_collection_done.signal.connect(main_window.select_cate_tag)
     signal_button_selected_done.signal.connect(main_window.select_cate_tag_after)
     signal_shape_info_update.signal.connect(main_window.update_shape_info_text)
@@ -111,23 +109,6 @@ def connect_signals(main_window):
 
 
 def init_menu(main_win):
-    # main_win.menu_seg_annotation = QMenu(title='label_list_menu', parent=main_win)
-    # main_win.ui.obj_list.customContextMenuRequested.connect(
-    #     lambda: main_win.show_menu(main_win.menu_seg_annotation))
-    # main_win.action_modify_one_shape_class = QAction(main_win.tr('修改类别'), main_win)
-    # main_win.action_modify_one_shape_class.triggered.connect(main_win.modify_obj_list_start)
-    # main_win.action_delete_one_shape = QAction(main_win.tr('删除标注'), main_win)
-    # main_win.action_delete_one_shape.triggered.connect(lambda: main_win.del_all_shapes(False))
-    # main_win.action_delete_all = QAction(main_win.tr('全部删除'), main_win)
-    # main_win.action_delete_all.triggered.connect(lambda: main_win.del_all_shapes(True))
-    # main_win.action_lock_shape = QAction(main_win.tr('锁定标注'), main_win)
-    # main_win.action_lock_shape.triggered.connect(main_win.lock_shape)
-
-    # main_win.menu_seg_annotation.addAction(main_win.action_modify_one_shape_class)
-    # main_win.menu_seg_annotation.addAction(main_win.action_delete_one_shape)
-    # main_win.menu_seg_annotation.addAction(main_win.action_delete_all)
-    # main_win.menu_seg_annotation.addAction(main_win.action_lock_shape)
-
     main_win.menu_set_shape_info = QMenu(main_win)
     main_win.action_oc_shape_info = QAction(main_win.tr('禁用（提高切图速度）'), main_win)
     main_win.action_oc_shape_info.triggered.connect(main_win.oc_shape_info)
