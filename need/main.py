@@ -16,6 +16,7 @@ from need.custom_signals import ErrorSignal
 from need.algorithms import get_seg_mask
 from need.functions import *
 from need.utils import MonitorVariable, INS_all_classes
+from need.SharedWidgetStatFlags import stat_flags
 
 
 # noinspection PyUnresolvedReferences
@@ -145,9 +146,9 @@ class HHL_MainWindow(QMainWindow):
         widget = self.sender()
 
         if widget.objectName() == 'pushButton_img_cate_add':
-            self.ui.img_cate_buttons.add_button(is_enable=self.in_edit_mode())
+            self.ui.img_cate_buttons.add_button(is_enable=stat_flags.HHL_Edit_Mode)
         elif widget.objectName() == 'pushButton_img_tag_add':
-            self.ui.img_tag_buttons.add_button(is_enable=self.in_edit_mode())
+            self.ui.img_tag_buttons.add_button(is_enable=stat_flags.HHL_Edit_Mode)
         elif widget.objectName() == 'pushButton_obj_cate_add':
             self.ui.obj_cate_buttons.add_button()
         elif widget.objectName() == 'pushButton_obj_tag_add':
@@ -793,7 +794,7 @@ class HHL_MainWindow(QMainWindow):
 
         self.ui.radioButton_read.setChecked(True)
         self.ui.obj_list.edit_button.setChecked(False)
-        self.ui.obj_list.edit_button.setDisabled(not self.in_edit_mode())
+        self.ui.obj_list.edit_button.setDisabled(not stat_flags.HHL_Edit_Mode)
 
         self.obj_info_show_set()
         self.set_action_disabled()
@@ -862,7 +863,7 @@ class HHL_MainWindow(QMainWindow):
                 return True
         return False
 
-    def img_enhance(self):  # done -------------------
+    def img_enhance(self):
         self.ui.horizontalSlider_3.setValue(100)
 
         brightness_v = self.ui.horizontalSlider.value()
@@ -876,7 +877,7 @@ class HHL_MainWindow(QMainWindow):
             self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                     re_center=False, img_info_update=False)
 
-    def img_enhance_reset(self):  # done -------------------
+    def img_enhance_reset(self):
         self.ui.pushButton_82.setChecked(False)
         self.ui.pushButton_83.setChecked(False)
         self.ui.pushButton_81.setText(' 0°')
@@ -885,7 +886,7 @@ class HHL_MainWindow(QMainWindow):
         self.ui.horizontalSlider_2.setValue(100)
         self.ui.horizontalSlider_3.setValue(100)
 
-    def img_flip(self, h_flip=False, v_flip=False, do_paint=True):  # done -------------------
+    def img_flip(self, h_flip=False, v_flip=False, do_paint=True):
         if len(self.imgs) and self.cv2_img_changed is not None:
             if h_flip:
                 self.cv2_img_changed = cv2.flip(self.cv2_img_changed, 1)
@@ -911,7 +912,7 @@ class HHL_MainWindow(QMainWindow):
         elif index > self.__cur_i:
             self.scan_img(next=True, count=index - self.__cur_i, from_jump=True)
 
-    def img_pil_contrast(self):  # done----------------
+    def img_pil_contrast(self):
         self.ui.horizontalSlider.setValue(0)
         self.ui.horizontalSlider_2.setValue(100)
 
@@ -926,7 +927,7 @@ class HHL_MainWindow(QMainWindow):
             self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
                                                     re_center=False, img_info_update=False)
 
-    def img_rotate(self, do_paint=True):  # done------------
+    def img_rotate(self, do_paint=True):
         if len(self.imgs) and self.cv2_img_changed is not None:
             old_degree = int(self.ui.pushButton_81.text().strip().removesuffix('°'))
             if do_paint:
@@ -951,7 +952,7 @@ class HHL_MainWindow(QMainWindow):
         c_time, m_time = get_file_cmtime(img_path)
         self.ui.label_time_info.setText(self.tr(f'创建: {c_time}, 修改: {m_time}'))
 
-    def img_xy_color_update(self, info):  # done----------------------
+    def img_xy_color_update(self, info):
         x, y, r, g, b = info
         self.ui.label_xyrgb.setText(f'X: {x}, Y: {y} <br>'  # &nbsp; 加入空格
                                     f'<font color=red> R: {r}, </font>'
@@ -968,9 +969,6 @@ class HHL_MainWindow(QMainWindow):
 
         QMB.information(self.ui, self.tr('无搜索结果'), self.tr('未找到相关图片。'))
         self.ui.setFocus()
-
-    def in_edit_mode(self):
-        return not self.ui.radioButton_read.isChecked()
 
     def init_widgets_wrt_task(self):
         self.ui.checkBox_one_label.setChecked(self.task_cfg['one_file'])
@@ -1148,7 +1146,6 @@ class HHL_MainWindow(QMainWindow):
 
         self.ui.setFocus()
 
-    # done ----------------
     def new_img_window(self, path=''):
         if not path:
             path = self.file_select_dlg.getOpenFileName(self, self.tr('选择图片'),
@@ -1669,17 +1666,15 @@ class HHL_MainWindow(QMainWindow):
         # else:
         #     self.thread_auto_save.terminate()
 
-        edit_mode = self.in_edit_mode()
-        if not edit_mode:
-            self.ui.obj_list.edit_button.setChecked(edit_mode)
+        stat_flags.HHL_Edit_Mode = self.ui.radioButton_write.isChecked()
+        if not stat_flags.HHL_Edit_Mode:
+            self.ui.obj_list.edit_button.setChecked(stat_flags.HHL_Edit_Mode)
 
-            # self.ui.pushButton_bg.setDisabled(read_mode)
+        self.ui.obj_list.edit_button.setDisabled(not stat_flags.HHL_Edit_Mode)
+        self.ui.img_cate_buttons.reset_img_select_enable(stat_flags.HHL_Edit_Mode)
+        self.ui.img_tag_buttons.reset_img_select_enable(stat_flags.HHL_Edit_Mode)
 
-        self.ui.obj_list.edit_button.setDisabled(not edit_mode)
-        self.ui.img_cate_buttons.reset_img_select_enable(edit_mode)
-        self.ui.img_tag_buttons.reset_img_select_enable(edit_mode)
-
-    def set_scan_delay(self):  # done -------------
+    def set_scan_delay(self):
         delay, is_ok = self.input_dlg.getInt(self.ui, self.tr('切图延时'), self.tr('单位：ms'),
                                              self.scan_delay, 0, 9999, 100)
         if is_ok:
@@ -1696,7 +1691,7 @@ class HHL_MainWindow(QMainWindow):
         if button:
             button.set_as_default()
 
-    def set_separate_label(self, by_click=False):  # done------------------
+    def set_separate_label(self, by_click=False):
         if by_click:
             self.SeparateLabel = self.ui.checkBox_separate_label.isChecked()
             if not self.SeparateLabel and not self.OneFileLabel:

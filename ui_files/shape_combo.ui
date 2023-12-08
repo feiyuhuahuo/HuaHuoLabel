@@ -10,6 +10,9 @@
     <height>366</height>
    </rect>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::CustomContextMenu</enum>
+  </property>
   <property name="windowTitle">
    <string>高级形状</string>
   </property>
@@ -32,6 +35,9 @@
       <font>
        <pointsize>10</pointsize>
       </font>
+     </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>
@@ -61,7 +67,7 @@
       </font>
      </property>
      <property name="contextMenuPolicy">
-      <enum>Qt::DefaultContextMenu</enum>
+      <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>

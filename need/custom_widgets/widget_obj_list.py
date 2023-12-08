@@ -1,13 +1,10 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-import pdb
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QColor, QCursor, QAction, QPixmap
+from PySide6.QtGui import QIcon, QColor, QCursor, QAction
 from PySide6.QtWidgets import QPushButton, QApplication, QWidget, QListWidget, QListWidgetItem, QSizePolicy, \
     QVBoxLayout, QSpacerItem, QCheckBox, QMenu
 from need.custom_signals import IntSignal, BoolSignal
 from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
-from need.functions import get_HHL_parent
 
 signal_update_num = IntSignal()
 signal_obj_list_folded = BoolSignal()
@@ -43,7 +40,6 @@ class ObjList(QWidget):
                                        'QCheckBox::indicator:unchecked {image: url(images/switch_off.png);}'
                                        'QCheckBox::indicator:checked {image: url(images/switch_on.png);}')
         self.edit_button.setToolTip(self.tr('修改标注'))
-        self.edit_button.toggled.connect(self.__set_shape_edit_mode)
         self.edit_button.setDisabled(True)
 
         self.obj_list = QListWidget(self)
@@ -137,9 +133,6 @@ class ObjList(QWidget):
             self.parent().layout().setStretch(1, 1)
             self.parent().layout().setStretch(2, 20)
 
-    def __set_shape_edit_mode(self):
-        self.menu.setDisabled(not self.edit_button.isChecked())
-
     def __update_list_num(self):
         count = self.obj_list.count()
         self.title_button.setText(self.tr('   标注列表') + f'({count})')
@@ -157,6 +150,13 @@ class ObjList(QWidget):
     def del_row(self, row: int):
         self.obj_list.takeItem(row)
         self.__update_list_num()
+
+    def draw_selected_shape(self, i):  # 在标注列表选定当前项时，对应高亮显示图上的标注
+        if i == -1:
+            if not self.has_locked_shape():
+                signal_draw_selected_shape.send(self.obj_list.currentRow())
+        else:
+            signal_draw_selected_shape.send(i)
 
     def modify_cur_c(self, new_c: str):
         item = self.obj_list.currentItem()
@@ -176,19 +176,17 @@ class ObjList(QWidget):
     def set_shape_unlocked(self, item: QListWidgetItem):
         item.setIcon(QIcon())
 
-    def draw_selected_shape(self, i):  # 在标注列表选定当前项时，对应高亮显示图上的标注
-        if i == -1:
-            if not self.has_locked_shape():
-                signal_draw_selected_shape.send(self.obj_list.currentRow())
-        else:
-            signal_draw_selected_shape.send(i)
-
     def set_shape_selected(self, i):  # 在图上选定标注时，对应设置标注列表的当前项
         item = self.obj_list.item(i)
         self.obj_list.setCurrentItem(item)
         item.setSelected(True)
 
     def show_menu(self):  # 在鼠标位置显示菜单
+        if not self.edit_button.isChecked():
+            self.menu.setDisabled(True)
+        else:
+            self.menu.setDisabled(False)
+
         self.menu.exec(QCursor.pos())
 
 
