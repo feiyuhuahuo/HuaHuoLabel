@@ -4,6 +4,8 @@
 
 ## [===> English README.md](README_EN.md)  
 
+Thanks for the star. A new version is developing. You can check it in branch: new_fw. More stronger function, better UI, unified label process, format conversion, auto labeling... But since I develop with my spare time, it still needs a long time to go.    
+
 ## 花火标注  
 <div align=center>
 <img src="images/readme_imgs/main_ui_cn.png" width="800px">  
@@ -76,13 +78,6 @@ Ubuntu版本：
     打包完成后，将images文件夹、ts_files文件夹、ui_files文件夹、project.json文件拷贝到软件根目录下。  
 
 3. 克隆原代码后直接在IDE里运行[HHL.py](HHL.py)
-
-## 帮助项目
-1. 如果你熟悉PySide6，这些问题或许可以帮到作者。  
-https://forum.qt.io/topic/141592/can-not-move-horizontalscrollbar-to-the-rightmost-side
-https://forum.qt.io/topic/141742/how-to-translate-text-with-quiloader
-
-2. 作者英文水平有限，软件英文版的翻译以及[USAGE_EN.md](USAGE_EN.md)的翻译需要您的宝贵意见。  
 
 ## License  
 花火标注采用GNU GPL许可证，您可以随意使用该工具，但在未取得作者许可的情况下，请勿使用该软件进行商业行为。  
