@@ -145,31 +145,9 @@ def has_ch(text):
 
 
 def img_exif_orientation(img):
-    exif = img.getexif()
-    if exif is None:
-        return img
-
-    exif = {ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS}
-    orientation = exif.get('Orientation', None)
-
-    if orientation == 1:
-        return img
-    elif orientation == 2:
-        return ImageOps.mirror(img)
-    elif orientation == 3:
-        return img.transpose(Image.ROTATE_180)
-    elif orientation == 4:
-        return ImageOps.flip(img)
-    elif orientation == 5:
-        return ImageOps.mirror(img.transpose(Image.ROTATE_270))
-    elif orientation == 6:
-        return img.transpose(Image.ROTATE_270)
-    elif orientation == 7:
-        return ImageOps.mirror(img.transpose(Image.ROTATE_90))
-    elif orientation == 8:
-        return img.transpose(Image.ROTATE_90)
-    else:
-        return img
+    if (img.getexif()).get(274):
+        img = ImageOps.exif_transpose(img)
+    return img
 
 
 def img_path2_qpixmap(img_path):

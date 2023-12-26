@@ -122,7 +122,7 @@ class PushButtonWaiting(QPushButton):
                 stat_flags.PushButtonWaitingTag_IsVisible = True
 
             self.__color_i = 0
-            self.timer.start(80)
+            self.timer.start(50)  # 背景色变换的时间
 
 # if __name__ == "__main__":
 #     from PySide6.QtWidgets import QApplication

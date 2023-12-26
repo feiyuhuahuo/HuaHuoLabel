@@ -9,11 +9,9 @@ from PIL import Image, ImageOps, ExifTags
 
 Image.MAX_IMAGE_PIXELS = None
 
-img = Image.open('../images/test_imgs/1_2.jpg')
+img = Image.open('D:\Data\SIC_D/test/3.1.jpg')
 exif = img.getexif()
 exif = {ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS}
 orientation = exif.get('Orientation', None)
 print('rotation: ', orientation)
-print('h, w: ', img.size)
-
-img.save('../images/test_imgs/1_2.tif')
+print('w, h: ', img.size)

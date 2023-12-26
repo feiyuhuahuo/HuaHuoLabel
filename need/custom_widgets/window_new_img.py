@@ -14,7 +14,7 @@ class BaseImgWindow(QMainWindow):
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon('images/icon.png'))
 
-        width = self.ui.img_area.width()  # 确保img_area能以512*512的大小展示，否则影响其坐标计算等
+        width = self.ui.img_area.width()  # 确保img_area能以512*512的大小展示，否则可能影响其坐标计算等（不确定）。
         height = self.ui.img_area.height() + self.ui.label_xyrgb.height() + 6 + 4  # 6是layout spacing, 4是测出来的误差
         self.resize(width, height)
 
@@ -22,8 +22,8 @@ class BaseImgWindow(QMainWindow):
         self.ui.img_area.signal_img_time2ui.signal.connect(self.img_time_info_update)
         self.ui.img_area.signal_img_size2ui.signal.connect(self.img_size_info_update)
 
-    def paint_img(self, img_path_or_pix_map, img_path, re_center=True, img_info_update=True):
-        self.ui.img_area.paint_img(img_path_or_pix_map, img_path, re_center, img_info_update)
+    def paint_img(self, pix_map, img_path, re_center=True, img_info_update=True):
+        self.ui.img_area.paint_img(pix_map, img_path, re_center, img_info_update)
 
     def img_size_info_update(self, wh: tuple):
         ori_w, ori_h = self.ui.img_area.ori_img_size()

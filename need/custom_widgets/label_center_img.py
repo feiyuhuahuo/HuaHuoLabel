@@ -12,7 +12,7 @@ from need.utils import AnnUndo, INS_shape_type
 from need.custom_signals import *
 from need.custom_widgets import SelectItem, signal_select_window_close, CustomMessageBox, signal_shape_combo_reset, \
     signal_rename_sub_shape, signal_draw_sub_shape
-from need.functions import get_HHL_parent
+from need.functions import get_HHL_parent, img_path2_qpixmap
 from need.SharedWidgetStatFlags import stat_flags
 
 signal_draw_shape_done = BoolSignal()
@@ -191,14 +191,14 @@ class BaseImgFrame(QLabel):
     def ori_img_size(self) -> tuple:
         return self.img.size().toTuple()
 
-    def paint_img(self, img_path_or_pix_map, img_path='', re_center=True, img_info_update=True):
-        if img_path_or_pix_map is None:  # 有时候是None，原因未知
+    def paint_img(self, path_pixmap_qimage, img_path='', re_center=True, img_info_update=True):
+        if path_pixmap_qimage is None:  # 有时候是None，原因未知
             return
         if img_info_update:
             assert img_path, 'img_path is None.'
 
         self.img_path = img_path
-        self.img = QPixmap(img_path_or_pix_map)  # self.img始终保持为原图
+        self.img = QPixmap(path_pixmap_qimage)  # self.img始终保持为原图
 
         if re_center:
             if self.is_bg():
@@ -226,14 +226,15 @@ class BaseImgFrame(QLabel):
         cur_center_x, cur_center_y = old_x + old_img_w / 2, old_y + old_img_h / 2
         offset_x, offset_y = (ex - cur_center_x) / old_img_w, (ey - cur_center_y) / old_img_h
 
-        if scale_ratio == 1:
-            self.scaled_img = self.img
-        else:
-            self.scaled_img = self.img.scaled(int(old_img_w * scale_ratio), int(old_img_h * scale_ratio),
-                                              Qt.KeepAspectRatio, self.interpolation)
+        short_side = min(old_img_w, old_img_h)
+        if scale_ratio > 1:  # 应为int()向下取整的关系，尺寸太小时无法至少放大1像素，特此处理下
+            scale_ratio = max(scale_ratio, (short_side + 1) / short_side)
+
+        new_w = max(1, int(old_img_w * scale_ratio))  # 图片尺寸不能小于1
+        new_h = max(1, int(old_img_h * scale_ratio))
+        self.scaled_img = self.img.scaled(new_w, new_h, Qt.KeepAspectRatio, self.interpolation)
 
         new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
-
         new_img_x = (1 / 2 + offset_x) * (old_img_w - new_img_w) + old_x
         new_img_y = (1 / 2 + offset_y) * (old_img_h - new_img_h) + old_y
         self.img_tl = QPointF(new_img_x, new_img_y)
@@ -582,6 +583,19 @@ class CenterImg(BaseImgFrame):
                 signal_shape_info_update.send(self.editing_shape_i)
 
     def paintEvent(self, e):  # 时刻都在绘制，关注绘制数量多时，是否会造成系统负担
+        # from ctypes import windll  获取不准
+
+        # gdi32 = windll.gdi32
+        # user32 = windll.user32
+        # hdc = user32.GetDC(None)  # 获取颜色值
+        # aa = QCursor.pos().toTuple()
+        # print(aa)
+        # pixel = gdi32.GetPixel(hdc, aa[0], aa[1])  # 提取RGB值
+        # r = pixel & 0x0000ff
+        # g = (pixel & 0x00ff00) >> 8
+        # b = pixel >> 16
+        # print(r, g, b)
+
         self.painter.begin(self)
         self.painter.drawPixmap(self.img_tl, self.scaled_img)
 
@@ -605,23 +619,41 @@ class CenterImg(BaseImgFrame):
     def __add_widget_img_pair(self, qpointf):
         if self.ShowOriImg:
             return
-
         if self.SelectingCateTag:
             get_HHL_parent(self).check_warnings('selecting_cate_tag')
             return
 
-        img_pixel_x, img_pixel_y, _ = self.widget_coor_to_img_coor(qpointf)
-        if img_pixel_x is not None:
-            img_p = [img_pixel_x, img_pixel_y]
-            if self.shape_type in INS_shape_type(['多边形', '矩形', '椭圆形']):
-                self.img_coors.append(img_p)
+        if self.shape_type in INS_shape_type('多边形'):
+            img_x, img_y, _ = self.widget_coor_to_img_coor(qpointf)
+            if img_x is not None:
                 self.widget_coors.append(qpointf)
-            elif self.shape_type in INS_shape_type('像素'):
-                if img_p not in self.img_coors:
-                    self.img_coors.append(img_p)
-                    self.widget_coors.append(self.img_coor_to_widget_coor(img_p))  # 计算精确的像素的左上角的widget坐标
+                self.img_coors.append([img_x, img_y])
+        elif self.shape_type in INS_shape_type(['矩形', '椭圆形']):
+            assert len(self.widget_coors) <= 2, 'Error, len(self.widget_coors) must <= 2.'
+            if len(self.widget_coors) == 1:  # 格式化左上角点和右下角点坐标
+                x, y = self.widget_coors[0].toTuple()
+                xx, yy = qpointf.toTuple()
+                x1, y1 = min(x, xx), min(y, yy)
+                x2, y2 = max(x, xx), max(y, yy)
+                p1, p2 = QPointF(x1, y1), QPointF(x2, y2)
+                img_x1, img_y1, _ = self.widget_coor_to_img_coor(p1)
+                img_x2, img_y2, _ = self.widget_coor_to_img_coor(p2)
+                if img_x1 is not None and img_x2 is not None:
+                    self.widget_coors = [p1, p2]
+                    self.img_coors = [[img_x1, img_y1], [img_x2, img_y2]]
+            else:
+                img_x, img_y, _ = self.widget_coor_to_img_coor(qpointf)
+                if img_x is not None:
+                    self.widget_coors.append(qpointf)
+                    self.img_coors.append([img_x, img_y])
+        elif self.shape_type in INS_shape_type('像素'):
+            img_x, img_y, _ = self.widget_coor_to_img_coor(qpointf)
+            img_p = [img_x, img_y]
+            if img_x is not None and img_p not in self.img_coors:
+                self.widget_coors.append(self.img_coor_to_widget_coor(img_p))  # 计算精确的像素的左上角的widget坐标
+                self.img_coors.append(img_p)
 
-            self.update()
+        self.update()
 
     def __ann_add_text(self, ori_position):  # 注释模式添加文字功能
         input_dlg = QInputDialog()
@@ -1048,8 +1080,6 @@ class CenterImg(BaseImgFrame):
 
         self.collection_window.close()
 
-
-
     def __shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):  # 标注随图片缩放而缩放
         for one in self.__all_shapes:
             for one_sub in one['sub_shapes']:
@@ -1068,6 +1098,7 @@ class CenterImg(BaseImgFrame):
 
     def __sub_shapes_clear(self):
         self.__sub_shapes_temp = []
+        self.update()
 
     def __sub_shape_rename(self, info):
         i, new_name = info
@@ -1136,15 +1167,15 @@ class CenterImg(BaseImgFrame):
     def get_ann_img(self):
         return self.scaled_img_painted.scaled(self.img.size(), Qt.KeepAspectRatio, self.interpolation).toImage()
 
-    def get_tuple_polygons(self):
-        json_shapes = deepcopy(self.__all_shapes)
-        if len(json_shapes):
-            for one in json_shapes:
+    def get_tuple_shapes(self):
+        shapes = deepcopy(self.__all_shapes)
+        if len(shapes):
+            for one in shapes:
                 for one_sub in one['sub_shapes']:
                     widget_points = [aa.toTuple() for aa in one_sub['widget_coors']]
                     one_sub['widget_coors'] = widget_points
 
-        return json_shapes
+        return shapes
 
     def modify_polygon_class(self, i, new_class, new_color):
         polygon = self.__all_shapes[i]
@@ -1223,14 +1254,15 @@ class CenterImg(BaseImgFrame):
         else:
             action_img = self.img
 
-        if scale_ratio == 1:
-            self.scaled_img = action_img
-        else:
-            self.scaled_img = action_img.scaled(int(old_img_w * scale_ratio), int(old_img_h * scale_ratio),
-                                                Qt.KeepAspectRatio, self.interpolation)
+        short_side = min(old_img_w, old_img_h)
+        if scale_ratio > 1:  # 应为int()向下取整的关系，尺寸太小时无法至少放大1像素，特此处理下
+            scale_ratio = max(scale_ratio, (short_side + 1) / short_side)
+
+        new_w = max(1, int(old_img_w * scale_ratio))  # 图片尺寸不能小于1
+        new_h = max(1, int(old_img_h * scale_ratio))
+        self.scaled_img = action_img.scaled(new_w, new_h, Qt.KeepAspectRatio, self.interpolation)
 
         new_img_w, new_img_h = self.scaled_img.width(), self.scaled_img.height()
-
         new_img_x = (1 / 2 + offset_x) * (old_img_w - new_img_w) + old_x
         new_img_y = (1 / 2 + offset_y) * (old_img_h - new_img_h) + old_y
         self.img_tl = QPointF(new_img_x, new_img_y)

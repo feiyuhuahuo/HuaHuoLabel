@@ -187,7 +187,17 @@ class ObjList(QWidget):
         else:
             self.menu.setDisabled(False)
 
-        self.menu.exec(QCursor.pos())
+        show = False
+        rect1 = self.obj_list.rect()
+        cursor_rel_pos = self.obj_list.mapFromGlobal(QCursor.pos())
+        if rect1.contains(cursor_rel_pos):
+            if self.obj_list.count() > 0:
+                final_item = self.obj_list.item(self.obj_list.count() - 1)
+                item_rect = self.obj_list.visualItemRect(final_item)
+                if cursor_rel_pos.toTuple()[1] < item_rect.y() + item_rect.height():
+                    show = True
+        if show:
+            self.menu.exec(QCursor.pos())
 
 
 if __name__ == '__main__':

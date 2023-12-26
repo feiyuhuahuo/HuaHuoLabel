@@ -818,13 +818,13 @@ class HHL_MainWindow(QMainWindow):
 
     def go_next_sub_window(self):
         img_path = self.imgs[self.__cur_i]
-        if self.window_flow_label:
-            qimg_png = self.get_qimg_png(img_path)
-            if qimg_png:
-                self.window_flow_label.paint_img(qimg_png, img_path)
-        if self.window_flow_img:
-            if (pixmap := img_path2_qpixmap(img_path)) is not None:
-                self.window_flow_img.paint_img(pixmap, img_path)
+        # if self.window_flow_label:
+        #     qimg_png = self.get_qimg_png(img_path)
+        #     if qimg_png:
+        #         self.window_flow_label.paint_img(qimg_png, img_path)
+        # if self.window_flow_img:
+        #     if (pixmap := img_path2_qpixmap(img_path)) is not None:
+        #         self.window_flow_img.paint_img(pixmap, img_path)
 
     def has_labeled(self, img_path):
         img_name = img_path.split('/')[-1]
@@ -875,7 +875,7 @@ class HHL_MainWindow(QMainWindow):
             self.cv2_img_changed = (self.cv2_img.astype('float32') + brightness_v) * contrast_v
             self.cv2_img_changed = np.clip(self.cv2_img_changed, a_min=0., a_max=255.)
             self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
-                                                    re_center=False, img_info_update=False)
+                                      re_center=False, img_info_update=False)
 
     def img_enhance_reset(self):
         self.ui.pushButton_82.setChecked(False)
@@ -895,7 +895,7 @@ class HHL_MainWindow(QMainWindow):
 
             if do_paint:
                 self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
-                                                        re_center=False, img_info_update=False)
+                                          re_center=False, img_info_update=False)
 
     def img_jump(self, i=None):
         if i:
@@ -925,7 +925,7 @@ class HHL_MainWindow(QMainWindow):
             contrast_img = contrast_enhancer.enhance(value)
             self.cv2_img_changed = np.array(contrast_img)
             self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
-                                                    re_center=False, img_info_update=False)
+                                      re_center=False, img_info_update=False)
 
     def img_rotate(self, do_paint=True):
         if len(self.imgs) and self.cv2_img_changed is not None:
@@ -936,7 +936,7 @@ class HHL_MainWindow(QMainWindow):
                 self.ui.pushButton_81.setText(new_degree)
                 self.ui.pushButton_81.setChecked(new_degree != ' 0°')
                 self.center_img.paint_img(array_to_qimg(self.cv2_img_changed),
-                                                        re_center=False, img_info_update=False)
+                                          re_center=False, img_info_update=False)
             else:
                 for i in range(old_degree // 90):
                     self.cv2_img_changed = cv2.rotate(self.cv2_img_changed, cv2.ROTATE_90_CLOCKWISE)
@@ -1017,7 +1017,7 @@ class HHL_MainWindow(QMainWindow):
                     for one in miss_list:
                         self.label_file_dict['labels'].pop(one)
         else:
-            self.label_file_dict = {'task': self.task, 'work_mode': self.WorkMode, 'labels': {}}
+            self.label_file_dict = {'task': self.task, 'labels': {}}
 
         return True
 
@@ -1072,46 +1072,6 @@ class HHL_MainWindow(QMainWindow):
         if path:
             self.del_img(path)
 
-    def m_cls_to_button(self):  # 若已存在txt标注，直接显示在按钮上
-        self.buttons_clear()
-
-        lines = []
-        img_name = self.current_img_name()
-        if self.OneFileLabel:
-            if self.label_file_dict['labels'].get(img_name):
-                lines = self.label_file_dict['labels'][img_name]['class']
-        elif self.SeparateLabel:
-            txt_name = img_name[:-3] + 'txt'
-            txt_path = f'{self.get_root("separate")}/{txt_name}'
-
-            if os.path.isfile(txt_path):
-                with open(txt_path, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                lines = [aa.strip() for aa in lines]
-
-        lines_copy = lines.copy()
-        button_layout = self.ui.groupBox_2.layout()
-        for one in lines:
-            for i in range(button_layout.count()):
-                item = button_layout.itemAt(i)
-                for j in range(item.count()):
-                    button = item.itemAt(j).widget()
-                    if button.text() == one:
-                        button.setStyleSheet('QPushButton { background-color: lightgreen }')
-                        lines_copy.remove(one)
-
-        if len(lines_copy):
-            for category in lines_copy:
-                Going = True
-                for i in range(button_layout.count()):
-                    item = button_layout.itemAt(i)
-                    for j in range(item.count()):
-                        button = item.itemAt(j).widget()
-                        if Going and button.text() == '-':
-                            button.setText(category)
-                            button.setStyleSheet('QPushButton { background-color: lightgreen }')
-                            Going = False
-
     def modify_obj_list_start(self):
         if self.ui.obj_list.edit_button.isChecked():
             self.LabelUiCallByMo = True
@@ -1159,8 +1119,10 @@ class HHL_MainWindow(QMainWindow):
 
             window_new_img = BaseImgWindow(self, title=self.tr('图片窗口'))
             window_new_img.setAttribute(Qt.WA_DeleteOnClose)
-            window_new_img.paint_img(path, path)
-            window_new_img.show()
+            qpixmap = img_path2_qpixmap(path)
+            if qpixmap is not None:
+                window_new_img.paint_img(qpixmap, path)
+                window_new_img.show()
 
     def obj_info_show_set(self):
         self.ui.listWidget_obj_info.setVisible(self.ui.checkBox_hide_obj_info.isChecked())
@@ -1180,64 +1142,16 @@ class HHL_MainWindow(QMainWindow):
             if osp.exists(ann_jpg):
                 self.center_img.set_ann_painted_img(ann_jpg)
 
-    def polygons_to_img(self):
-        self.center_img.clear_all_polygons()
-        self.ui.obj_list.clear()
-
-        img_path = self.imgs[self.__cur_i]
-        if '图片已删除' in img_path:
-            return
-
-        if self.OneFileLabel:
-            img_name = img_path.split('/')[-1]
-            img_dict = self.label_file_dict['labels'].get(img_name)
-            if img_dict:
-                polygons, img_h, img_w = img_dict['polygons'], img_dict['img_height'], img_dict['img_width']
-                if polygons == ['bg']:
-                    polygons = []
-            else:
-                return
-        elif self.SeparateLabel:
-            json_path = self.get_separate_label(img_path, 'json')
-            if osp.exists(json_path):
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    content = json.load(f)
-                    polygons, img_h, img_w = content['polygons'], content['img_height'], content['img_width']
-                    if polygons == ['bg']:
-                        polygons = []
-            else:
-                return
-
-        for one in polygons:
-            cate = one['category']
-            if cate in INS_all_classes.classes():
-                item = self.ui.class_list.findItems(cate, Qt.MatchExactly)[0]
-                one['qcolor'] = item.foreground().color().name()
-
-            item, _ = self.ui.class_list.new_class_item(cate, color=one['qcolor'])
-            self.ui.obj_list.add_item(item.clone())
-            self.show_shape_info(one)
-
-            if cate not in INS_all_classes.classes():
-                self.ui.class_list.set_look(item)
-                self.ui.class_list.add_item(item)
-                self.sem_class_modified_tip()
-
-        # polygons的嵌套的数据结构导致数据容易发生原位修改，哪怕使用了.get()方法和函数传参也一样，具体原理未知
-        self.center_img.prepare_polygons(deepcopy(polygons), img_h, img_w)
-
     def raise_label_mode_conflict(self):  # done----------------------------
         if self.task_root:
             # 加了QMB后，可以阻止点击QcheckBox时切换状态，原因未知
-            QMB.critical(self.ui, self.tr('错误操作'),
-                         self.tr('请勿在标注途中切换标注模式，否则容易造成标注文件混乱！'))
+            QMB.critical(self.ui, self.tr('错误操作'), self.tr('请勿在标注途中切换标注模式，否则容易造成标注文件混乱！'))
 
     def random_train_val(self):
         if not self.check_warnings(['task', 'edit_mode']):
             return
 
-        content, is_ok = self.input_dlg.getText(self.ui, self.tr('划分比例'),
-                                                self.tr('请输入训练集和验证集的划分比例'),
+        content, is_ok = self.input_dlg.getText(self.ui, self.tr('划分比例'), self.tr('请输入训练集和验证集的划分比例'),
                                                 QLineEdit.Normal, text='7:1')
         if not is_ok:
             return
@@ -1317,7 +1231,7 @@ class HHL_MainWindow(QMainWindow):
         cv2.imencode('.jpg', img_array.astype('uint8'))[1].tofile(save_path)
         self.window_ann_saved.show(self.tr('图片保存于：{}。').format(save_path))
 
-    def save_det_seg(self):
+    def save_label(self):
         img_path = self.imgs[self.__cur_i]
         if img_path == 'images/图片已删除.png':
             return
@@ -1326,16 +1240,17 @@ class HHL_MainWindow(QMainWindow):
         img_name = img_path.split('/')[-1]
         tv = self.current_tv()
 
-        json_polygons = self.center_img.get_tuple_polygons()
+        shape_json = self.center_img.get_tuple_shapes()
 
-        if self.WorkMode == self.AllModes[2] and self.ui.pushButton_bg.objectName() == 'bg':
-            assert not json_polygons, 'json_polygons should be empty when label is bg!'
-            json_polygons = ['bg']
+        # if self.ui.pushButton_bg.objectName() == 'bg':
+        #     assert not shape_json, 'shape_json should be empty when label is bg!'
+        #     shape_json = ['bg']
 
-        one_label = {'img_height': img_h, 'img_width': img_w, 'tv': tv, 'polygons': json_polygons}
+        one_label = {'img_height': img_h, 'img_width': img_w, 'train_val': tv, 'img_classes': '',
+                     'img_tags': '', 'object_num': len(shape_json), 'objects': shape_json}
 
         if self.OneFileLabel:
-            if json_polygons:
+            if shape_json:
                 self.label_file_dict['labels'][img_name] = one_label
             else:
                 if self.label_file_dict['labels'].get(img_name):
@@ -1346,33 +1261,27 @@ class HHL_MainWindow(QMainWindow):
             os.makedirs(label_path, exist_ok=True)
 
             json_name = f'{img_name[:-4]}.json'
-            png_name = f'{img_name[:-4]}.png'
             json_path = f'{label_path}/{json_name}'
-            png_path = f'{label_path}/{png_name}'
             tv_img = f'{self.get_root("tv")}/imgs/{tv}/{img_name}'
             tv_json = f'{self.get_root("tv")}/labels/{tv}/{json_name}'
-            tv_png = f'{self.get_root("tv")}/labels/{tv}/{png_name}'
 
-            if json_polygons:
-                if not self.version_remind():
-                    return
-
+            if shape_json:
                 with open(json_path, 'w', encoding='utf-8') as f:
                     json.dump(one_label, f, sort_keys=False, ensure_ascii=False, indent=4)
                 if osp.exists(tv_json):
                     with open(tv_json, 'w', encoding='utf-8') as f:
                         json.dump(one_label, f, sort_keys=False, ensure_ascii=False, indent=4)
 
-                if self.WorkMode == self.AllModes[2]:
-                    if json_polygons == ['bg']:
-                        json_polygons = []
-
-                    seg_class_names = INS_all_classes.classes()
-                    seg_mask = get_seg_mask(seg_class_names, json_polygons, img_h, img_w)
-                    if seg_mask is not None:
-                        cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(png_path)
-                        if osp.exists(tv_png):
-                            cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
+                # if self.WorkMode == self.AllModes[2]:
+                #     if shape_json == ['bg']:
+                #         shape_json = []
+                #
+                #     seg_class_names = INS_all_classes.classes()
+                #     seg_mask = get_seg_mask(seg_class_names, shape_json, img_h, img_w)
+                #     if seg_mask is not None:
+                #         cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(png_path)
+                #         if osp.exists(tv_png):
+                #             cv2.imencode('.png', seg_mask.astype('uint8'))[1].tofile(tv_png)
 
             else:  # 若标注为空，则在训练集&验证集里剔除
                 if osp.exists(tv_img):
@@ -1381,7 +1290,7 @@ class HHL_MainWindow(QMainWindow):
                     elif tv == 'val':
                         self.mor_vars.val_num -= 1
 
-                file_remove([tv_img, json_path, tv_json, png_path, tv_png])
+                file_remove([tv_img, json_path, tv_json])
 
     def save_one_file_json(self, check_version=True):
         if self.ui.radioButton_write.isChecked() and self.OneFileLabel and self.label_file_dict:
@@ -1448,7 +1357,6 @@ class HHL_MainWindow(QMainWindow):
         if self.ui.radioButton_write.isChecked():
             pass
             # self.save_label()
-            # self.save_det_seg()
 
         if last and 0 < self.__cur_i <= self.img_num:
             for _ in range(count):
@@ -1463,13 +1371,12 @@ class HHL_MainWindow(QMainWindow):
         if 0 <= self.__cur_i < self.img_num:
             # self.center_img.set_shape_locked(False)
             self.show_img_status_info()
-            self.show_label_to_ui()
+            # self.shape_to_img()
+
             # self.set_tv_label()
             # if self.WorkMode in self.AllModes[(2, 4)]:
             #     self.go_next_flow_window()
-            # if self.WorkMode == self.AllModes[2]:
-            #     self.set_semantic_bg_when_scan()
-            #
+
             scan_time = (time.time() - scan_start) * 1000
             if scan_time < self.scan_delay:
                 time.sleep((self.scan_delay - scan_time) / 1000)
@@ -1647,7 +1554,7 @@ class HHL_MainWindow(QMainWindow):
                 self.language = 'EN'
                 app.exit(99)
 
-    def set_one_file_label(self, by_click=False):  # done ------------------------
+    def set_one_file_label(self, by_click=False):
         if by_click:
             self.OneFileLabel = self.ui.checkBox_one_label.isChecked()
             if not self.SeparateLabel and not self.OneFileLabel:
@@ -1738,6 +1645,53 @@ class HHL_MainWindow(QMainWindow):
             else:
                 self.ui.label_train_val.set_none()
 
+    def shape_to_img(self):
+        # self.clear_shape_info()
+        self.center_img.clear_all_polygons()
+        self.ui.obj_list.clear()
+
+        img_path = self.imgs[self.__cur_i]
+        if '图片已删除' in img_path:
+            return
+
+        if self.OneFileLabel:
+            img_name = img_path.split('/')[-1]
+            img_dict = self.label_file_dict['labels'].get(img_name)
+            if img_dict:
+                polygons, img_h, img_w = img_dict['polygons'], img_dict['img_height'], img_dict['img_width']
+                if polygons == ['bg']:
+                    polygons = []
+            else:
+                return
+        elif self.SeparateLabel:
+            json_path = self.get_separate_label(img_path, 'json')
+            if osp.exists(json_path):
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    content = json.load(f)
+                    polygons, img_h, img_w = content['polygons'], content['img_height'], content['img_width']
+                    if polygons == ['bg']:
+                        polygons = []
+            else:
+                return
+
+        for one in polygons:
+            cate = one['category']
+            if cate in INS_all_classes.classes():
+                item = self.ui.class_list.findItems(cate, Qt.MatchExactly)[0]
+                one['qcolor'] = item.foreground().color().name()
+
+            item, _ = self.ui.class_list.new_class_item(cate, color=one['qcolor'])
+            self.ui.obj_list.add_item(item.clone())
+            self.show_shape_info(one)
+
+            if cate not in INS_all_classes.classes():
+                self.ui.class_list.set_look(item)
+                self.ui.class_list.add_item(item)
+                self.sem_class_modified_tip()
+
+        # polygons的嵌套的数据结构导致数据容易发生原位修改，哪怕使用了.get()方法和函数传参也一样，具体原理未知
+        self.center_img.prepare_polygons(deepcopy(polygons), img_h, img_w)
+
     def shape_type_change(self):
         text = self.ui.comboBox_2.currentText()
         self.center_img.change_shape_type(text)
@@ -1805,16 +1759,7 @@ class HHL_MainWindow(QMainWindow):
             self.bottom_img_text = path
             self.ui.label_path.setTextFormat(Qt.PlainText)
             self.ui.label_path.setText(uniform_path(self.bottom_img_text))
-            # self.paint_ann_img() todo: 何时该画ann_img
-
-    def show_label_to_ui(self):
-        pass
-
-        # if self.WorkMode == self.AllModes[1]:
-        #     self.m_cls_to_button()
-        # elif self.WorkMode in self.AllModes[(2, 3, 4)]:
-        #     self.clear_shape_info()
-        #     self.polygons_to_img()
+            # self.paint_ann_img()  todo: 何时该画ann_img
 
     def show_menu(self, menu):  # 在鼠标位置显示菜单
         if menu.title() == 'label_list_menu':
@@ -2091,6 +2036,9 @@ class HHL_MainWindow(QMainWindow):
 # todo：导出coco、voc等格式的数据结构
 # todo: 版本记录，切换有点慢，是否需要加入请等待窗口
 # todo: 超大图片的显示需要支持吗
+# todo: 新建的图片窗口 根据展示的图像尺寸  自适应大小
+
+# todo: 像素指针根据背景自动变色
 # todo: 新架构-----------------------------------------
 
 # todo: log自动清理
