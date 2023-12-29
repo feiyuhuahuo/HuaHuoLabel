@@ -6,7 +6,6 @@ from PySide6.QtCore import QPropertyAnimation, Qt, QRectF, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QStylePainter, QStyle
 
-from need.custom_widgets import signal_draw_shape_done
 from need.custom_signals import BoolSignal
 from need.functions import get_HHL_parent
 from need.SharedWidgetStatFlags import stat_flags
@@ -42,8 +41,6 @@ class PushButtonWaiting(QPushButton):
                         'border-radius: 4px; padding-left:4px; padding-right:4px;} '
                         'QPushButton:hover {background-color:  rgb(225, 225, 225);} '
                         'QPushButton:pressed {background-color: rgb(215, 215, 215);}')
-
-        signal_draw_shape_done.signal.connect(self.show_button)
 
     def enterEvent(self, event):
         self._rotateAnimationStarted = False

@@ -5,8 +5,8 @@ from .dialog_select_list import BaseSelectList, SingleSelectList
 from .dialog_img_edit import ImgEdit
 from .window_select_category import SelectItem, signal_select_window_close
 from .window_shape_combo import ShapeCombo, signal_shape_combo_reset, signal_rename_sub_shape, signal_draw_sub_shape
-from .label_center_img import CenterImg, signal_set_shape_list_selected, BaseImgFrame, signal_shape_info_update, \
-    signal_draw_selected_shape, signal_draw_shape_done, signal_one_collection_done, CenterImgView
+from .label_center_img import CenterImg, CenterImgView, signal_set_shape_list_selected, BaseImgFrame, \
+    signal_draw_selected_shape, signal_one_collection_done
 from .label_read_edit import ReadEditInfo
 from .label_waiting import WaitingLabel
 from .label_train_val import LabelTrainVal
@@ -31,8 +31,8 @@ from .window_build_task import BuildTask
 __all__ = ['CenterImg', 'ClassStatWidget', 'SelectItem', 'ProgressWindow', 'BaseButtonGroup',
            'WaitingLabel', 'CustomMessageBox', 'BaseSelectList', 'PushButtonWaiting',
            'signal_set_shape_list_selected', 'signal_draw_selected_shape', 'signal_draw_sub_shape',
-           'signal_draw_shape_done', 'signal_one_collection_done', 'BaseImgFrame',
-           'signal_shape_info_update', 'signal_show_plain_img', 'signal_show_label_img', 'signal_button_selected_done',
+           'signal_one_collection_done', 'BaseImgFrame',
+           'signal_show_plain_img', 'signal_show_label_img', 'signal_button_selected_done',
            'signal_select_window_close', 'BuildTask', 'ReadEditInfo', 'TaskDescBrowser', 'ImgsFlow',
            'SearchBox', 'LabelTrainVal', 'LabelTrainBar', 'LabelValBar',
            'AutoInfer', 'signal_request_imgs', 'ImgTagList', 'ImgEdit', 'ScanButton', 'JumpToImg', 'CenterImgView',

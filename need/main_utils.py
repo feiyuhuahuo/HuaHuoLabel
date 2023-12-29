@@ -17,7 +17,6 @@ from need.custom_threads import *
 # https://forum.qt.io/topic/152101/memory-can-not-release-correctly-because-of-using-lambda-as-slot/12
 # 3.QPixmap在图片很大时，会极其占用内存
 def connect_signals(main_window):
-    main_window.ui.checkBox_hide_obj_info.toggled.connect(main_window.obj_info_show_set)
     main_window.ui.checkBox_hide_cross.clicked.connect(main_window.set_hide_cross)
     main_window.ui.checkBox_one_label.pressed.connect(main_window.raise_label_mode_conflict)
     main_window.ui.checkBox_one_label.toggled.connect(lambda: main_window.set_one_file_label(by_click=True))
@@ -100,7 +99,6 @@ def connect_signals(main_window):
     signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
     # signal_one_collection_done.signal.connect(main_window.select_cate_tag)
     signal_button_selected_done.signal.connect(main_window.select_cate_tag_after)
-    signal_shape_info_update.signal.connect(main_window.update_shape_info_text)
     signal_show_label_img.signal.connect(main_window.flow_show)
     signal_show_plain_img.signal.connect(main_window.flow_show)
     signal_stat_info.signal.connect(main_window.show_class_statistic_done)
@@ -109,11 +107,6 @@ def connect_signals(main_window):
 
 
 def init_menu(main_win):
-    main_win.menu_set_shape_info = QMenu(main_win)
-    main_win.action_oc_shape_info = QAction(main_win.tr('禁用（提高切图速度）'), main_win)
-    main_win.action_oc_shape_info.triggered.connect(main_win.oc_shape_info)
-    main_win.menu_set_shape_info.addAction(main_win.action_oc_shape_info)
-
     main_win.ui.action_cn.triggered.connect(lambda: main_win.set_language('CN'))
     main_win.ui.action_en.triggered.connect(lambda: main_win.set_language('EN'))
     main_win.ui.action_about.triggered.connect(main_win.about_hhl)
@@ -123,7 +116,6 @@ def init_custom_widgets(main_window):
     main_window.dialog_img_edit = ImgEdit(main_window)
     main_window.window_build_task = BuildTask(main_window)
     main_window.window_shape_combo = ShapeCombo(main_window)
-    main_window.pushbutton_waiting = PushButtonWaiting(main_window)
     main_window.window_sem_class_changed = CustomMessageBox('information', main_window.tr('类别列表变化'))
     main_window.window_ann_saved = CustomMessageBox('information', main_window.tr('已保存'))
     main_window.window_large_img_warn = CustomMessageBox('information', main_window.tr('图片过大'))

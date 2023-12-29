@@ -58,7 +58,6 @@ class HHL_MainWindow(QMainWindow):
         self.init_variables()
         self.reset_init_variables()
         init_menu(self)
-        self.obj_info_show_set()
         self.set_action_disabled()
         connect_signals(self)
         self.log_info('Application opened.', mark_line=True)
@@ -534,8 +533,6 @@ class HHL_MainWindow(QMainWindow):
 
     def del_shape(self, i):
         self.ui.obj_list.del_row(i)
-        if self.ui.listWidget_obj_info.count():
-            self.ui.listWidget_obj_info.takeItem(i)
 
     def delete_one_class_jsons(self):
         c_name = self.ui.class_list.currentItem().text()
@@ -694,24 +691,24 @@ class HHL_MainWindow(QMainWindow):
             else:
                 return 'none'
 
-    def get_info_text(self, polygon):
-        if self.WorkMode == self.AllModes[3]:
-            points = polygon['img_points']
-            width = points[1][0] - points[0][0]
-            height = points[1][1] - points[0][1]
-            text = self.tr('类别：{}\n宽度：{}\n高度：{}\n').format(polygon['category'], width, height)
-        elif self.WorkMode in self.AllModes[(2, 4)]:
-            img_path = self.imgs[self.__cur_i]
-            img_w, img_h = QPixmap(img_path).size().toTuple()
-            mask = get_seg_mask(['fake'], [polygon], img_h, img_w, value=1)
-            mask = (mask > 0).astype('uint8')
-            area = mask.sum()
-            cv2_img = cv2.imdecode(np.fromfile(img_path, dtype='uint8'), cv2.IMREAD_COLOR)
-            img_masked = cv2_img * (mask[:, :, None])
-            color_avg = (img_masked.sum((0, 1)) / area).astype('uint8').tolist()
-            text = self.tr('类别：{}\n面积：{}\n平均灰度：{}\n').format(polygon['category'], area, color_avg)
-
-        return text
+    # def get_info_text(self, polygon):
+    #     if self.WorkMode == self.AllModes[3]:
+    #         points = polygon['img_points']
+    #         width = points[1][0] - points[0][0]
+    #         height = points[1][1] - points[0][1]
+    #         text = self.tr('类别：{}\n宽度：{}\n高度：{}\n').format(polygon['category'], width, height)
+    #     elif self.WorkMode in self.AllModes[(2, 4)]:
+    #         img_path = self.imgs[self.__cur_i]
+    #         img_w, img_h = QPixmap(img_path).size().toTuple()
+    #         mask = get_seg_mask(['fake'], [polygon], img_h, img_w, value=1)
+    #         mask = (mask > 0).astype('uint8')
+    #         area = mask.sum()
+    #         cv2_img = cv2.imdecode(np.fromfile(img_path, dtype='uint8'), cv2.IMREAD_COLOR)
+    #         img_masked = cv2_img * (mask[:, :, None])
+    #         color_avg = (img_masked.sum((0, 1)) / area).astype('uint8').tolist()
+    #         text = self.tr('类别：{}\n面积：{}\n平均灰度：{}\n').format(polygon['category'], area, color_avg)
+    #
+    #     return text
 
     def get_qimg_png(self, img_path):
         seg_mask = None
@@ -796,7 +793,6 @@ class HHL_MainWindow(QMainWindow):
         self.ui.obj_list.edit_button.setChecked(False)
         self.ui.obj_list.edit_button.setDisabled(not stat_flags.HHL_Edit_Mode)
 
-        self.obj_info_show_set()
         self.set_action_disabled()
         self.img_enhance_reset()
 
@@ -862,6 +858,12 @@ class HHL_MainWindow(QMainWindow):
             if one['category'] in self.looking_classes:
                 return True
         return False
+
+    def has_obj_cate_button(self):
+        return self.ui.obj_cate_buttons.button_num() != 0
+
+    def has_obj_tag_button(self):
+        return self.ui.obj_tag_buttons.button_num() != 0
 
     def img_enhance(self):
         self.ui.horizontalSlider_3.setValue(100)
@@ -988,6 +990,9 @@ class HHL_MainWindow(QMainWindow):
         self.shape_combo_offset = QPoint(0, 0)
         self.scan_delay = 0
 
+    def is_selecting_cate_tag(self):
+        return self.ui.pushButton_waiting_cate.isVisible() or self.ui.pushButton_waiting_tag.isVisible()
+
     def load_one_file_dict(self):
         if not self.OneFileLabel:
             return True
@@ -1091,19 +1096,6 @@ class HHL_MainWindow(QMainWindow):
             self.sem_class_modified_tip()
 
         self.center_img.modify_polygon_class(i, name, color.name())
-        old_item = self.ui.obj_list.currentItem()
-        old_class = old_item.text()
-        old_item.setText(name)
-        old_item.setForeground(color)
-
-        row = self.ui.obj_list.currentRow()
-
-        if self.ui.listWidget_obj_info.count():
-            info_item = self.ui.listWidget_obj_info.item(row)
-            new_text = info_item.text().replace(old_class, name)
-            info_item.setText(new_text)
-            info_item.setForeground(color)
-
         self.ui.setFocus()
 
     def new_img_window(self, path=''):
@@ -1123,17 +1115,6 @@ class HHL_MainWindow(QMainWindow):
             if qpixmap is not None:
                 window_new_img.paint_img(qpixmap, path)
                 window_new_img.show()
-
-    def obj_info_show_set(self):
-        self.ui.listWidget_obj_info.setVisible(self.ui.checkBox_hide_obj_info.isChecked())
-
-    def oc_shape_info(self):
-        if self.action_oc_shape_info.text() == self.tr('禁用（提高切图速度）'):
-            self.clear_shape_info()
-            self.action_oc_shape_info.setText(self.tr('启用（降低切图速度）'))
-        elif self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
-            self.action_oc_shape_info.setText(self.tr('禁用（提高切图速度）'))
-        self.ui.setFocus()
 
     def paint_ann_img(self):
         if self.task_root:
@@ -1240,7 +1221,7 @@ class HHL_MainWindow(QMainWindow):
         img_name = img_path.split('/')[-1]
         tv = self.current_tv()
 
-        shape_json = self.center_img.get_tuple_shapes()
+        shape_json = self.center_img.get_json_shapes()
 
         # if self.ui.pushButton_bg.objectName() == 'bg':
         #     assert not shape_json, 'shape_json should be empty when label is bg!'
@@ -1481,13 +1462,13 @@ class HHL_MainWindow(QMainWindow):
         else:
             if self.ui.radioButton_write.isChecked():
                 obj_done, tag_done = False, False
-                assert self.ui.obj_cate_buttons.isVisible(), 'obj_cate_buttons must be visible after one shape drawed.'
+
                 if self.ui.pushButton_waiting_cate.has_confirmed():
                     obj_done = True
                     self.ui.obj_cate_buttons.set_obj_select_stat(before_select=False)
                 if ((self.ui.obj_tag_buttons.isVisible() and self.ui.pushButton_waiting_tag.has_confirmed())
-                        or not self.ui.obj_tag_buttons.isVisible()):
-                    tag_done = True
+                        or not self.ui.obj_tag_buttons.isVisible() or not self.has_obj_tag_button()):
+                    tag_done = True # todo:
                     self.ui.obj_tag_buttons.set_obj_select_stat(before_select=False)
 
                 if obj_done and tag_done:
@@ -1495,17 +1476,22 @@ class HHL_MainWindow(QMainWindow):
                     color = self.ui.obj_cate_buttons.color(cates[0])
                     self.ui.obj_list.add_item(', '.join(cates), color)
                     tags = self.ui.obj_tag_buttons.selected_buttons()
-                    self.center_img.save_one_shape(cates, tags, color)
+
+                    combo = ''
+                    if stat_flags.ShapeCombo_IsOpened:
+                        combo = self.window_shape_combo.combo_text()
+
+                    self.center_img.save_one_shape(cates, tags, color, combo)
                     self.ui.comboBox_2.setDisabled(False)
-                    # self.show_shape_info(self.center_img.get_one_polygon(-1))
 
     def select_cate_tag_before(self):
         self.ui.comboBox_2.setDisabled(True)
-
         self.ui.obj_cate_buttons.set_obj_select_stat(before_select=True)
         self.ui.obj_tag_buttons.set_obj_select_stat(before_select=True)
         if not self.ui.obj_cate_buttons.isVisible():
             self.ui.pushButton_obj_cate.click()
+        self.ui.pushButton_waiting_cate.show_button()
+        self.ui.pushButton_waiting_tag.show_button()
 
     def sem_class_modified_tip(self):
         if self.SeparateLabel and self.ui.radioButton_write.isChecked():
@@ -1530,12 +1516,6 @@ class HHL_MainWindow(QMainWindow):
         hide = not self.ui.checkBox_hide_cross.isChecked()
         self.center_img.set_hide_cross(hide)
         self.ui.pushButton_cross_color.setDisabled(hide)
-
-    def set_info_widget_selected(self):
-        if self.ui.listWidget_obj_info.count():
-            row = self.ui.obj_list.currentRow()
-            if self.ui.listWidget_obj_info.item(row):
-                self.ui.listWidget_obj_info.item(row).setSelected(True)
 
     def set_language(self, language):  # done-----------------------
         # 不重启也可以实时翻译，但是这个问题无法解决，QAction需要在changeEvent里逐个添加翻译代码
@@ -1646,7 +1626,6 @@ class HHL_MainWindow(QMainWindow):
                 self.ui.label_train_val.set_none()
 
     def shape_to_img(self):
-        # self.clear_shape_info()
         self.center_img.clear_all_polygons()
         self.ui.obj_list.clear()
 
@@ -1682,7 +1661,6 @@ class HHL_MainWindow(QMainWindow):
 
             item, _ = self.ui.class_list.new_class_item(cate, color=one['qcolor'])
             self.ui.obj_list.add_item(item.clone())
-            self.show_shape_info(one)
 
             if cate not in INS_all_classes.classes():
                 self.ui.class_list.set_look(item)
@@ -1772,16 +1750,6 @@ class HHL_MainWindow(QMainWindow):
 
         menu.exec(QCursor.pos())
 
-    def show_shape_info(self, polygon):
-        if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
-            return
-
-        item = QListWidgetItem()
-        item.setText(self.get_info_text(polygon))
-        color = QColor(polygon['qcolor'])
-        item.setForeground(color)
-        self.ui.listWidget_obj_info.addItem(item)
-
     def show_task_window(self):
         self.window_build_task.show(self.image_folder)
 
@@ -1848,7 +1816,6 @@ class HHL_MainWindow(QMainWindow):
             self.show_img_status_info()
 
             self.set_tool_mode()
-            # self.clear_shape_info()
 
             # if self.load_one_file_dict():
             #     self.show_label_to_ui()
@@ -1887,22 +1854,7 @@ class HHL_MainWindow(QMainWindow):
         self.window_usp_progress = ProgressWindow(title=self.tr('PNG更新'), text_prefix=self.tr('更新PNG标注中：'))
         self.window_usp_progress.show()
 
-    def update_shape_info_text(self, i):
-        pass
-        # if self.action_oc_shape_info.text() == self.tr('启用（降低切图速度）'):
-        #     return
-        #
-        # text = self.get_info_text(self.center_img.get_one_polygon(i))
-        # self.ui.listWidget_obj_info.item(i).setText(text)
-
     def version_add(self):
-        # x, y = self.ui.line_9.pos().toTuple()
-        # x = x + self.ui.line_9.width() - 70
-        # y = y - 10
-        #
-        # self.bu.show_at(self.ui.line_9.parent().mapToGlobal(QPoint(x, y)))
-        # return
-
         if not self.check_warnings(['task', 'git']):
             return
 
@@ -1920,10 +1872,6 @@ class HHL_MainWindow(QMainWindow):
 
             files = uniform_path(glob.glob(f'{self.task_root}/*'))
             existed_files = sorted([one.split('/')[-1] for one in files])
-
-            # repo.index.add(['new.txt'])
-            # repo.index.remove(['old.txt'])
-            # repo.index.commit('this is a test')
 
             for one in existed_files:
                 if one in self.task_cfg['tracked_files']:
@@ -2037,8 +1985,6 @@ class HHL_MainWindow(QMainWindow):
 # todo: 版本记录，切换有点慢，是否需要加入请等待窗口
 # todo: 超大图片的显示需要支持吗
 # todo: 新建的图片窗口 根据展示的图像尺寸  自适应大小
-
-# todo: 像素指针根据背景自动变色
 # todo: 新架构-----------------------------------------
 
 # todo: log自动清理

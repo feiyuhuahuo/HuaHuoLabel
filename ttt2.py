@@ -6,38 +6,17 @@ import numpy as np
 
 import cv2
 
-cv2.namedWindow('aa', cv2.WINDOW_NORMAL)
-imgs = glob.glob('D:\Data\weiguan\guobao\SourceImg/*')
+img = cv2.imread('images/color_cursor.png', cv2.IMREAD_UNCHANGED)
 
-for one in imgs:
-    if 'MappingLite' in one:
-        continue
-    if 'bin' in one:
-        continue
-    if 'contour' in one:
-        continue
-    if 'part' in one:
-        continue
+img_bin = (img[:, :, 3] != 0)
 
-    img = cv2.imread(one, cv2.IMREAD_GRAYSCALE)
-    if (img > 150).sum() > 6400:
-        img_name = one.split('\\')[-1]
-        img_bin = cv2.threshold(img, 10, 255, cv2.THRESH_BINARY)[1]
-        contours = cv2.findContours(img_bin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-        img_contour = cv2.drawContours(cv2.cvtColor(img_bin, cv2.COLOR_GRAY2BGR), contours, -1, (0, 0, 255), 1)
-        # cv2.imwrite(f'D:\Data\weiguan\guobao\SourceImg/{img_name}_contour_external.jpg', img_contour)
+img_255 = img_bin.astype('uint8') * 255
+img_255 = np.repeat(img_255[:, :, None], 3, axis=2)
 
-        for i, one_contour in enumerate(contours):
-            area = cv2.contourArea(one_contour)
-            if area > 10000:
-                print(f'D:\Data\weiguan\guobao\SourceImg/{img_name}_part_{i}.jpg')
-                mask = np.zeros(img.shape, dtype='uint8')
-                cv2.fillConvexPoly(mask, one_contour, 255)
-                part = cv2.bitwise_and(img, mask)
+final = img[:, :, 3]
+img2 = np.concatenate([img_255, final[:, :, None]], axis=2)
+# print(img_255.sum())
+# cv2.imshow("aa", img2)
+# cv2.waitKey()
 
-                pixel_sum = cv2.sumElems(part)[0]
-                num = cv2.countNonZero(part)
-
-                print(pixel_sum, num, pixel_sum/num)
-
-        print('--------------------------------------------')
+cv2.imwrite('images/color_cursor2.png', img2)

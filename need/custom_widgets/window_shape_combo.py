@@ -9,6 +9,7 @@ from PySide6.QtGui import QAction, QIcon, QCursor
 
 from need.SharedWidgetStatFlags import stat_flags
 from need.custom_signals import ListSignal, BoolSignal, StrSignal
+from need.functions import get_HHL_parent
 
 signal_draw_sub_shape = StrSignal()
 signal_shape_combo_reset = BoolSignal()
@@ -37,7 +38,8 @@ class ShapeCombo(QMainWindow):
 
         self.__shape_stack = []
         self.cursor = QCursor()
-        self.__base_text_temp, self.__combo_text_temp = '', ''
+        self.__base_text_temp, self.__combo_text_temp = '', ''  # 用于重命名操作取消时，恢复原来的名称
+        self.__combo_text = ''
 
         self.ui.listWidget.itemClicked.connect(self.__shape_select_stack)
         self.ui.listWidget_2.itemClicked.connect(self.__shape_select_stack)
@@ -48,6 +50,7 @@ class ShapeCombo(QMainWindow):
         self.ui.pushButton_union.clicked.connect(self.__add_combo_union)
         self.ui.pushButton_diff.clicked.connect(self.__add_combo_diff)
         self.ui.pushButton_new.clicked.connect(self.__clear_all_shapes)
+        self.ui.pushButton_add.clicked.connect(self.__complete_combo_shape)
         signal_draw_sub_shape.signal.connect(self.__add_base_shape)
 
     def closeEvent(self, event):
@@ -65,7 +68,7 @@ class ShapeCombo(QMainWindow):
         for i in range(self.ui.listWidget_2.count()):
             text = self.ui.listWidget_2.item(i).text().split(': ')[-1]
             if text == combo_str:
-                QMessageBox.warning(self, self.tr('重复的名称'), self.tr(f'"{text}"已存在。'))
+                QMessageBox.warning(self, self.tr('重复的名称'), self.tr('"{}"已存在。').format(text))
                 return
 
         name = self.tr('组合') + str(self.ui.listWidget_2.count() + 1) + ': ' + combo_str
@@ -114,7 +117,7 @@ class ShapeCombo(QMainWindow):
                 continue
 
             if name == self.ui.listWidget.item(i).text():
-                QMessageBox.warning(self, self.tr('重复的名称'), self.tr(f'"{name}"已存在。'))
+                QMessageBox.warning(self, self.tr('重复的名称'), self.tr('"{}"已存在。').format(name))
                 return False
 
         for i in range(self.ui.listWidget_2.count()):
@@ -122,7 +125,7 @@ class ShapeCombo(QMainWindow):
                 continue
 
             if name == self.ui.listWidget_2.item(i).text().split(': ')[0]:
-                QMessageBox.warning(self, self.tr('重复的名称'), self.tr(f'"{name}"已存在。'))
+                QMessageBox.warning(self, self.tr('重复的名称'), self.tr('"{}"已存在。').format(name))
                 return False
 
         return True
@@ -153,6 +156,56 @@ class ShapeCombo(QMainWindow):
                     self.ui.listWidget_2.currentItem().setText(self.__combo_text_temp)
                     self.ui.listWidget_2.blockSignals(False)
 
+    def __clear_all_shapes(self):
+        self.ui.listWidget.clear()
+        self.ui.listWidget_2.clear()
+        self.__shape_stack = []
+        signal_shape_combo_reset.send(True)
+
+    def __complete_combo_shape(self):
+        combo_selectd = self.ui.listWidget_2.selectedItems()
+        if len(combo_selectd) > 1:
+            QMessageBox.warning(self, self.tr('组合数量错误'), self.tr('请逐个添加组合形状。'))
+            return
+
+        if len(combo_selectd) == 1:
+            self.__combo_text = combo_selectd[0].text()
+            get_HHL_parent(self).select_cate_tag_before()
+
+    def __cursor_in_base_list(self):
+        rect = self.ui.listWidget.rect()
+        cursor_rel_pos = self.ui.listWidget.mapFromGlobal(self.cursor.pos())
+        return rect.contains(cursor_rel_pos)
+
+    def __cursor_in_combo_list(self):
+        rect = self.ui.listWidget_2.rect()
+        cursor_rel_pos = self.ui.listWidget_2.mapFromGlobal(self.cursor.pos())
+        return rect.contains(cursor_rel_pos)
+
+    def __del_shape(self):
+        if self.__cursor_in_base_list():
+            cur_text = self.ui.listWidget.currentItem().text()
+
+            choice = QMessageBox.question(self.ui, self.tr('删除组合形状'),
+                                          self.tr('所有包含"{}"的组合形状也将被删除，继续吗？').format(cur_text))
+            if choice == QMessageBox.Yes:
+                self.ui.listWidget.takeItem(self.ui.listWidget.currentRow())
+                if cur_text in self.__shape_stack:
+                    self.__shape_stack.remove(cur_text)
+
+                for one in self.ui.listWidget_2.findItems(cur_text, Qt.MatchContains):
+                    combo_text = one.text()
+                    self.ui.listWidget_2.takeItem(self.ui.listWidget_2.row(one))
+                    if combo_text in self.__shape_stack:
+                        self.__shape_stack.remove(combo_text)
+
+        elif self.__cursor_in_combo_list():
+            cur_text = self.ui.listWidget_2.currentItem().text()
+            self.ui.listWidget_2.takeItem(self.ui.listWidget_2.currentRow())
+
+            if cur_text in self.__shape_stack:
+                self.__shape_stack.remove(cur_text)
+
     def __replace_existed_shape_name(self, old_name, new_name):
         self.ui.listWidget_2.blockSignals(True)
         for i in range(self.ui.listWidget_2.count()):
@@ -167,25 +220,31 @@ class ShapeCombo(QMainWindow):
 
         self.__combo_text_temp = self.__combo_text_temp.replace(old_name, new_name)
 
-    def __clear_all_shapes(self):
-        self.ui.listWidget.clear()
-        self.ui.listWidget_2.clear()
+    def __rename_shape(self):
+        if self.sender() == self.ui.listWidget:
+            self.__base_text_temp = self.ui.listWidget.currentItem().text()
+            self.ui.listWidget.editItem(self.ui.listWidget.currentItem())
+        elif self.sender() == self.ui.listWidget_2:
+            self.__combo_text_temp = self.ui.listWidget_2.currentItem().text()
+            self.ui.listWidget_2.editItem(self.ui.listWidget_2.currentItem())
+        elif self.sender() == self.action_rename_shape:
+            if self.__cursor_in_base_list():
+                self.__base_text_temp = self.ui.listWidget.currentItem().text()
+                self.ui.listWidget.editItem(self.ui.listWidget.currentItem())
+            elif self.__cursor_in_combo_list():
+                self.__combo_text_temp = self.ui.listWidget_2.currentItem().text()
+                self.ui.listWidget_2.editItem(self.ui.listWidget_2.currentItem())
+
+        self.__set_all_items_not_selected()
+
+    def __set_all_items_not_selected(self):
+        for i in range(self.ui.listWidget.count()):
+            self.ui.listWidget.item(i).setSelected(False)
+
+        for i in range(self.ui.listWidget_2.count()):
+            self.ui.listWidget_2.item(i).setSelected(False)
+
         self.__shape_stack = []
-        signal_shape_combo_reset.send(True)
-
-    def __cursor_in_base_list(self):
-        rect = self.ui.listWidget.rect()
-        cursor_rel_pos = self.ui.listWidget.mapFromGlobal(self.cursor.pos())
-        return rect.contains(cursor_rel_pos)
-
-    def __cursor_in_combo_list(self):
-        rect = self.ui.listWidget_2.rect()
-        cursor_rel_pos = self.ui.listWidget_2.mapFromGlobal(self.cursor.pos())
-        return rect.contains(cursor_rel_pos)
-
-    def __del_shape(self):
-        self.ui.listWidget.currentItem().setText('SADFF')
-        pass
 
     def __shape_select_stack(self):
         if self.sender() == self.ui.listWidget:
@@ -197,28 +256,6 @@ class ShapeCombo(QMainWindow):
             self.__shape_stack.remove(current_text)
         else:
             self.__shape_stack.append(current_text)
-
-    def __rename_shape(self):
-        if self.sender() == self.ui.listWidget:
-            self.__base_text_temp = self.ui.listWidget.currentItem().text()
-            self.ui.listWidget.editItem(self.ui.listWidget.currentItem())
-        elif self.sender() == self.ui.listWidget_2:
-            self.__combo_text_temp = self.ui.listWidget_2.currentItem().text()
-            self.ui.listWidget_2.editItem(self.ui.listWidget_2.currentItem())
-        elif self.sender() == self.action_rename_shape:
-            if self.__cursor_in_base_list():
-                self.ui.listWidget.editItem(self.ui.listWidget.currentItem())
-            elif self.__cursor_in_combo_list():
-                self.ui.listWidget_2.editItem(self.ui.listWidget_2.currentItem())
-
-    def __set_all_items_not_selected(self):
-        for i in range(self.ui.listWidget.count()):
-            self.ui.listWidget.item(i).setSelected(False)
-
-        for i in range(self.ui.listWidget_2.count()):
-            self.ui.listWidget_2.item(i).setSelected(False)
-
-        self.__shape_stack = []
 
     def __show_menu(self):  # 在鼠标位置显示菜单, 超出item区域不显示
         show = False
@@ -242,6 +279,9 @@ class ShapeCombo(QMainWindow):
         if show:
             self.menu.exec(self.cursor.pos())
 
+    def combo_text(self):
+        return self.__combo_text
+
     def move_to(self, pos: QPoint):
         self.move(pos)
 
@@ -257,4 +297,6 @@ if __name__ == '__main__':
     pp.show()
     app.exec()
 
-# todo: 1.del shape 3.添加功能 4. base shape在选中时同步高亮显示
+# todo: 1.del shape 和rename shape 同步修改已添加的图形
+#  2.添加功能
+#  3. sub shape的高亮显示，角点移动，整体移动 如何和 基础形状标注、组合标注兼容
