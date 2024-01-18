@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
-from need.functions import get_HHL_parent
+from need.functions import get_HHL_instance
 from PySide6.QtWidgets import QTextBrowser
 
 
@@ -10,4 +10,4 @@ class TaskDescBrowser(QTextBrowser):
 
     def focusOutEvent(self, ev):
         super().focusOutEvent(ev)
-        get_HHL_parent(self).task_desc_edit(self.toPlainText())
+        get_HHL_instance().task_desc_edit(self.toPlainText())

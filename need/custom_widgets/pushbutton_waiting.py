@@ -7,8 +7,8 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QStylePainter, QStyle
 
 from need.custom_signals import BoolSignal
-from need.functions import get_HHL_parent
-from need.SharedWidgetStatFlags import stat_flags
+from need.functions import get_HHL_instance
+from need.SharedWidgetStatVars import stat_vars
 
 signal_button_selected_done = BoolSignal()
 
@@ -29,7 +29,6 @@ class PushButtonWaiting(QPushButton):
         self.clicked.connect(self.__done)
         self.icon_ok = QIcon('images/icon_11.png')
         self.setVisible(False)
-        self.__activated = False
         self.__confirmed = False
         self.timer = QTimer()
         self.timer.timeout.connect(self.__change_bg_color)
@@ -88,38 +87,34 @@ class PushButtonWaiting(QPushButton):
             self.__color_i += 1
 
     def __done(self):
-        if get_HHL_parent(self).check_warnings('cate_selected'):
+        if get_HHL_instance().check_warnings('cate_selected'):
             self._rotateAnimation.stop()
             self._rotateAnimationStarted = False
             self.__confirmed = True
 
             self.setVisible(False)
             if 'cate' in self.objectName():
-                stat_flags.PushButtonWaitingCate_IsVisible = False
+                stat_vars.PushButtonWaitingCate_IsVisible = False
             elif 'tag' in self.objectName():
-                stat_flags.PushButtonWaitingTag_IsVisible = False
+                stat_vars.PushButtonWaitingTag_IsVisible = False
 
             signal_button_selected_done.signal.emit(True)
 
     def has_confirmed(self):
         return self.__confirmed
 
-    def set_activated(self, activate):
-        self.__activated = activate
-
     def show_button(self):
-        if self.__activated:
-            self.__confirmed = False
-            self._rotateAnimation.start()
+        self.__confirmed = False
+        self._rotateAnimation.start()
 
-            self.setVisible(True)
-            if 'cate' in self.objectName():
-                stat_flags.PushButtonWaitingCate_IsVisible = True
-            elif 'tag' in self.objectName():
-                stat_flags.PushButtonWaitingTag_IsVisible = True
+        self.setVisible(True)
+        if 'cate' in self.objectName():
+            stat_vars.PushButtonWaitingCate_IsVisible = True
+        elif 'tag' in self.objectName():
+            stat_vars.PushButtonWaitingTag_IsVisible = True
 
-            self.__color_i = 0
-            self.timer.start(50)  # 背景色变换的时间
+        self.__color_i = 0
+        self.timer.start(50)  # 背景色变换的时间
 
 # if __name__ == "__main__":
 #     from PySide6.QtWidgets import QApplication

@@ -5,7 +5,6 @@ import glob
 import copy
 import datetime
 import pdb
-
 import numpy as np
 
 from typing import Union, List
@@ -14,8 +13,8 @@ from os import path as osp
 from datetime import datetime
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QWidget
 from need.custom_widgets import CustomMessageBox
+from PySide6.QtWidgets import QApplication
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -68,14 +67,11 @@ def get_file_cmtime(path):
     return c_time, m_time
 
 
-def get_HHL_parent(widget: QWidget):  # 返回后，只允许调用HHL_MainWindow的方法，不允许调用其子控件，否则用信号
-    assert widget.parent() is not None, f'"{widget}" has no parent.'
-
-    while 'HHL_MainWindow' not in str(widget.parent()):
-        widget = widget.parent()
-        assert widget.parent() is not None, f'Strange! "{widget}" can not find HHL MainWindow.'
-
-    return widget.parent()
+def get_HHL_instance():  # 返回后，只允许调用HHL_MainWindow的方法，不允许调用其子控件的方法，否则用信号
+    for one in QApplication.allWidgets():
+        if 'HHL_MainWindow' in str(one):
+            return one
+    return None
 
 
 def get_rotated_img_array(img_path: str, size: tuple = ()):

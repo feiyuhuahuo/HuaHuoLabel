@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QMainWindow, QListWidgetItem
 from PySide6.QtGui import QIcon, QColor
 from PySide6.QtCore import Qt
 from need.custom_signals import BoolSignal
-from need.functions import get_HHL_parent
+from need.functions import get_HHL_instance
 
 signal_select_window_close = BoolSignal()
 

@@ -95,8 +95,8 @@ def connect_signals(main_window):
     sys.stderr.signal.connect(main_window.log_sys_error)
 
     signal_auto_save.signal.connect(main_window.auto_save)
-    signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
-    signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
+    # signal_cocc_done.signal.connect(main_window.change_one_class_category_done)
+    # signal_docl_done.signal.connect(main_window.delete_one_class_jsons_done)
     # signal_one_collection_done.signal.connect(main_window.select_cate_tag)
     signal_button_selected_done.signal.connect(main_window.select_cate_tag_after)
     signal_show_label_img.signal.connect(main_window.flow_show)
@@ -124,16 +124,19 @@ def init_custom_widgets(main_window):
     main_window.window_flow_label.setWindowFlags(Qt.WindowStaysOnTopHint)
     main_window.window_flow_img = BaseImgWindow(title=main_window.tr('原始图片'))
     main_window.window_flow_img.setWindowFlags(Qt.WindowStaysOnTopHint)
-    main_window.dialog_tracked_files = None
-    main_window.dialog_version_change = None
+    main_window.dlg_tracked_files = None
+    main_window.dlg_version_change = None
 
     # self.window_auto_infer_progress = None
     # self.window_class_stat = None
     # self.window_usp_progress = None
     # self.window_auto_infer = None
+    main_window.center_img = main_window.ui.graphicsView.img_area
     main_window.ui.spinBox_thickness.set_default('images/thickness.png', 1, 20, 2)
     main_window.ui.spinBox_thickness2.set_default('images/thickness.png', 1, 20, 3)
     main_window.ui.spinBox_fontsize.set_default('images/font_size.png', 1, 50, 20, padding_icon=2)
+
+    main_window.wfm = WidgetFunctionMap(main_window)
 
 
 def close_sub_windows(main_window):
@@ -167,3 +170,8 @@ def register_custom_widgets(loader):
     loader.registerCustomWidget(SearchBox)
     loader.registerCustomWidget(ScanButton)
     loader.registerCustomWidget(TaskDescBrowser)
+
+
+class WidgetFunctionMap:
+    def __init__(self, main_window):
+        self.center_img_set_shape_locked = main_window.center_img.set_shape_locked

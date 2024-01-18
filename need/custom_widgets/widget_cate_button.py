@@ -4,8 +4,9 @@ import pdb
 from PySide6.QtWidgets import QInputDialog, QPushButton, QMenu, QWidget, QLineEdit
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QAction, QCursor
-from need.functions import get_HHL_parent
-from need.SharedWidgetStatFlags import stat_flags
+from need.functions import get_HHL_instance
+from need.SharedWidgetStatVars import stat_vars
+
 
 class BaseButton(QWidget):
     def __init__(self, parent=None, cate='', looking=None, is_default=None):
@@ -91,7 +92,7 @@ class BaseButton(QWidget):
             if self.parent().check_name_list(text):
                 self.parent().edit_name(self.class_button.text(), text.strip())
                 self.set_cate(text)
-                get_HHL_parent(self).cate_button_update(from_where=self.__class__.__name__)
+                get_HHL_instance().cate_button_update(from_where=self.__class__.__name__)
 
     def get_ss(self, ss_names: list):
         ss = []
@@ -102,7 +103,7 @@ class BaseButton(QWidget):
             elif one == 'default':
                 ss.append(self.ss_default[one])
             elif one in ('selected', 'not_selected'):
-                if self.__is_click_valid():
+                if self.is_click_valid():
                     ss.append(self.ss_click_valid[one])
                 else:
                     ss.append(self.ss_click_invalid[one])
@@ -111,7 +112,7 @@ class BaseButton(QWidget):
 
         return ''.join(ss)
 
-    def __is_click_valid(self):
+    def is_click_valid(self):
         clicked_signal = self.class_button.metaObject().method(37)  # 37为信号clicked的索引
         return self.class_button.isSignalConnected(clicked_signal)
 
@@ -146,7 +147,7 @@ class BaseButton(QWidget):
 
         if assigned_default is None:  # 由click触发才会去更新并保存按钮组信息
             self.parent().track_is_default(self.class_button.text(), True if ss_default else False)
-            get_HHL_parent(self).cate_button_update(from_where=self.__class__.__name__)
+            get_HHL_instance().cate_button_update(from_where=self.__class__.__name__)
 
     def set_cate(self, cate: str):
         self.class_button.setText(cate.strip())
@@ -192,7 +193,7 @@ class BaseButton(QWidget):
 
         if assigned_looking is None:  # 由click触发才会去更新并保存按钮组信息
             self.parent().track_is_looking(self.class_button.text(), set_looking)
-            get_HHL_parent(self).cate_button_update(from_where=self.__class__.__name__)
+            get_HHL_instance().cate_button_update(from_where=self.__class__.__name__)
 
     def show_menu(self):  # 在鼠标位置显示菜单
         self.menu.exec(QCursor.pos())
@@ -230,14 +231,14 @@ class ObjCateButton(BaseButton):
             ss_selected = self.get_ss(['selected'])
         else:
             self.action_default.setText('设为默认')
-            self.set_click_valid(stat_flags.PushButtonWaitingCate_IsVisible)
+            self.set_click_valid(stat_vars.PushButtonWaitingCate_IsVisible)
             ss_selected = self.get_ss(['not_selected'])
 
         self.class_button.setStyleSheet(self.get_ss(['base']) + ss_default + ss_selected)
 
         if assigned_default is None:  # 由click触发才会去更新并保存按钮组信息
             self.parent().track_is_default(self.class_button.text(), True if ss_default else False)
-            get_HHL_parent(self).cate_button_update(from_where=self.__class__.__name__)
+            get_HHL_instance().cate_button_update(from_where=self.__class__.__name__)
 
 
 class ObjTagButton(BaseButton):
@@ -260,11 +261,11 @@ class ObjTagButton(BaseButton):
             ss_selected = self.get_ss(['selected'])
         else:
             self.action_default.setText('设为默认')
-            self.set_click_valid(stat_flags.PushButtonWaitingTag_IsVisible)
+            self.set_click_valid(stat_vars.PushButtonWaitingTag_IsVisible)
             ss_selected = self.get_ss(['not_selected'])
 
         self.class_button.setStyleSheet(self.get_ss(['base']) + ss_default + ss_selected)
 
         if assigned_default is None:  # 由click触发才会去更新并保存按钮组信息
             self.parent().track_is_default(self.class_button.text(), True if ss_default else False)
-            get_HHL_parent(self).cate_button_update(from_where=self.__class__.__name__)
+            get_HHL_instance().cate_button_update(from_where=self.__class__.__name__)

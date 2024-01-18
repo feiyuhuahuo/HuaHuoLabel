@@ -1,13 +1,19 @@
 #!/usr/bin/env python 
 # -*- coding:utf-8 -*-
+import pdb
+
 from PySide6.QtGui import QIcon, QColor, QCursor, QAction
 from PySide6.QtWidgets import QPushButton, QApplication, QWidget, QListWidget, QListWidgetItem, QSizePolicy, \
-    QVBoxLayout, QSpacerItem, QCheckBox, QMenu
-from need.custom_signals import IntSignal, BoolSignal
-from need.custom_widgets import signal_set_shape_list_selected, signal_draw_selected_shape
+    QVBoxLayout, QSpacerItem, QCheckBox, QMenu, QAbstractItemView
+from need.custom_signals import IntSignal
+from need.SharedWidgetStatVars import stat_vars
+from need.functions import get_HHL_instance
 
-signal_update_num = IntSignal()
-signal_obj_list_folded = BoolSignal()
+signal_del_shape = IntSignal()
+signal_del_shape_from_img = IntSignal()
+signal_draw_selected_shape = IntSignal()
+signal_set_obj_selected = IntSignal()
+signal_show_obj_cate_tag = IntSignal()
 
 
 class ObjList(QWidget):
@@ -91,8 +97,10 @@ class ObjList(QWidget):
         self.icon_unlook = QIcon('images/look/not_look2.png')
         self.icon_unlook_key = self.icon_unlook.cacheKey()
         self.icon_shape_locked = QIcon('images/locked.png')
-        self.obj_list.itemClicked.connect(lambda: self.draw_selected_shape(i=-1))
-        signal_set_shape_list_selected.signal.connect(self.set_shape_selected)
+        self.obj_list.itemClicked.connect(self.__draw_selected_shape)
+        self.obj_list.itemSelectionChanged.connect(self.__show_obj_cate_tag)
+        signal_set_obj_selected.signal.connect(self.__set_shape_selected)
+        signal_del_shape_from_img.signal.connect(self.__del_shape_from_img)
 
         layout = QVBoxLayout()
         layout.setSpacing(0)
@@ -102,19 +110,19 @@ class ObjList(QWidget):
         self.setLayout(layout)
 
         self.menu = QMenu(title='label_list_menu', parent=self)
-        self.customContextMenuRequested.connect(self.show_menu)
-        self.action_modify_cate = QAction(QIcon('images/note.png'), self.tr('修改类别'), self)
-
-        # self.action_modify_cate.triggered.connect(self.modify_obj_list_start)
-        self.action_shape = QAction(QIcon('images/icon_43.png'), self.tr('删除标注'), self)
-        # self.action_delete_one_shape.triggered.connect(lambda: self.del_all_shapes(False))
+        self.menu.setFixedWidth(120)
+        self.customContextMenuRequested.connect(self.__show_menu)
+        self.action_modify = QAction(QIcon('images/note.png'), self.tr('修改类别/标签'), self)
+        self.action_modify.triggered.connect(self.__modify_cate_tag)
+        self.action_delete_one = QAction(QIcon('images/icon_43.png'), self.tr('删除标注'), self)
+        self.action_delete_one.triggered.connect(lambda: self.__del_shape(False))
         self.action_delete_all = QAction(QIcon('images/no_no.png'), self.tr('全部删除'), self)
-        # self.action_delete_all.triggered.connect(lambda: self.del_all_shapes(True))
+        self.action_delete_all.triggered.connect(lambda: self.__del_shape(True))
         self.action_lock_shape = QAction(QIcon('images/locked.png'), self.tr('锁定标注'), self)
-        # self.action_lock_shape.triggered.connect(self.lock_shape)
+        self.action_lock_shape.triggered.connect(self.lock_shape)
 
-        self.menu.addAction(self.action_modify_cate)
-        self.menu.addAction(self.action_shape)
+        self.menu.addAction(self.action_modify)
+        self.menu.addAction(self.action_delete_one)
         self.menu.addAction(self.action_delete_all)
         self.menu.addAction(self.action_lock_shape)
         self.menu.setDisabled(True)
@@ -122,6 +130,33 @@ class ObjList(QWidget):
     def wheelEvent(self, event):
         if self.edit_button.isEnabled():
             self.edit_button.setChecked(event.angleDelta().y() < 0)
+
+        if not self.edit_button.isChecked():
+            if self.action_lock_shape.text() == self.tr('取消锁定'):
+                self.lock_shape()
+
+    def __del_shape(self, del_all=False):
+        if del_all:
+            self.obj_list.clear()
+            signal_del_shape.send(-1)
+        else:
+            row_i = self.obj_list.currentRow()
+            self.obj_list.takeItem(row_i)
+            signal_del_shape.send(row_i)
+
+        self.__update_list_num()
+
+    def __del_shape_from_img(self, shape_i):
+        if shape_i == -1:
+            self.obj_list.clear()
+        else:
+            self.obj_list.takeItem(shape_i)
+
+        signal_del_shape.send(shape_i)
+        self.__update_list_num()
+
+    def __draw_selected_shape(self):  # 在标注列表选定当前项时，对应高亮显示图上的标注
+        signal_draw_selected_shape.send(self.obj_list.currentRow())
 
     def __fold_list(self):
         self.obj_list.setVisible(not self.obj_list.isVisible())
@@ -133,55 +168,16 @@ class ObjList(QWidget):
             self.parent().layout().setStretch(1, 1)
             self.parent().layout().setStretch(2, 20)
 
-    def __update_list_num(self):
-        count = self.obj_list.count()
-        self.title_button.setText(self.tr('   标注列表') + f'({count})')
+    def __modify_cate_tag(self):
+        stat_vars.ObjList_Modifying_I = self.obj_list.currentRow()
+        get_HHL_instance().select_cate_tag_before()
 
-    def add_item(self, text, color):
-        item = QListWidgetItem(text)
-        item.setForeground(QColor(color))
-        self.obj_list.addItem(item)
-        self.__update_list_num()
-
-    def clear(self):
-        self.obj_list.clear()
-        self.__update_list_num()
-
-    def del_row(self, row: int):
-        self.obj_list.takeItem(row)
-        self.__update_list_num()
-
-    def draw_selected_shape(self, i):  # 在标注列表选定当前项时，对应高亮显示图上的标注
-        if i == -1:
-            if not self.has_locked_shape():
-                signal_draw_selected_shape.send(self.obj_list.currentRow())
-        else:
-            signal_draw_selected_shape.send(i)
-
-    def modify_cur_c(self, new_c: str):
-        item = self.obj_list.currentItem()
-        item.setText(new_c)
-
-    def has_locked_shape(self):
-        for i in range(self.obj_list.count()):
-            item = self.obj_list.item(i)
-            if item.icon().cacheKey() != 0:
-                return item
-        return False
-
-    def set_shape_locked(self, item: QListWidgetItem):
-        item.setIcon(self.icon_shape_locked)
-        self.draw_selected_shape(self.obj_list.row(item))
-
-    def set_shape_unlocked(self, item: QListWidgetItem):
-        item.setIcon(QIcon())
-
-    def set_shape_selected(self, i):  # 在图上选定标注时，对应设置标注列表的当前项
+    def __set_shape_selected(self, i):  # 在图上选定标注时，对应设置标注列表的当前项
         item = self.obj_list.item(i)
         self.obj_list.setCurrentItem(item)
         item.setSelected(True)
 
-    def show_menu(self):  # 在鼠标位置显示菜单
+    def __show_menu(self):  # 在鼠标位置显示菜单
         if not self.edit_button.isChecked():
             self.menu.setDisabled(True)
         else:
@@ -199,21 +195,41 @@ class ObjList(QWidget):
         if show:
             self.menu.exec(QCursor.pos())
 
+    def __show_obj_cate_tag(self):
+        signal_show_obj_cate_tag.send(self.obj_list.currentRow())
 
-if __name__ == '__main__':
-    app = QApplication()
-    bb = QWidget()
-    ly = QVBoxLayout()
+    def __update_list_num(self):
+        count = self.obj_list.count()
+        self.title_button.setText(self.tr('   标注列表') + f'({count})')
 
-    img_edit = ObjList()
-    ly.addWidget(QPushButton())
-    ly.addWidget(img_edit)
-    ly.addItem(QSpacerItem(0, 0))
-    ly.setStretch(0, 1)
-    ly.setStretch(1, 1)
-    ly.setStretch(2, 10)
-    # ly.addItem(QSpacerItem(0, 30))
-    bb.setLayout(ly)
-    bb.show()
+    def add_item(self, text, color):
+        item = QListWidgetItem(text)
+        item.setForeground(QColor(color))
+        self.obj_list.addItem(item)
+        self.__update_list_num()
 
-    app.exec()
+    def lock_shape(self):
+        cur_item = self.obj_list.currentItem()
+        if self.action_lock_shape.text() == self.tr('锁定标注'):
+            self.obj_list.setSelectionMode(QAbstractItemView.NoSelection)  # 禁用item选择功能
+            self.obj_list.itemClicked.disconnect()
+            self.__draw_selected_shape()
+            get_HHL_instance().wfm.center_img_set_shape_locked(True)
+            self.action_modify.setDisabled(True)
+            self.action_delete_one.setDisabled(True)
+            self.action_delete_all.setDisabled(True)
+            cur_item.setIcon(self.icon_shape_locked)
+            self.action_lock_shape.setText(self.tr('取消锁定'))
+        else:
+            get_HHL_instance().wfm.center_img_set_shape_locked(False)
+            self.action_modify.setDisabled(False)
+            self.action_delete_one.setDisabled(False)
+            self.action_delete_all.setDisabled(False)
+            self.obj_list.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.obj_list.itemClicked.connect(self.__draw_selected_shape)
+            cur_item.setIcon(QIcon())
+            self.action_lock_shape.setText(self.tr('锁定标注'))
+
+    def set_current_text(self, text, color):
+        self.obj_list.currentItem().setText(text)
+        self.obj_list.currentItem().setForeground(QColor(color))

@@ -3,22 +3,19 @@
 import pdb
 from typing import List, Union
 from copy import deepcopy
-from PySide6.QtWidgets import QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel, QGraphicsView, \
-    QGraphicsScene, QGraphicsItem, QGraphicsPixmapItem, QPushButton, QFileDialog
+from PySide6.QtWidgets import (QInputDialog, QMessageBox, QApplication, QMenu, QListWidgetItem, QLabel, QGraphicsView,
+                               QGraphicsScene, QGraphicsItem, QGraphicsPixmapItem, QPushButton, QFileDialog)
 from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QSize
 from PySide6.QtGui import QPixmap, QPainter, QFont, QColor, QPen, QUndoStack, QCursor, QAction, QIcon
 from need.algorithms import coor_in_shape
 from need.utils import AnnUndo, INS_shape_type
 from need.custom_signals import *
-from need.custom_widgets import SelectItem, signal_select_window_close, CustomMessageBox, signal_shape_combo_reset, \
-    signal_rename_sub_shape, signal_draw_sub_shape
-from need.functions import get_HHL_parent, img_path2_qpixmap
-from need.SharedWidgetStatFlags import stat_flags
+from need.custom_widgets import *
+from need.functions import get_HHL_instance, img_path2_qpixmap
+from need.SharedWidgetStatVars import stat_vars
 
 signal_one_collection_done = StrSignal()
 signal_select_collection_ok = StrSignal()
-signal_draw_selected_shape = IntSignal()
-signal_set_shape_list_selected = IntSignal()
 
 
 class BaseImgFrame(QLabel):
@@ -338,6 +335,7 @@ class CenterImg(BaseImgFrame):
         self.widget_coors = []
         self.img_coors = []
         self.__sub_shapes_temp = []
+        self.__sub_shapes_names = []
         self.shape_type = self.tr('多边形')
         self.cursor_in_widget = QPointF(0., 0.)  # 鼠标在控件坐标系的实时坐标
         self.scaled_img_painted = None
@@ -357,7 +355,7 @@ class CenterImg(BaseImgFrame):
         self.AnnMode = False
         self.LeftClick = False  # 用于实现图片拖曳和标注拖曳功能
         self.PolygonLastPointDone = False  # 用于标识画完一个多边形
-        self.PolygonLocked = False
+        self.HasShapeLocking = False
         self.HideCross = True
         self.MovingShape = False  # 仅在拖动标注移动时为True
         self.FlagDrawCollection = False
@@ -399,7 +397,12 @@ class CenterImg(BaseImgFrame):
         signal_draw_selected_shape.signal.connect(self.__draw_selected_shape)
         signal_select_collection_ok.signal.connect(self.__select_collection_ok)
         signal_rename_sub_shape.signal.connect(self.__sub_shape_rename)
+        signal_del_sub_shape.signal.connect(self.__sub_shape_del)
         signal_shape_combo_reset.signal.connect(self.__sub_shapes_clear)
+        signal_check_repeated_name.signal.connect(self.__check_redu_shape_name)
+        signal_get_combo_name.signal.connect(self.__get_sub_shape_name)
+        signal_show_obj_cate_tag.signal.connect(self.__send_current_obj_info)
+        signal_del_shape.signal.connect(self.__del_shape_from_obj_list)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -411,7 +414,7 @@ class CenterImg(BaseImgFrame):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             if file_path.split('.')[-1] in ('jpg', 'jpeg', 'png', 'bmp'):
-                get_HHL_parent(self).new_img_window(file_path)
+                get_HHL_instance().new_img_window(file_path)
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
@@ -428,18 +431,18 @@ class CenterImg(BaseImgFrame):
                 if self.AnnMode:
                     self.undo_stack.undo()
                 else:
-                    if not get_HHL_parent(self).is_selecting_cate_tag():
+                    if not get_HHL_instance().is_selecting_cate_tag():
                         self.__remove_widget_img_pair()
         else:
             if key in (Qt.Key_A, Qt.Key_D, Qt.Key_W, Qt.Key_S):
                 if self.corner_index is None and self.editing_shape_i is not None:
                     self.__move_polygons(self.editing_shape_i, key=key)
                 else:  # 此时在尝试切图
-                    if not get_HHL_parent(self).check_warnings('selecting_cate_tag'):
+                    if not get_HHL_instance().check_warnings('selecting_cate_tag'):
                         return
 
             if key == Qt.Key_Delete:
-                self.del_polygons()
+                self.__del_shape()
             if key == Qt.Key_Shift:
                 self.set_cursor(shift=True)
 
@@ -507,14 +510,14 @@ class CenterImg(BaseImgFrame):
 
                 if QApplication.keyboardModifiers() == Qt.ControlModifier:
                     if (self.shape_type in INS_shape_type('像素') and len(self.img_coors) and
-                            not get_HHL_parent(self).is_selecting_cate_tag()):
+                            not get_HHL_instance().is_selecting_cate_tag()):
                         self.__add_widget_img_pair(self.cursor_in_widget)  # 添加像素点坐标
                 else:
                     if self.ShapeEditMode:
                         if QApplication.keyboardModifiers() != Qt.ShiftModifier:
                             # 有了self.polygon_editing_i后，在paintEvent()里触发draw_editing_polygon()才有效
-                            if not self.MovingShape and not self.PolygonLocked:
-                                self.editing_shape_i = self.__get_editing_polygon()
+                            if not self.MovingShape and not self.HasShapeLocking:
+                                self.editing_shape_i = self.__get_editing_shape()
 
                             if self.LeftClick:
                                 if not self.MovingShape and self.corner_index is not None:
@@ -594,9 +597,8 @@ class CenterImg(BaseImgFrame):
             elif QApplication.keyboardModifiers() == Qt.ShiftModifier and self.ShapeEditMode:
                 self.__erase_paint_pixel(self.editing_shape_i)
 
-    def paintEvent(self, e):  # 时刻都在绘制，关注绘制数量多时，是否会造成系统负担
+    def paintEvent(self, e):  # 每次都清空重新绘制，关注绘制数量多时，是否会造成系统负担
         # from ctypes import windll  获取不准
-
         # gdi32 = windll.gdi32
         # user32 = windll.user32
         # hdc = user32.GetDC(None)  # 获取颜色值
@@ -631,7 +633,7 @@ class CenterImg(BaseImgFrame):
     def __add_widget_img_pair(self, qpointf):
         if self.ShowOriImg:
             return
-        if not get_HHL_parent(self).check_warnings('selecting_cate_tag'):
+        if not get_HHL_instance().check_warnings('selecting_cate_tag'):
             return
 
         if self.shape_type in INS_shape_type('多边形'):
@@ -693,6 +695,12 @@ class CenterImg(BaseImgFrame):
         self.ann_point_last = self.ann_point_cur
         self.scaled_img_painted = self.scaled_img.copy()  # 保存一个绘图的副本
 
+    def __check_redu_shape_name(self, name: str):
+        stat_vars.ShapeCombo_NameRepeated = False
+        if name in self.__sub_shapes_names:
+            stat_vars.ShapeCombo_NameRepeated = True
+            QMessageBox.warning(self, self.tr('重复的名称'), self.tr('"{}"已存在。').format(name))
+
     def __clear_editing_i_corner(self):
         self.editing_shape_i = None
         self.corner_index = None
@@ -701,7 +709,7 @@ class CenterImg(BaseImgFrame):
         self.widget_coors = []
         self.img_coors = []
 
-    def __close_to_corner(self, coors, radius=3, is_ellipse=False):
+    def __close_to_coors(self, coors, radius=3, is_ellipse=False):
         self.painter.setPen(Qt.NoPen)
         self.painter.setBrush(QColor('lightgreen'))
 
@@ -733,7 +741,7 @@ class CenterImg(BaseImgFrame):
         assert len(corner_index) == 3, f'error len(corner_index) is {len(corner_index)}.'
         i, j, k = corner_index
 
-        if self.PolygonLocked:
+        if self.HasShapeLocking:
             if i != self.editing_shape_i:
                 return
 
@@ -783,12 +791,12 @@ class CenterImg(BaseImgFrame):
     def __cursor_close_to_corner(self):
         def get_point_index(shape_type, widget_coors):
             if shape_type in INS_shape_type('椭圆形'):
-                k = self.__close_to_corner(widget_coors, is_ellipse=True)
+                k = self.__close_to_coors(widget_coors, is_ellipse=True)
                 if type(k) == int:
                     return k
             elif shape_type in INS_shape_type(['多边形', '矩形']):
                 for n, one_coor in enumerate(widget_coors):
-                    if self.__close_to_corner(one_coor):
+                    if self.__close_to_coors(one_coor):
                         return n
             elif shape_type in INS_shape_type('组合'):
                 pass  # todo: --------------------------------
@@ -797,6 +805,9 @@ class CenterImg(BaseImgFrame):
 
         corner_index = None
         for i, shape in enumerate(self.__all_shapes):
+            if self.HasShapeLocking and i != self.editing_shape_i:
+                continue
+
             for j, one_sub in enumerate(shape['sub_shapes']):
                 k = get_point_index(one_sub['shape_type'], one_sub['widget_coors'])
                 if k > -1:
@@ -808,6 +819,20 @@ class CenterImg(BaseImgFrame):
                 return -1, j, k
 
         return corner_index
+
+    def __del_shape(self):
+        if self.ShapeEditMode and self.editing_shape_i is not None:
+            signal_del_shape_from_img.send(self.editing_shape_i)
+
+    def __del_shape_from_obj_list(self, shape_i):
+        if shape_i == -1:
+            self.__all_shapes = []
+        else:
+            self.__all_shapes.pop(shape_i)
+
+        self.__sync_widget_data_and_json_data('del', shape_i)
+        self.editing_shape_i = None
+        self.update()
 
     def __draw_cross_line(self):  # 画十字线
         if not self.HideCross:
@@ -836,7 +861,7 @@ class CenterImg(BaseImgFrame):
                         self.painter.drawEllipse(QRect(int(x1), int(y1), int(x2 - x1), int(y2 - y1)))
 
             elif self.shape_type in INS_shape_type('多边形'):
-                if not get_HHL_parent(self).is_selecting_cate_tag():
+                if not get_HHL_instance().is_selecting_cate_tag():
                     if len(self.widget_coors) >= 2:  # 画已完成的完整线段
                         for i in range(len(self.widget_coors) - 1):
                             self.painter.drawLine(self.widget_coors[i], self.widget_coors[i + 1])
@@ -844,7 +869,7 @@ class CenterImg(BaseImgFrame):
                         self.painter.drawLine(self.widget_coors[-1], self.cursor_in_widget)
 
                 if len(self.widget_coors) >= 3:  # 至少3个点才能绘制出polygon
-                    if self.__close_to_corner(self.widget_coors[0]):  # 判定是否到了第一个点
+                    if self.__close_to_coors(self.widget_coors[0]):  # 判定是否到了第一个点
                         self.PolygonLastPointDone = True
 
             elif self.shape_type in INS_shape_type('像素'):
@@ -879,7 +904,7 @@ class CenterImg(BaseImgFrame):
                 elif st in INS_shape_type('像素'):
                     self.__fill_img_pixel(editing_shape['sub_shapes'][0]['img_coors'], QColor(0, 255, 0, 150))
 
-            signal_set_shape_list_selected.send(self.editing_shape_i)
+            signal_set_obj_selected.send(self.editing_shape_i)
 
     def __draw_one_shape(self, shape, qcolor):
         st = shape['shape_type']
@@ -902,7 +927,7 @@ class CenterImg(BaseImgFrame):
             for one_sub in one['sub_shapes']:
                 self.__draw_one_shape(one_sub, QColor(one['qcolor']))
 
-        if get_HHL_parent(self).is_selecting_cate_tag() or stat_flags.ShapeCombo_IsOpened:
+        if get_HHL_instance().is_selecting_cate_tag() or stat_vars.ShapeCombo_IsOpened:
             for one in self.__sub_shapes_temp:
                 self.painter.setPen(QPen(self.seg_pen_color, self.seg_pen_size))
                 self.__draw_one_shape(one, self.seg_pen_color)
@@ -950,7 +975,7 @@ class CenterImg(BaseImgFrame):
 
         self.painter.setBrush(Qt.NoBrush)
 
-    def __get_editing_polygon(self):
+    def __get_editing_shape(self):
         editing_i = None
         cursor_coor = self.cursor_in_widget.toTuple()
 
@@ -1038,21 +1063,41 @@ class CenterImg(BaseImgFrame):
             if self.LeftClick:
                 self.start_pos = self.cursor_in_widget
 
+        self.__sync_widget_data_and_json_data('modify', shape_i)
         self.update()
         self.MovingShape = True
 
     def __move_to_new_folder(self):
-        get_HHL_parent(self).move_to_new_folder()
+        get_HHL_instance().move_to_new_folder()
+
+    def __get_sub_shape_name(self):
+        if self.sender() is None:
+            prefix = self.shape_type
+        elif self.sender() == signal_get_combo_name:
+            prefix = self.tr('组合')
+
+        name = prefix + str(len(self.__sub_shapes_names) + 1)
+        while name in self.__sub_shapes_names:
+            ii = int(name.split(prefix)[-1])
+            ii += 1
+            name = prefix + str(ii)
+
+        self.__sub_shapes_names.append(name)
+
+        if self.sender() is None:
+            return name
+        elif self.sender() == signal_get_combo_name:
+            stat_vars.ShapeCombo_ComboName = name
 
     def __one_shape_drawed(self):
-        name = self.shape_type + str(len(self.__sub_shapes_temp) + 1)
+        name = self.__get_sub_shape_name()
         self.__sub_shapes_temp.append({'name': name, 'shape_type': self.shape_type,
                                        'widget_coors': self.widget_coors.copy(), 'img_coors': self.img_coors.copy()})
-        if stat_flags.ShapeCombo_IsOpened:
+        if stat_vars.ShapeCombo_IsOpened:
             self.__clear_widget_img_coors()
-            signal_draw_sub_shape.send(self.shape_type)
+            signal_draw_sub_shape.send(name)
         else:
-            get_HHL_parent(self).select_cate_tag_before()
+            get_HHL_instance().select_cate_tag_before()
 
     def __ori_img_show(self):
         self.ShowOriImg = not self.ShowOriImg
@@ -1108,7 +1153,10 @@ class CenterImg(BaseImgFrame):
 
         self.collection_window.close()
 
-    def __shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):  # 标注随图片缩放而缩放
+    def __send_current_obj_info(self, i):
+        stat_vars.CenterImg_CurrentObj = self.__all_shapes[i]
+
+    def __shape_scale_move(self, old_img_tl, scale_factor=(1., 1.)):  # 标注随图片缩放而缩放、拖动
         for one in self.__all_shapes:
             for one_sub in one['sub_shapes']:
                 one_sub['widget_coors'] = self.shape_scale_convert(one_sub['widget_coors'], old_img_tl, scale_factor)
@@ -1128,13 +1176,61 @@ class CenterImg(BaseImgFrame):
         pass
 
     def __sub_shapes_clear(self):
-        if not stat_flags.ShapeCombo_IsOpened:
+        if not stat_vars.ShapeCombo_IsOpened:
             self.__sub_shapes_temp = []
             self.update()
 
-    def __sub_shape_rename(self, info):
-        i, new_name = info
-        self.__sub_shapes_temp[i]['name'] = new_name
+    def __sub_shape_del(self, info):
+        name, is_combo = info
+        self.__sub_shapes_names = [one for one in self.__sub_shapes_names if one != name]
+
+        if is_combo:
+            self.__all_shapes = [one for one in self.__all_shapes if name not in one['combo']]
+            self.__all_shapes_json = [one for one in self.__all_shapes_json if name not in one['combo']]
+        else:
+            self.__sub_shapes_temp = [one for one in self.__sub_shapes_temp if one['name'] != name]
+
+            for one_var in (self.__all_shapes, self.__all_shapes_json):
+                for one_shape in one_var:
+                    temp = [one for one in one_shape['sub_shapes'] if one['name'] != name]
+                    one_shape['sub_shapes'] = temp
+
+    def __sub_shape_rename(self, names):
+        old_name, new_name = names
+        for i, name in enumerate(self.__sub_shapes_names):
+            if name == old_name:
+                self.__sub_shapes_names[i] = new_name
+
+        for one in self.__sub_shapes_temp:
+            if one['name'] == old_name:
+                one['name'] = new_name
+
+        for one_var in (self.__all_shapes, self.__all_shapes_json):
+            for one_shape in one_var:
+                for one in one_shape['sub_shapes']:
+                    if one['name'] == old_name:
+                        one['name'] = new_name
+
+                one_shape['combo'] = one_shape['combo'].replace(old_name, new_name)
+
+    def __sync_widget_data_and_json_data(self, mode, shape_i=-1):
+        if mode == 'add':
+            shape_copy = deepcopy(self.__all_shapes[-1])
+            for one_sub in shape_copy['sub_shapes']:
+                one_sub['widget_coors'] = [aa.toTuple() for aa in one_sub['widget_coors']]
+
+            self.__all_shapes_json.append(shape_copy)
+        elif mode == 'modify':
+            shape_copy = deepcopy(self.__all_shapes[shape_i])
+            for one_sub in shape_copy['sub_shapes']:
+                one_sub['widget_coors'] = [aa.toTuple() for aa in one_sub['widget_coors']]
+
+            self.__all_shapes_json[shape_i] = shape_copy
+        elif mode == 'del':
+            if shape_i == -1:
+                self.__all_shapes_json = []
+            else:
+                self.__all_shapes_json.pop(shape_i)
 
     def __undo(self):
         if self.AnnMode:
@@ -1163,10 +1259,9 @@ class CenterImg(BaseImgFrame):
         self.shape_type = shape_type
         self.__clear_widget_img_coors()
 
-    def clear_all_polygons(self):
-        self.__all_shapes = []
+    def clear_all_shapes(self):
         self.__clear_widget_img_coors()
-        self.update()
+        signal_del_shape_from_img.send(-1)
 
     def clear_scaled_img(self, to_undo=True):
         if to_undo:
@@ -1177,20 +1272,13 @@ class CenterImg(BaseImgFrame):
         self.update()
         self.scaled_img_painted = self.scaled_img.copy()
 
-    def del_polygons(self):
-        if self.ShapeEditMode and self.editing_shape_i is not None:
-            self.__all_shapes.pop(self.editing_shape_i)
-            get_HHL_parent(self).del_shape(self.editing_shape_i)
-            self.editing_shape_i = None
-        self.update()
-
     def focus_set_img_area(self, press=False, moving=False, release=False, ctrl_press=False, ctrl_release=False):
         if ctrl_press:
             self.setFocus()
         if moving:
             if self.corner_index is None and self.editing_shape_i is None:
                 if (QApplication.keyboardModifiers() != Qt.ControlModifier and
-                        not get_HHL_parent(self).is_selecting_cate_tag()):
+                        not get_HHL_instance().is_selecting_cate_tag()):
                     self.clearFocus()
             else:
                 self.setFocus()
@@ -1200,13 +1288,21 @@ class CenterImg(BaseImgFrame):
     def get_ann_img(self):
         return self.scaled_img_painted.scaled(self.img.size(), Qt.KeepAspectRatio, self.interpolation).toImage()
 
-    def get_json_shapes(self):
-        return self.__all_shapes_json
+    def get_all_obj_jsons(self):
+        jsons = deepcopy(self.__all_shapes)
+        for one_obj in jsons:
+            for one_sub in one_obj['sub_shapes']:
+                tuple_points = [aa.toTuple() for aa in one_sub['widget_coors']]
+                one_sub['widget_coors'] = tuple_points
 
-    def modify_polygon_class(self, i, new_class, new_color):
-        polygon = self.__all_shapes[i]
-        polygon['category'] = new_class
-        polygon['qcolor'] = new_color
+        return jsons
+
+    def modify_one_shape(self, i, new_class: list, new_tags: list, new_color: str):  # 修改类别/标签
+        shape = self.__all_shapes[i]
+        shape['category'] = new_class
+        shape['tags'] = new_tags
+        shape['qcolor'] = new_color
+        self.__sync_widget_data_and_json_data('modify', i)
         self.update()
 
     def move_pix_img(self):  # 拖曳图片功能
@@ -1249,27 +1345,18 @@ class CenterImg(BaseImgFrame):
     def reset_cursor(self):
         self.cursor_in_widget = QPointF(-10, -10)
 
-    def save_one_shape(self, category: list[str], tags: list[str], qcolor: QColor, combo: str = ''):
+    def save_one_shape(self, category: list[str], tags: list[str], color: str, combo: str = ''):
         if self.FlagDrawCollection:
             st = self.FlagDrawCollection
             self.FlagDrawCollection = False
-        elif stat_flags.ShapeCombo_IsOpened:
+        elif stat_vars.ShapeCombo_IsOpened:
             st = self.tr('组合')
         else:
             st = self.shape_type
 
-        self.__all_shapes.append({'category': category, 'tags': tags, 'qcolor': qcolor, 'shape_type': st,
+        self.__all_shapes.append({'category': category, 'tags': tags, 'qcolor': color, 'shape_type': st,
                                   'sub_shapes': self.__sub_shapes_temp, 'combo': combo})
-
-        tuple_shapes = deepcopy(self.__sub_shapes_temp)
-        for one_sub in tuple_shapes:
-            tuple_points = [aa.toTuple() for aa in one_sub['widget_coors']]
-            one_sub['widget_coors'] = tuple_points
-        self.__all_shapes_json.append({'category': category, 'tags': tags, 'qcolor': qcolor, 'shape_type': st,
-                                       'sub_shapes': tuple_shapes, 'combo': combo})
-
-        print(self.__all_shapes)
-        # todo: 将qpointf转化为tuple，新建一个属性来记录
+        self.__sync_widget_data_and_json_data('add')
         self.__clear_widget_img_coors()
         self.__sub_shapes_clear()
         self.update()
@@ -1359,7 +1446,7 @@ class CenterImg(BaseImgFrame):
         self.update()
 
     def set_shape_locked(self, lock):
-        self.PolygonLocked = lock
+        self.HasShapeLocking = lock
 
     def set_tool_mode(self, draw=True, shape_edit=False, ann=False):
         self.DrawMode, self.ShapeEditMode, self.AnnMode = draw, shape_edit, ann

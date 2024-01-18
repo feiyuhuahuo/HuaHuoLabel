@@ -66,3 +66,13 @@ class ErrorSignal(QObject):
 
     def write(self, text):
         self.signal.emit(str(text))
+
+
+class WidgetSignal(QObject):
+    signal = Signal(QObject)
+
+    def __init__(self):
+        super().__init__()
+
+    def send(self, info):
+        self.signal.emit(info)
