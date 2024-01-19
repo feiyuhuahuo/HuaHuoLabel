@@ -1767,200 +1767,6 @@ R: 100, G: 100, B: 100</string>
           <number>6</number>
          </property>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <item>
-            <widget class="QCheckBox" name="checkBox_one_label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>所有标注用一个统一的文件保存</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QCheckBox::indicator{ 
-border:  2px solid white; 
- }
-QCheckBox::indicator:checked {
-    background-color:       blue;
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:       rgb(225, 225, 225);
-}
-</string>
-             </property>
-             <property name="text">
-              <string>统一标注模式</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="checkBox_separate_label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>每张图片都会保存单独的标注文件</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QCheckBox::indicator:checked {
-    background-color:       blue;
-    border:                 2px solid white;  
-
-}
-
-QCheckBox::indicator:unchecked {
-    background-color:       rgb(225, 225, 225);
-    border:                 2px solid white;  
-
-}
-</string>
-             </property>
-             <property name="text">
-              <string>独立标注模式</string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_7">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="radioButton_read">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>图片分类通过剪切进行</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QRadioButton::indicator:checked {
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-    background-color:       rgb(225, 225, 225);
-    border:                 2px solid white;  
-}
-QRadioButton::indicator:disabled {
-    background-color:       rgb(100, 100, 100);
-    border:                 2px solid white;  
-}</string>
-             </property>
-             <property name="text">
-              <string>只读</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
-             </attribute>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="radioButton_write">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>图片分类通过复制进行</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QRadioButton::indicator:checked {
-
-    background-color:       green;
-    border:                 2px solid white;  
-}
-
-QRadioButton::indicator:unchecked {
-
-    background-color:       rgb(225, 225, 225);
-    border:                 2px solid white;  
-}
-QRadioButton::indicator:disabled {
-
-    background-color:       rgb(100, 100, 100);
-    border:                 2px solid white;  
-}</string>
-             </property>
-             <property name="text">
-              <string>编辑</string>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
-             </attribute>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_28">
            <item>
             <widget class="QPushButton" name="pushButton_build_task">
@@ -2114,6 +1920,154 @@ border-radius: 5px;</string>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_29">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_11">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_9">
+               <item>
+                <widget class="QRadioButton" name="radioButton_read">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="toolTip">
+                  <string>图片分类通过剪切进行</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QRadioButton::indicator:checked {
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+}
+QRadioButton::indicator:disabled {
+    background-color:       rgb(100, 100, 100);
+    border:                 2px solid white;  
+}</string>
+                 </property>
+                 <property name="text">
+                  <string>只读</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_write">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="toolTip">
+                  <string>图片分类通过复制进行</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QRadioButton::indicator:checked {
+
+    background-color:       green;
+    border:                 2px solid white;  
+}
+
+QRadioButton::indicator:unchecked {
+
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+}
+QRadioButton::indicator:disabled {
+
+    background-color:       rgb(100, 100, 100);
+    border:                 2px solid white;  
+}</string>
+                 </property>
+                 <property name="text">
+                  <string>编辑</string>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup</string>
+                 </attribute>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBox_separate_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>每张图片都会保存单独的标注文件，与标注相关的操作都以独立标注文件为准</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QCheckBox::indicator:checked {
+    background-color:       blue;
+    border:                 2px solid white;  
+
+}
+
+QCheckBox::indicator:unchecked {
+    background-color:       rgb(225, 225, 225);
+    border:                 2px solid white;  
+
+}
+</string>
+               </property>
+               <property name="text">
+                <string>独立标注文件</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
            <item>
             <widget class="TaskDescBrowser" name="textBrowser_task_desc">
              <property name="sizePolicy">

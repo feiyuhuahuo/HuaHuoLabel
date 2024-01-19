@@ -137,7 +137,7 @@ class HHL_MainWindow(QMainWindow):
         elif widget.objectName() == 'pushButton_obj_tag_add':
             self.ui.obj_tag_buttons.add_button()
 
-    def add_to_train_val(self, dst_part, img_path=None, pass_one_file=False, pass_separate_file=False):
+    def add_to_train_val(self, dst_part, img_path=None):
         if not self.check_warnings(['task', 'edit_mode']):
             return
 
@@ -175,7 +175,7 @@ class HHL_MainWindow(QMainWindow):
 
             self.all_labels['labels'][img_name]['tv'] = dst_part
 
-        if self.SeparateLabel and not pass_separate_file:
+        if self.SaveSeparate and not pass_separate_file:
             tv_img_path = f'{self.get_root("tv")}/imgs/{dst_part}'
             os.makedirs(tv_img_path, exist_ok=True)
 
@@ -479,11 +479,10 @@ class HHL_MainWindow(QMainWindow):
         os.makedirs(path_del_img, exist_ok=True)
         self.file_move(img_path, path_del_img)
 
-        if self.OneFileLabel:
-            if self.all_labels['labels'].get(img_name):
-                self.all_labels['labels'].pop(img_name)
+        if self.all_labels['labels'].get(img_name):
+            self.all_labels['labels'].pop(img_name)
 
-        if self.SeparateLabel:
+        if self.SaveSeparate:
             if file_remove(f'{self.get_root("tv")}/imgs/train/{img_name}'):
                 self.mor_vars.train_num -= 1
             if file_remove(f'{self.get_root("tv")}/imgs/val/{img_name}'):
@@ -505,18 +504,18 @@ class HHL_MainWindow(QMainWindow):
         self.ui.listWidget_imgs_flow.set_cur_deleted()
         self.go_next_img()
 
-    def delete_one_class_jsons(self):
-        c_name = self.ui.class_list.currentItem().text()
-        re = QMB.question(self.ui, self.tr('删除类别'), self.tr('确定删除所有<font color=red>{}</font>标注吗？')
-                          .format(c_name))
-
-        if re == QMB.Yes:
-            # 删除某一类后，若图片无标注，则对应的标注文件会删除，原图不会，train和val里的对应图片和标注都会删除
-            self.thread_docl = DeleteOneClassLabels(self.imgs, self.WorkMode, self.OneFileLabel,
-                                                    self.SeparateLabel, deepcopy(self.all_labels),
-                                                    INS_all_classes.classes(), c_name, self)
-            self.thread_docl.start()
-            self.show_waiting_label()
+    # def delete_one_class_jsons(self):
+    #     c_name = self.ui.class_list.currentItem().text()
+    #     re = QMB.question(self.ui, self.tr('删除类别'), self.tr('确定删除所有<font color=red>{}</font>标注吗？')
+    #                       .format(c_name))
+    #
+    #     if re == QMB.Yes:
+    #         # 删除某一类后，若图片无标注，则对应的标注文件会删除，原图不会，train和val里的对应图片和标注都会删除
+    #         self.thread_docl = DeleteOneClassLabels(self.imgs, self.WorkMode, self.OneFileLabel,
+    #                                                 self.SaveSeparate, deepcopy(self.all_labels),
+    #                                                 INS_all_classes.classes(), c_name, self)
+    #         self.thread_docl.start()
+    #         self.show_waiting_label()
 
     # def delete_one_class_jsons_done(self, done):
     #     if done:
@@ -620,17 +619,10 @@ class HHL_MainWindow(QMainWindow):
         if not self.check_warnings(['task', 'edit_mode']):
             return
 
-        if self.OneFileLabel:
-            for k, v in self.all_labels['labels'].items():
-                if v['tv'] != 'val':
-                    img_path = f'{self.get_root("img")}/{k}'
-                    self.add_to_train_val('train', img_path, pass_separate_file=True)
-
-        if self.SeparateLabel:
+        if self.SaveSeparate:
             choice = QMB.question(self.ui, self.tr('独立标注模式'), self.tr('训练集将被覆盖，继续吗？'))
             if choice == QMB.Yes:
-                if not self.OneFileLabel:
-                    self.mor_vars.train_num = 0
+                self.mor_vars.train_num = 0
 
                 if osp.exists(f'{self.get_root("tv")}/imgs/train'):
                     shutil.rmtree(f'{self.get_root("tv")}/imgs/train')
@@ -640,23 +632,32 @@ class HHL_MainWindow(QMainWindow):
                 val_img_list = glob_imgs(f'{self.get_root("tv")}/imgs/val')
                 val_img_list = [one.split('/')[-1] for one in val_img_list]
                 for one in self.imgs:
-                    if self.has_labeled(one) and one.split('/')[-1] not in val_img_list:
+                    img_name = one.split('/')[-1]
+                    if self.has_labeled(one) and img_name not in val_img_list:
                         self.add_to_train_val('train', one, pass_one_file=True)
+        else:
+            for k, v in self.all_labels['labels'].items():
+                if v['tv'] != 'val':
+                    img_path = f'{self.get_root("img")}/{k}'
+                    self.add_to_train_val('train', img_path, pass_separate_file=True)
+
+                    # if self.all_labels['labels'].get(img_name):
+                    #     self.all_labels['labels'][img_name]['train_val'] = 'train'
 
         QMB.information(self.ui, self.tr('已完成'), self.tr('已完成。'))
 
     def get_img_tv(self, img_path):
         img_name = img_path.split('/')[-1]
-        if self.OneFileLabel:
-            if self.all_labels['labels'].get(img_name):
-                return self.all_labels['labels'][img_name]['tv']
-            else:
-                return 'none'
-        elif self.SeparateLabel:
+        if self.SaveSeparate:
             if osp.exists(f'{self.get_root("tv")}/imgs/train/{img_name}'):
                 return 'train'
             elif osp.exists(f'{self.get_root("tv")}/imgs/val/{img_name}'):
                 return 'val'
+            else:
+                return 'none'
+        else:
+            if self.all_labels['labels'].get(img_name):
+                return self.all_labels['labels'][img_name]['tv']
             else:
                 return 'none'
 
@@ -679,7 +680,7 @@ class HHL_MainWindow(QMainWindow):
     #
     #     return text
 
-    def get_qimg_png(self, img_path):
+    def get_qimg_png(self, img_path):  # todo------------------------------
         seg_mask = None
         classes = INS_all_classes.classes()
         if self.OneFileLabel:
@@ -690,7 +691,7 @@ class HHL_MainWindow(QMainWindow):
                 if polygons == ['bg']:
                     polygons = []
                 seg_mask = get_seg_mask(classes, polygons, img_h, img_w, ins_seg=self.WorkMode == self.AllModes[4])
-        elif self.SeparateLabel:
+        elif self.SaveSeparate:
             if self.WorkMode == self.AllModes[2]:
                 png_path = self.get_separate_label(img_path, 'png')
                 if osp.exists(png_path):
@@ -731,16 +732,16 @@ class HHL_MainWindow(QMainWindow):
         return f'{label_root}/{img_pure_name}.{suffix}'
 
     def get_tv_num(self):
-        if self.OneFileLabel:
+        if self.SaveSeparate:
+            self.mor_vars.train_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/train'))
+            self.mor_vars.val_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/val'))
+        else:
             self.mor_vars.train_num, self.mor_vars.val_num = 0, 0
             for one in self.all_labels['labels'].values():
                 if one['tv'] == 'train':
                     self.mor_vars.train_num += 1
                 elif one['tv'] == 'val':
                     self.mor_vars.val_num += 1
-        elif self.SeparateLabel:
-            self.mor_vars.train_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/train'))
-            self.mor_vars.val_num = len(glob_imgs(f'{self.get_root("tv")}/imgs/val'))
 
     def graphics_reset(self):  # 清空所有任务相关的控件
         self.center_img.clear_all_shapes()
@@ -790,17 +791,19 @@ class HHL_MainWindow(QMainWindow):
         #     if (pixmap := img_path2_qpixmap(img_path)) is not None:
         #         self.window_flow_img.paint_img(pixmap, img_path)
 
-    def has_labeled(self, img_path):  # 确认当前图片是否已包含标注  #todo： ------------------------
+    def has_labeled(self, img_path):  # 确认当前图片是否已包含标注
         img_name = img_path.split('/')[-1]
-        if self.OneFileLabel:
-            if self.all_labels['labels'].get(img_name):
-                return True
-            return False
-        elif self.SeparateLabel:
+
+        if self.SaveSeparate:  # 若图中不包含标注，则不会保存独立标注文件
             json_path = self.get_separate_label(img_path, 'json')
             if osp.exists(json_path):
                 return True
-            return False
+        else:
+            if self.all_labels['labels'].get(img_name):
+                temp = self.all_labels['labels'][img_name]
+                if temp['img_classes'] or temp['img_tags'] or temp['obj_num'] > 0:
+                    return True
+        return False
 
     def has_looking_classes(self, img_path):
         if self.OneFileLabel:
@@ -810,7 +813,7 @@ class HHL_MainWindow(QMainWindow):
                 polygons = img_dict['polygons']
             else:
                 return False
-        elif self.SeparateLabel:
+        elif self.SaveSeparate:
             json_path = self.get_separate_label(img_path, 'json')
             if osp.exists(json_path):
                 with open(json_path, 'r', encoding='utf-8') as f:
@@ -941,8 +944,7 @@ class HHL_MainWindow(QMainWindow):
         self.ui.setFocus()
 
     def init_widgets_wrt_task(self):
-        self.ui.checkBox_one_label.setChecked(self.task_cfg['one_file'])
-        self.ui.checkBox_separate_label.setChecked(self.task_cfg['separate_file'])
+        self.ui.checkBox_separate_label.setChecked(self.task_cfg['save_separate'])
         self.ui.textBrowser_task_desc.setText(self.task_cfg['task_desc'])
         self.ui.img_cate_buttons.init_buttons(self.task_cfg['img_classes'])
         self.ui.img_tag_buttons.init_buttons(self.task_cfg['img_tags'])
@@ -955,10 +957,9 @@ class HHL_MainWindow(QMainWindow):
         self.label_folder = self.tr('标注')
         self.tv_folder = self.tr('训练集&验证集')
         self.ann_folder = self.tr('注释图片')
-        self.OneFileLabel = True
-        self.SeparateLabel = False
+        self.SaveSeparate = False
         self.signal_error2app = ErrorSignal()
-        self.task_cfg = {'one_file': True, 'separate_file': False, 'task_desc': '', 'img_classes': {},
+        self.task_cfg = {'save_separate': False, 'task_desc': '', 'img_classes': {},
                          'img_tags': {}, 'obj_classes': {}, 'obj_tags': {}, 'version_head': '',
                          'tracked_files': ['task_cfg.json', self.label_folder]}
 
@@ -1076,11 +1077,6 @@ class HHL_MainWindow(QMainWindow):
             if osp.exists(ann_jpg):
                 self.center_img.set_ann_painted_img(ann_jpg)
 
-    def raise_label_mode_conflict(self):  # done----------------------------
-        if self.task_root:
-            # 加了QMB后，可以阻止点击QcheckBox时切换状态，原因未知
-            QMB.critical(self.ui, self.tr('错误操作'), self.tr('请勿在标注途中切换标注模式，否则容易造成标注文件混乱！'))
-
     def random_train_val(self):
         if not self.check_warnings(['task', 'edit_mode']):
             return
@@ -1095,7 +1091,7 @@ class HHL_MainWindow(QMainWindow):
             QMB.critical(self.ui, self.tr('格式错误'), self.tr('请输入正确的划分比例！'))
             return
 
-        if self.SeparateLabel:
+        if self.SaveSeparate:
             choice = QMB.question(self.ui, self.tr('独立标注模式'),
                                   self.tr('"{0}"下的"imgs"和"labels"文件夹将被覆盖，继续吗？').format(
                                       self.get_root('tv')))
@@ -1318,11 +1314,11 @@ class HHL_MainWindow(QMainWindow):
             if '图片已删除' in self.imgs[i]:
                 continue
 
-            if self.OneFileLabel:
-                result = self.all_labels['labels'].get(self.imgs[i].split('/')[-1])
-            elif self.SeparateLabel:
+            if self.SaveSeparate:
                 json_path = self.get_separate_label(self.imgs[i], 'json')
                 result = osp.exists(json_path)
+            else:
+                result = self.all_labels['labels'].get(self.imgs[i].split('/')[-1])
 
             if not result:
                 break
@@ -1441,7 +1437,7 @@ class HHL_MainWindow(QMainWindow):
             self.ui.pushButton_waiting_tag.show_button()
 
     def sem_class_modified_tip(self):
-        if self.SeparateLabel and self.ui.radioButton_write.isChecked():
+        if self.SaveSeparate and self.ui.radioButton_write.isChecked():
             if not self.window_sem_class_changed.DontShowAgain:
                 self.window_sem_class_changed.show(self.tr('类别数量发生变化，用于语义分割任务的PNG标注可能需要更新。'))
 
@@ -1481,25 +1477,7 @@ class HHL_MainWindow(QMainWindow):
                 self.language = 'EN'
                 app.exit(99)
 
-    def set_one_file_label(self, by_click=False):
-        if by_click:
-            self.OneFileLabel = self.ui.checkBox_one_label.isChecked()
-            if not self.SeparateLabel and not self.OneFileLabel:
-                QMB.warning(self.ui, self.tr('未选择标注模式'), self.tr('请选择至少一种标注模式！'))
-                self.ui.checkBox_one_label.setChecked(True)
-
-            self.task_cfg['one_file'] = self.OneFileLabel
-            self.task_cfg_export()
-
     def set_edit_mode(self):
-        # if self.OneFileLabel:
-        #     if self.ui.radioButton_read.isChecked():
-        #         self.thread_auto_save.terminate()
-        #     else:
-        #         self.thread_auto_save.start()
-        # else:
-        #     self.thread_auto_save.terminate()
-
         stat_vars.HHL_Edit_Mode = self.ui.radioButton_write.isChecked()
         if not stat_vars.HHL_Edit_Mode:
             self.ui.obj_list.edit_button.setChecked(stat_vars.HHL_Edit_Mode)
@@ -1527,12 +1505,8 @@ class HHL_MainWindow(QMainWindow):
 
     def set_separate_label(self, by_click=False):
         if by_click:
-            self.SeparateLabel = self.ui.checkBox_separate_label.isChecked()
-            if not self.SeparateLabel and not self.OneFileLabel:
-                QMB.warning(self.ui, self.tr('未选择标注模式'), self.tr('请选择至少一种标注模式！'))
-                self.ui.checkBox_one_label.setChecked(True)
-
-            self.task_cfg['separate_file'] = self.SeparateLabel
+            self.SaveSeparate = self.ui.checkBox_separate_label.isChecked()
+            self.task_cfg['save_separate'] = self.SaveSeparate
             self.task_cfg_export()
 
     def set_shape_edit_mode(self):
@@ -1553,7 +1527,14 @@ class HHL_MainWindow(QMainWindow):
 
     def set_tv_label(self):
         img_name = self.current_img_name()
-        if self.OneFileLabel:
+        if self.SaveSeparate:
+            if osp.exists(f'{self.get_root("tv")}/imgs/train/{img_name}'):
+                self.ui.label_train_val.set_train()
+            elif osp.exists(f'{self.get_root("tv")}/imgs/val/{img_name}'):
+                self.ui.label_train_val.set_val()
+            else:
+                self.ui.label_train_val.set_none()
+        else:
             if self.all_labels['labels'].get(img_name):
                 tv = self.all_labels['labels'][img_name]['tv']
                 if tv == 'train':
@@ -1564,13 +1545,6 @@ class HHL_MainWindow(QMainWindow):
                     self.ui.label_train_val.set_none()
             else:
                 self.ui.label_train_val.set_none()
-        elif self.SeparateLabel:
-            if osp.exists(f'{self.get_root("tv")}/imgs/train/{img_name}'):
-                self.ui.label_train_val.set_train()
-            elif osp.exists(f'{self.get_root("tv")}/imgs/val/{img_name}'):
-                self.ui.label_train_val.set_val()
-            else:
-                self.ui.label_train_val.set_none()
 
     def shape_to_img(self):
         self.center_img.clear_all_shapes()
@@ -1579,16 +1553,7 @@ class HHL_MainWindow(QMainWindow):
         if '图片已删除' in img_path:
             return
 
-        if self.OneFileLabel:
-            img_name = img_path.split('/')[-1]
-            img_dict = self.all_labels['labels'].get(img_name)
-            if img_dict:
-                polygons, img_h, img_w = img_dict['polygons'], img_dict['img_height'], img_dict['img_width']
-                if polygons == ['bg']:
-                    polygons = []
-            else:
-                return
-        elif self.SeparateLabel:
+        if self.SaveSeparate:
             json_path = self.get_separate_label(img_path, 'json')
             if osp.exists(json_path):
                 with open(json_path, 'r', encoding='utf-8') as f:
@@ -1596,6 +1561,15 @@ class HHL_MainWindow(QMainWindow):
                     polygons, img_h, img_w = content['polygons'], content['img_height'], content['img_width']
                     if polygons == ['bg']:
                         polygons = []
+            else:
+                return
+        else:
+            img_name = img_path.split('/')[-1]
+            img_dict = self.all_labels['labels'].get(img_name)
+            if img_dict:
+                polygons, img_h, img_w = img_dict['polygons'], img_dict['img_height'], img_dict['img_width']
+                if polygons == ['bg']:
+                    polygons = []
             else:
                 return
 
@@ -1639,7 +1613,7 @@ class HHL_MainWindow(QMainWindow):
 
     def show_class_statistic(self):
         self.thread_cs = ClassStatistics(self.WorkMode, self.img_num, INS_all_classes.classes(), self.OneFileLabel,
-                                         deepcopy(self.all_labels), self.SeparateLabel, self, self.language)
+                                         deepcopy(self.all_labels), self.SaveSeparate, self, self.language)
         self.thread_cs.start()
         self.show_waiting_label()
 
@@ -1757,15 +1731,15 @@ class HHL_MainWindow(QMainWindow):
             #     self.set_tv_label()
             #     self.get_tv_num()
             #
-            # if self.OneFileLabel:
-            #     self.thread_auto_save.start()
+
+            # self.thread_auto_save.start()
 
             try:  # 可能没装Git客户端
                 self.repo = git.Repo.init(self.task_root)
             except:
                 self.repo = None
 
-            self.log_info(f'task: {self.task}, one file: {self.OneFileLabel}, separate file: {self.SeparateLabel}')
+            self.log_info(f'task: {self.task}, save separate file: {self.SaveSeparate}')
 
     def update_button_num(self, info):
         name, num = info
@@ -1906,6 +1880,10 @@ class HHL_MainWindow(QMainWindow):
 
             self.task_cfg['tracked_files'] = new_tracked_files
             self.task_cfg_export()
+
+
+# todo: 先弄完划分训练、验证集逻辑，再弄存图逻辑，注意语义分割背景选项(把它加入img_classes吧），再弄载入标注逻辑。
+
 
 # todo: 新架构-----------------------------------------
 # todo: 加入启动动画，记录并显示初始化时的log

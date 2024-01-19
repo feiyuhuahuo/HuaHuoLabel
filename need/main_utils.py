@@ -18,9 +18,6 @@ from need.custom_threads import *
 # 3.QPixmap在图片很大时，会极其占用内存
 def connect_signals(main_window):
     main_window.ui.checkBox_hide_cross.clicked.connect(main_window.set_hide_cross)
-    main_window.ui.checkBox_one_label.pressed.connect(main_window.raise_label_mode_conflict)
-    main_window.ui.checkBox_one_label.toggled.connect(lambda: main_window.set_one_file_label(by_click=True))
-    main_window.ui.checkBox_separate_label.pressed.connect(main_window.raise_label_mode_conflict)
     main_window.ui.checkBox_separate_label.toggled.connect(lambda: main_window.set_separate_label(by_click=True))
     main_window.ui.checkBox_sem_bg.toggled.connect(main_window.set_sem_bg)
 

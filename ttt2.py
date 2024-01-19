@@ -5,18 +5,20 @@ import pdb
 import numpy as np
 
 import cv2
+cv2.namedWindow("aa", cv2.WINDOW_NORMAL)
+# cv2.namedWindow("bb", cv2.WINDOW_NORMAL)
 
-img = cv2.imread('images/color_cursor.png', cv2.IMREAD_UNCHANGED)
+imgs = glob.glob('D:\Data\SIC_D\weiguan\edge_corner_overex/1/*')
+for one in imgs:
+    print(one)
+    img = cv2.imread(one, cv2.IMREAD_GRAYSCALE)
 
-img_bin = (img[:, :, 3] != 0)
+    blur = cv2.GaussianBlur(img, (3, 3), 0)  # 用高斯滤波处理原图像降噪
+    canny = cv2.Canny(blur, 10, 40)  # 50是最小阈值,150是最大阈值
 
-img_255 = img_bin.astype('uint8') * 255
-img_255 = np.repeat(img_255[:, :, None], 3, axis=2)
+    cv2.imshow('aa',canny)
+    # cv2.imshow('bb', absY)
+    cv2.waitKey()
 
-final = img[:, :, 3]
-img2 = np.concatenate([img_255, final[:, :, None]], axis=2)
-# print(img_255.sum())
-# cv2.imshow("aa", img2)
-# cv2.waitKey()
 
-cv2.imwrite('images/color_cursor2.png', img2)
+
